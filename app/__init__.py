@@ -1,9 +1,17 @@
 import os
 from datetime import timedelta
+from pathlib import Path
 
+from dotenv import load_dotenv
 from flask import Flask, redirect, request, session, url_for
 
 from .extensions import db
+
+# Passenger/cPanel (and any WSGI host that isn't Docker) does not source a shell
+# environment for us, so .env is loaded explicitly here. Real environment variables
+# set by the host (e.g. cPanel's "Setup Python App" UI) always win — load_dotenv()
+# never overwrites a variable that's already set.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 
 def create_app():
