@@ -12,7 +12,7 @@ services:
       - LEGACY_XLSX_PATH=/app/legacy/MAKUSANYO YA MAGARI - TAKWIMU.xlsx
       - SECRET_KEY=change-me-in-production
       # Login password for the whole system.
-      - SITE_PASSWORD=change-me-bicon-2026
+      - SITE_PASSWORD=BAKOBILE
       # Confirmation code required on every add/update/delete action.
       - ACTION_CODE=BAKOBILE
     restart: unless-stopped
