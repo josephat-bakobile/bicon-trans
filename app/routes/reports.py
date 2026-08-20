@@ -1,0 +1,113 @@
+from datetime import date
+
+from flask import Blueprint, Response, render_template, request
+
+from ..export_excel import build_collections_excel, build_consumption_excel, build_summary_excel
+from ..export_pdf import build_collections_pdf, build_consumption_pdf, build_summary_pdf
+from ..models import Car, ExpenseCategory
+from ..report_data import collections_rows, consumption_rows, summary_rows
+from ..utils import parse_date
+
+bp = Blueprint("reports", __name__)
+
+
+def _range():
+    today = date.today()
+    start = parse_date(request.args.get("start"), today.replace(day=1))
+    end = parse_date(request.args.get("end"), today)
+    return start, end
+
+
+@bp.route("/")
+def index():
+    start, end = _range()
+    car_id = request.args.get("car_id", type=int)
+    category_id = request.args.get("category_id", type=int)
+
+    s_rows, s_totals = summary_rows(start, end)
+    c_rows, c_total = collections_rows(start, end, car_id)
+    m_rows, m_total = consumption_rows(start, end, car_id, category_id)
+
+    return render_template(
+        "reports/index.html",
+        start=start,
+        end=end,
+        car_id=car_id,
+        category_id=category_id,
+        cars=Car.query.order_by(Car.code).all(),
+        categories=ExpenseCategory.query.order_by(ExpenseCategory.name).all(),
+        summary_rows=s_rows,
+        summary_totals=s_totals,
+        collection_rows=c_rows,
+        collection_total=c_total,
+        consumption_rows=m_rows,
+        consumption_total=m_total,
+    )
+
+
+@bp.route("/summary.xlsx")
+def summary_xlsx():
+    start, end = _range()
+    rows, totals = summary_rows(start, end)
+    buf = build_summary_excel(rows, totals, start, end)
+    return _send(buf, f"muhtasari_{start}_{end}.xlsx", "xlsx")
+
+
+@bp.route("/summary.pdf")
+def summary_pdf():
+    start, end = _range()
+    rows, totals = summary_rows(start, end)
+    buf = build_summary_pdf(rows, totals, start, end)
+    return _send(buf, f"muhtasari_{start}_{end}.pdf", "pdf")
+
+
+@bp.route("/collections.xlsx")
+def collections_xlsx():
+    start, end = _range()
+    car_id = request.args.get("car_id", type=int)
+    rows, total = collections_rows(start, end, car_id)
+    buf = build_collections_excel(rows, total, start, end)
+    return _send(buf, f"makusanyo_{start}_{end}.xlsx", "xlsx")
+
+
+@bp.route("/collections.pdf")
+def collections_pdf():
+    start, end = _range()
+    car_id = request.args.get("car_id", type=int)
+    rows, total = collections_rows(start, end, car_id)
+    buf = build_collections_pdf(rows, total, start, end)
+    return _send(buf, f"makusanyo_{start}_{end}.pdf", "pdf")
+
+
+@bp.route("/consumption.xlsx")
+def consumption_xlsx():
+    start, end = _range()
+    car_id = request.args.get("car_id", type=int)
+    category_id = request.args.get("category_id", type=int)
+    rows, total = consumption_rows(start, end, car_id, category_id)
+    buf = build_consumption_excel(rows, total, start, end)
+    return _send(buf, f"matumizi_{start}_{end}.xlsx", "xlsx")
+
+
+@bp.route("/consumption.pdf")
+def consumption_pdf():
+    start, end = _range()
+    car_id = request.args.get("car_id", type=int)
+    category_id = request.args.get("category_id", type=int)
+    rows, total = consumption_rows(start, end, car_id, category_id)
+    buf = build_consumption_pdf(rows, total, start, end)
+    return _send(buf, f"matumizi_{start}_{end}.pdf", "pdf")
+
+
+_MIME = {
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "pdf": "application/pdf",
+}
+
+
+def _send(buf, filename, kind):
+    return Response(
+        buf.read(),
+        mimetype=_MIME[kind],
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

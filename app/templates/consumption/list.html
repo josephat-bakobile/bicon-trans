@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Matumizi - BICON TRANS{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Matumizi (Consumption)</h4>
+  <a href="{{ url_for('consumption.new') }}" class="btn btn-primary">+ Taarifa Mpya</a>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto"><input type="date" class="form-control" name="start" value="{{ start }}"></div>
+  <div class="col-auto"><input type="date" class="form-control" name="end" value="{{ end }}"></div>
+  <div class="col-auto">
+    <select class="form-select" name="car_id">
+      <option value="">Gari zote</option>
+      {% for c in cars %}<option value="{{ c.id }}" {{ 'selected' if car_id==c.id else '' }}>{{ c.code }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select class="form-select" name="category_id">
+      <option value="">Aina zote</option>
+      {% for cat in categories %}<option value="{{ cat.id }}" {{ 'selected' if category_id==cat.id else '' }}>{{ cat.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-outline-secondary">Chuja</button>
+    <a href="{{ url_for('consumption.list_view') }}" class="btn btn-outline-secondary">Futa</a>
+  </div>
+</form>
+
+<div class="card-panel">
+  <table class="table table-sm table-money align-middle mb-0">
+    <thead>
+      <tr><th>Tarehe</th><th>Gari</th><th>Aina</th><th class="amount">Kiasi</th><th>Maelezo</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for e in entries %}
+      <tr>
+        <td>{{ e.date.strftime('%d-%m-%Y') }}</td>
+        <td>{{ e.car.code }}</td>
+        <td>{{ e.category.name }}</td>
+        <td class="amount">{{ e.amount | money }}</td>
+        <td class="text-muted small">{{ e.description or '' }}</td>
+        <td class="text-end">
+          <a href="{{ url_for('consumption.edit', entry_id=e.id) }}" class="btn btn-sm btn-outline-secondary">Hariri</a>
+          <form method="post" action="{{ url_for('consumption.delete', entry_id=e.id) }}" class="d-inline action-code-form"
+                data-confirm="Futa taarifa hii ya matumizi?">
+            <button class="btn btn-sm btn-outline-danger">Futa</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted text-center py-4">Hakuna taarifa za matumizi.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

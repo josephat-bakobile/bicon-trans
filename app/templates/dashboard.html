@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - BICON TRANS{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Dashboard</h4>
+  <span class="text-muted small">Mwezi huu: {{ today.strftime('%B %Y') }}</span>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile collected">
+      <div class="label">Makusanyo (mwezi huu)</div>
+      <div class="value">{{ month_totals.grand_collected | money }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile consumed">
+      <div class="label">Matumizi (mwezi huu)</div>
+      <div class="value">{{ month_totals.grand_consumed | money }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile net">
+      <div class="label">Baki (mwezi huu)</div>
+      <div class="value">{{ month_totals.grand_net | money }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile debt">
+      <div class="label">Madeni yaliyobaki</div>
+      <div class="value">{{ balances.grand_balance | money }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-7">
+    <div class="card-panel h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>Makusanyo dhidi ya Matumizi (miezi 6)</strong>
+        <span>
+          <span class="legend-dot" style="background:#2a78d6"></span>Makusanyo
+          <span class="legend-dot ms-3" style="background:#eb6834"></span>Matumizi
+        </span>
+      </div>
+      <canvas id="trendChart" height="110"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card-panel h-100">
+      <strong>Muhtasari kwa Gari (jumla)</strong>
+      <table class="table table-sm table-money mt-2 mb-0">
+        <thead><tr><th>Gari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th></tr></thead>
+        <tbody>
+          {% for r in all_time_totals.rows %}
+          <tr>
+            <td>{{ r.car.code }}</td>
+            <td class="amount">{{ r.collected | money }}</td>
+            <td class="amount">{{ r.consumed | money }}</td>
+            <td class="amount">{{ r.net | money }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card-panel">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>Mchango wa Kila Gari kwa Mwezi (Car Contribution by Month) &mdash; MAKUSANYO</strong>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#contribTable">
+          Onyesha kama Jedwali
+        </button>
+      </div>
+      <canvas id="contributionChart" height="90"></canvas>
+
+      <div class="collapse mt-3" id="contribTable">
+        <div class="table-responsive">
+        <table class="table table-sm table-money mb-0">
+          <thead>
+            <tr>
+              <th>Gari</th>
+              {% for label in contribution_matrix.labels %}<th class="amount">{{ label }}</th>{% endfor %}
+              <th class="amount">Jumla</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in contribution_matrix.rows %}
+            <tr>
+              <td>{{ r.car.code }}</td>
+              {% for v in r.amounts %}<td class="amount">{{ v | money }}</td>{% endfor %}
+              <td class="amount fw-bold">{{ r.total | money }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="table-light fw-bold">
+              <td>JUMLA KUU</td>
+              {% for v in contribution_matrix.col_totals %}<td class="amount">{{ v | money }}</td>{% endfor %}
+              <td class="amount">{{ contribution_matrix.grand_total | money }}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card-panel h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>Miamala ya Hivi Karibuni (Makusanyo)</strong>
+        <a href="{{ url_for('collections.list_view') }}" class="small">Ona zote &rarr;</a>
+      </div>
+      <table class="table table-sm table-money mb-0">
+        <thead><tr><th>Trans No</th><th>Tarehe</th><th>Magari</th><th class="amount">Jumla</th></tr></thead>
+        <tbody>
+          {% for t in recent_transactions %}
+          <tr>
+            <td><a href="{{ url_for('collections.edit', txn_id=t.id) }}">{{ t.trans_no }}</a></td>
+            <td>{{ t.date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ t.lines | map(attribute='car.code') | join(', ') }}</td>
+            <td class="amount">{{ t.total | money }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted text-center py-3">Hakuna miamala bado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card-panel h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>Matumizi ya Hivi Karibuni</strong>
+        <a href="{{ url_for('consumption.list_view') }}" class="small">Ona zote &rarr;</a>
+      </div>
+      <table class="table table-sm table-money mb-0">
+        <thead><tr><th>Tarehe</th><th>Gari</th><th class="amount">Kiasi</th></tr></thead>
+        <tbody>
+          {% for e in recent_consumption %}
+          <tr>
+            <td>{{ e.date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ e.car.code }}</td>
+            <td class="amount">{{ e.amount | money }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="text-muted text-center py-3">Hakuna matumizi bado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+const trend = {{ trend | tojson }};
+new Chart(document.getElementById('trendChart'), {
+  type: 'bar',
+  data: {
+    labels: trend.map(p => p.label),
+    datasets: [
+      { label: 'Makusanyo', data: trend.map(p => p.collected), backgroundColor: '#2a78d6', borderRadius: 4 },
+      { label: 'Matumizi', data: trend.map(p => p.consumed), backgroundColor: '#eb6834', borderRadius: 4 },
+    ]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: '#e1e0d9' }, ticks: { callback: v => v.toLocaleString() } },
+    }
+  }
+});
+
+const contributionLabels = {{ contribution_matrix.labels | tojson }};
+const contributionSeries = [
+  {% for r in contribution_matrix.rows %}
+  { label: {{ r.car.code | tojson }}, data: {{ r.amounts | tojson }} },
+  {% endfor %}
+];
+const carPalette = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
+new Chart(document.getElementById('contributionChart'), {
+  type: 'bar',
+  data: {
+    labels: contributionLabels,
+    datasets: contributionSeries.map((s, i) => ({
+      label: s.label,
+      data: s.data,
+      backgroundColor: carPalette[i % carPalette.length],
+      borderRadius: 4,
+    })),
+  },
+  options: {
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: '#e1e0d9' }, ticks: { callback: v => v.toLocaleString() } },
+    }
+  }
+});
+</script>
+{% endblock %}

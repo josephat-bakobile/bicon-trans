@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Makusanyo - BICON TRANS{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Makusanyo (Miamala)</h4>
+  <a href="{{ url_for('collections.new') }}" class="btn btn-primary">+ Muamala Mpya</a>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <input type="date" class="form-control" name="start" value="{{ start }}">
+  </div>
+  <div class="col-auto">
+    <input type="date" class="form-control" name="end" value="{{ end }}">
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-outline-secondary">Chuja</button>
+    <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary">Futa</a>
+  </div>
+</form>
+
+<div class="card-panel">
+  <table class="table table-sm table-money align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Trans No</th>
+        <th>Tarehe</th>
+        <th>Mgawanyo kwa Gari</th>
+        <th class="amount">Jumla</th>
+        <th>Maelezo</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>{{ t.trans_no }}</td>
+        <td>{{ t.date.strftime('%d-%m-%Y') }}</td>
+        <td>
+          {% for l in t.lines %}
+            <span class="badge text-bg-light border">{{ l.car.code }}: {{ l.amount | money }}</span>
+          {% endfor %}
+        </td>
+        <td class="amount">{{ t.total | money }}</td>
+        <td class="text-muted small">{{ t.note or '' }}</td>
+        <td class="text-end">
+          <a href="{{ url_for('collections.edit', txn_id=t.id) }}" class="btn btn-sm btn-outline-secondary">Hariri</a>
+          <form method="post" action="{{ url_for('collections.delete', txn_id=t.id) }}" class="d-inline action-code-form"
+                data-confirm="Una uhakika unataka kufuta muamala {{ t.trans_no }}?">
+            <button class="btn btn-sm btn-outline-danger">Futa</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted text-center py-4">Hakuna miamala.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

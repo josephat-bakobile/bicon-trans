@@ -1,0 +1,18 @@
+services:
+  web:
+    build: .
+    image: bicon-trans:latest
+    container_name: bicon-trans
+    ports:
+      - "8081:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - DATABASE_PATH=/app/data/bicon_trans.db
+      - LEGACY_XLSX_PATH=/app/legacy/MAKUSANYO YA MAGARI - TAKWIMU.xlsx
+      - SECRET_KEY=change-me-in-production
+      # Login password for the whole system.
+      - SITE_PASSWORD=change-me-bicon-2026
+      # Confirmation code required on every add/update/delete action.
+      - ACTION_CODE=BAKOBILE
+    restart: unless-stopped

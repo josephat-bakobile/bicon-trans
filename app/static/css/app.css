@@ -1,0 +1,83 @@
+:root {
+  --brand-blue: #2a78d6;
+  --brand-orange: #eb6834;
+  --surface: #fcfcfb;
+  --page: #f9f9f7;
+  --ink: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+  --line: #e1e0d9;
+  --good: #0ca30c;
+  --critical: #d03b3b;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.app-navbar {
+  background: linear-gradient(90deg, #12233f, #1d3a63);
+}
+
+.brand-logo {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+.login-logo {
+  height: 56px;
+  width: auto;
+  display: block;
+  margin: 0 auto 12px;
+}
+
+.stat-tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  height: 100%;
+}
+
+.stat-tile .label {
+  color: var(--ink-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.stat-tile .value {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-tile.collected .value { color: var(--brand-blue); }
+.stat-tile.consumed .value { color: var(--brand-orange); }
+.stat-tile.net .value { color: var(--good); }
+.stat-tile.debt .value { color: var(--critical); }
+
+.card-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+table.table-money td.amount, table.table-money th.amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}

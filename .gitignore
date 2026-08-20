@@ -1,0 +1,16 @@
+# Runtime data (SQLite DB, persisted via docker-compose volume)
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# LibreOffice/Office lock files
+.~lock.*#
+
+# Editor/OS cruft
+.DS_Store
+*.swp
+.claude

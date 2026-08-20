@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Madeni - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3">Madeni (Debt Tracking)</h4>
+
+<div class="card-panel mb-4">
+  <strong>Salio la Madeni kwa Gari</strong>
+  <table class="table table-sm table-money mt-2 mb-0">
+    <thead><tr><th>Gari</th><th class="amount">Anadaiwa (Jumla)</th><th class="amount">Amelipa (Jumla)</th><th class="amount">Baki</th></tr></thead>
+    <tbody>
+      {% for r in balances.rows %}
+      <tr>
+        <td>{{ r.car.code }}</td>
+        <td class="amount">{{ r.owed | money }}</td>
+        <td class="amount">{{ r.paid | money }}</td>
+        <td class="amount fw-bold">{{ r.balance | money }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="table-light fw-bold">
+        <td>JUMLA KUU</td>
+        <td class="amount">{{ balances.grand_owed | money }}</td>
+        <td class="amount">{{ balances.grand_paid | money }}</td>
+        <td class="amount">{{ balances.grand_balance | money }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card-panel mb-3">
+      <strong>Ongeza Deni (Anadaiwa)</strong>
+      <form method="post" action="{{ url_for('debts.new_debt') }}" class="row g-2 mt-1">
+        <div class="col-6"><input type="date" class="form-control" name="date" required></div>
+        <div class="col-6">
+          <select class="form-select" name="car_id" required>
+            {% for c in cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6"><input type="number" step="0.01" min="0" class="form-control" name="amount" placeholder="Kiasi" required></div>
+        <div class="col-6"><input type="text" class="form-control" name="description" placeholder="Maelezo (si lazima)"></div>
+        <div class="col-12">
+          <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
+          <input type="text" class="form-control" name="action_code" required>
+        </div>
+        <div class="col-12"><button class="btn btn-primary btn-sm">Hifadhi Deni</button></div>
+      </form>
+    </div>
+
+    <div class="card-panel">
+      <strong>Madeni ya Hivi Karibuni</strong>
+      <table class="table table-sm table-money mt-2 mb-0">
+        <thead><tr><th>Tarehe</th><th>Gari</th><th class="amount">Kiasi</th><th></th></tr></thead>
+        <tbody>
+          {% for d in debts %}
+          <tr>
+            <td>{{ d.date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ d.car.code }}</td>
+            <td class="amount">{{ d.amount | money }}</td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('debts.delete_debt', debt_id=d.id) }}" class="action-code-form" data-confirm="Futa deni hili?">
+                <button class="btn btn-sm btn-outline-danger">Futa</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted text-center py-3">Hakuna madeni.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-panel mb-3">
+      <strong>Ongeza Malipo ya Deni</strong>
+      <form method="post" action="{{ url_for('debts.new_payment') }}" class="row g-2 mt-1" id="payment-form">
+        <div class="col-6"><input type="date" class="form-control" name="date" required></div>
+        <div class="col-6">
+          <select class="form-select" name="car_id" id="payment-car" required>
+            {% for r in balances.rows %}
+            <option value="{{ r.car.id }}" data-balance="{{ r.balance }}">{{ r.car.code }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6">
+          <input type="number" step="0.01" min="0" class="form-control" name="amount" id="payment-amount" placeholder="Kiasi" required>
+        </div>
+        <div class="col-6 d-flex align-items-center small text-muted" id="payment-balance-hint"></div>
+        <div class="col-12"><input type="text" class="form-control" name="description" placeholder="Maelezo (si lazima)"></div>
+        <div class="col-12">
+          <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
+          <input type="text" class="form-control" name="action_code" required>
+        </div>
+        <div class="col-12"><button class="btn btn-primary btn-sm">Hifadhi Malipo</button></div>
+      </form>
+    </div>
+
+    <div class="card-panel">
+      <strong>Malipo ya Hivi Karibuni</strong>
+      <table class="table table-sm table-money mt-2 mb-0">
+        <thead><tr><th>Tarehe</th><th>Gari</th><th class="amount">Kiasi</th><th></th></tr></thead>
+        <tbody>
+          {% for p in payments %}
+          <tr>
+            <td>{{ p.date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ p.car.code }}</td>
+            <td class="amount">{{ p.amount | money }}</td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('debts.delete_payment', payment_id=p.id) }}" class="action-code-form" data-confirm="Futa malipo haya?">
+                <button class="btn btn-sm btn-outline-danger">Futa</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted text-center py-3">Hakuna malipo.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const carSelect = document.getElementById('payment-car');
+const amountInput = document.getElementById('payment-amount');
+const hint = document.getElementById('payment-balance-hint');
+
+function updateBalanceHint() {
+  const opt = carSelect.options[carSelect.selectedIndex];
+  const balance = parseFloat(opt.dataset.balance || '0');
+  hint.textContent = `Deni lililobaki: ${balance.toLocaleString()}`;
+  amountInput.max = balance > 0 ? balance : 0;
+}
+
+carSelect.addEventListener('change', updateBalanceHint);
+updateBalanceHint();
+</script>
+{% endblock %}

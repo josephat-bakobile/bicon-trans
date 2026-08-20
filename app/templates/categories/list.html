@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Aina za Matumizi - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3">Aina za Matumizi (Expense Categories)</h4>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-panel">
+      <strong>Ongeza Aina</strong>
+      <form method="post" action="{{ url_for('categories.new') }}" class="mt-2">
+        <div class="mb-2">
+          <label class="form-label">Jina la Aina</label>
+          <input type="text" class="form-control text-uppercase" name="name" placeholder="mfano: MAFUTA" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
+          <input type="text" class="form-control" name="action_code" required>
+        </div>
+        <button class="btn btn-primary btn-sm">Ongeza</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card-panel">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Jina</th><th>Hali</th><th></th></tr></thead>
+        <tbody>
+          {% for cat in categories %}
+          <tr>
+            <td>{{ cat.name }}</td>
+            <td>
+              {% if cat.active %}<span class="badge text-bg-success">Active</span>
+              {% else %}<span class="badge text-bg-secondary">Imezimwa</span>{% endif %}
+            </td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('categories.toggle', category_id=cat.id) }}" class="action-code-form">
+                <button class="btn btn-sm btn-outline-secondary">{{ 'Zima' if cat.active else 'Washa' }}</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
