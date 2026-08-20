@@ -14,3 +14,8 @@ venv/
 .DS_Store
 *.swp
 .claude
+.htaccess
+.well-known
+passenger_wsgi.py
+stderr.log
+tmp
