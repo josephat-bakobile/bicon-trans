@@ -1,0 +1,14 @@
+[Unit]
+Description=BICON TRANS
+After=network.target
+
+[Service]
+Type=simple
+User=bicon
+WorkingDirectory=/home/bicon/Documents/MAGARI
+EnvironmentFile=/home/bicon/Documents/MAGARI/.env
+ExecStart=/home/bicon/Documents/MAGARI/.venv/bin/gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 4 wsgi:app
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
