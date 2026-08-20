@@ -15,3 +15,8 @@ venv/
 *.swp
 .claude
 .git
+.htaccess
+.well-known
+passenger_wsgi.py
+stderr.log
+tmp
