@@ -21,7 +21,7 @@ def index():
 
     recent_transactions = (
         CollectionTransaction.query.order_by(
-            CollectionTransaction.date.desc(), CollectionTransaction.id.desc()
+            CollectionTransaction.transaction_date.desc(), CollectionTransaction.id.desc()
         )
         .limit(8)
         .all()

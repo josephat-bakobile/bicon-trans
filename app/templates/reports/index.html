@@ -75,21 +75,22 @@
   </div>
   <div style="max-height: 320px; overflow-y: auto;">
   <table class="table table-sm table-money mb-0">
-    <thead><tr><th>Tarehe</th><th>Trans No</th><th>Gari</th><th class="amount">Kiasi</th><th>Maelezo</th></tr></thead>
+    <thead><tr><th>Tarehe ya Makusanyo</th><th>Tarehe ya Muamala</th><th>Trans No</th><th>Gari</th><th class="amount">Kiasi</th><th>Maelezo</th></tr></thead>
     <tbody>
       {% for r in collection_rows %}
       <tr>
         <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
+        <td>{{ r.trans_date.strftime('%d-%m-%Y') }}</td>
         <td>{{ r.trans_no }}</td>
         <td>{{ r.car }}</td>
         <td class="amount">{{ r.amount | money }}</td>
         <td class="text-muted small">{{ r.note }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="5" class="text-muted text-center py-3">Hakuna data.</td></tr>
+      <tr><td colspan="6" class="text-muted text-center py-3">Hakuna data.</td></tr>
       {% endfor %}
     </tbody>
-    <tfoot><tr class="table-light fw-bold"><td colspan="3">JUMLA</td><td class="amount">{{ collection_total | money }}</td><td></td></tr></tfoot>
+    <tfoot><tr class="table-light fw-bold"><td colspan="4">JUMLA</td><td class="amount">{{ collection_total | money }}</td><td></td></tr></tfoot>
   </table>
   </div>
 </div>

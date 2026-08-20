@@ -1,12 +1,19 @@
 from datetime import date
 
-from flask import Blueprint, Response, render_template, request
+from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 
-from ..export_excel import build_collections_excel, build_consumption_excel, build_summary_excel
-from ..export_pdf import build_collections_pdf, build_consumption_pdf, build_summary_pdf
-from ..models import Car, ExpenseCategory
+from ..export_excel import (
+    build_collections_excel,
+    build_consumption_excel,
+    build_shortfalls_excel,
+    build_summary_excel,
+)
+from ..export_pdf import build_collections_pdf, build_consumption_pdf, build_shortfalls_pdf, build_summary_pdf
+from ..extensions import db
+from ..models import Car, ExpenseCategory, ShortfallClearance
 from ..report_data import collections_rows, consumption_rows, summary_rows
-from ..utils import parse_date
+from ..security import require_action_code
+from ..utils import parse_date, shortfall_report
 
 bp = Blueprint("reports", __name__)
 
@@ -97,6 +104,54 @@ def consumption_pdf():
     rows, total = consumption_rows(start, end, car_id, category_id)
     buf = build_consumption_pdf(rows, total, start, end)
     return _send(buf, f"matumizi_{start}_{end}.pdf", "pdf")
+
+
+@bp.route("/shortfalls")
+def shortfalls():
+    start, end = _range()
+    rows = shortfall_report(start, end)
+    return render_template("reports/shortfalls.html", start=start, end=end, rows=rows)
+
+
+@bp.route("/shortfalls/clear", methods=["POST"])
+@require_action_code
+def clear_shortfall():
+    start = request.form.get("start", "")
+    end = request.form.get("end", "")
+    car_id = int(request.form["car_id"])
+    shortfall_date = parse_date(request.form.get("date"))
+    description = (request.form.get("description") or "").strip()
+
+    if not description:
+        flash("Weka maelezo ya upungufu kabla ya kufafanua.", "danger")
+    elif not shortfall_date:
+        flash("Tarehe si sahihi.", "danger")
+    else:
+        existing = ShortfallClearance.query.filter_by(car_id=car_id, date=shortfall_date).first()
+        if existing:
+            existing.description = description
+        else:
+            db.session.add(ShortfallClearance(car_id=car_id, date=shortfall_date, description=description))
+        db.session.commit()
+        flash("Upungufu umefafanuliwa.", "success")
+
+    return redirect(url_for("reports.shortfalls", start=start, end=end))
+
+
+@bp.route("/shortfalls.xlsx")
+def shortfalls_xlsx():
+    start, end = _range()
+    rows = shortfall_report(start, end)
+    buf = build_shortfalls_excel(rows, start, end)
+    return _send(buf, f"upungufu_{start}_{end}.xlsx", "xlsx")
+
+
+@bp.route("/shortfalls.pdf")
+def shortfalls_pdf():
+    start, end = _range()
+    rows = shortfall_report(start, end)
+    buf = build_shortfalls_pdf(rows, start, end)
+    return _send(buf, f"upungufu_{start}_{end}.pdf", "pdf")
 
 
 _MIME = {

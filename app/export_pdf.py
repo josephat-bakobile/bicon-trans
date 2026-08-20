@@ -73,12 +73,72 @@ def build_summary_pdf(rows, totals, start, end):
 def build_collections_pdf(rows, total, start, end):
     buf = BytesIO()
     doc = _doc(buf)
-    data = [["TAREHE", "TRANS NO", "GARI", "KIASI", "MAELEZO"]]
+    data = [["TAREHE YA MAKUSANYO", "TAREHE YA MUAMALA", "TRANS NO", "GARI", "KIASI", "MAELEZO"]]
     for r in rows:
-        data.append([r["date"].isoformat(), r["trans_no"], r["car"], _money(r["amount"]), r["note"]])
-    data.append(["", "", "", _money(total), "JUMLA"])
+        data.append(
+            [
+                r["date"].isoformat(),
+                r["trans_date"].isoformat(),
+                r["trans_no"],
+                r["car"],
+                _money(r["amount"]),
+                r["note"],
+            ]
+        )
+    data.append(["", "", "", "", _money(total), "JUMLA"])
     elements = _header("Ripoti ya Makusanyo", f"{start.isoformat()} hadi {end.isoformat()}")
-    elements.append(_table(data, col_widths=[3 * cm, 3 * cm, 2.5 * cm, 3 * cm, None]))
+    elements.append(_table(data, col_widths=[2.7 * cm, 2.7 * cm, 2.7 * cm, 2 * cm, 2.5 * cm, None]))
+    doc.build(elements)
+    buf.seek(0)
+    return buf
+
+
+def build_reconciliation_pdf(rows, total, start, end):
+    buf = BytesIO()
+    doc = _doc(buf)
+    data = [["TAREHE YA MUAMALA", "TRANS NO", "JUMLA", "MAELEZO"]]
+    for r in rows:
+        data.append(
+            [
+                r["transaction_date"].isoformat(),
+                r["trans_no"],
+                _money(r["total"]),
+                r["note"],
+            ]
+        )
+    data.append(["", "JUMLA KUU", _money(total), ""])
+    elements = _header("Ripoti ya Upatanisho na Wakala wa Benki", f"{start.isoformat()} hadi {end.isoformat()}")
+    elements.append(_table(data, col_widths=[3.5 * cm, 3.5 * cm, 3.5 * cm, None]))
+    doc.build(elements)
+    buf.seek(0)
+    return buf
+
+
+def build_shortfalls_pdf(rows, start, end):
+    buf = BytesIO()
+    doc = _doc(buf)
+    data = [["TAREHE", "GARI", "LENGO", "KILICHOKUSANYWA", "UPUNGUFU", "HALI", "MAELEZO"]]
+    total_shortfall = 0.0
+    open_count = 0
+    for r in rows:
+        cleared = r["clearance"] is not None
+        if not cleared:
+            open_count += 1
+        total_shortfall += r["shortfall"]
+        data.append(
+            [
+                r["date"].isoformat(),
+                r["car"].code,
+                _money(r["target"]),
+                _money(r["collected"]),
+                _money(r["shortfall"]),
+                "Imefafanuliwa" if cleared else "Wazi",
+                r["clearance"].description if cleared else "",
+            ]
+        )
+    data.append(["", "", "", "JUMLA", _money(total_shortfall), f"{open_count} wazi", ""])
+    elements = _header("Ripoti ya Upungufu wa Makusanyo", f"{start.isoformat()} hadi {end.isoformat()}")
+    elements.append(_table(data, col_widths=[2.5 * cm, 2 * cm, 2.5 * cm, 3 * cm, 2.5 * cm, 2.5 * cm, None]))
     doc.build(elements)
     buf.seek(0)
     return buf

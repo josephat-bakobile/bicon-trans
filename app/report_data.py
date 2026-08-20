@@ -1,5 +1,5 @@
 from .extensions import db
-from .models import CollectionLine, CollectionTransaction, ConsumptionEntry
+from .models import Car, CollectionLine, CollectionTransaction, ConsumptionEntry
 from .utils import period_totals
 
 
@@ -19,21 +19,25 @@ def summary_rows(start, end):
 
 
 def collections_rows(start, end, car_id=None):
+    """One row per car contribution, keyed off collection_date (the day the amount
+    counts toward), not the transaction's bank date."""
     q = (
         db.session.query(CollectionLine, CollectionTransaction)
         .join(CollectionTransaction, CollectionLine.transaction_id == CollectionTransaction.id)
-        .filter(CollectionTransaction.date.between(start, end))
+        .join(Car, CollectionLine.car_id == Car.id)
+        .filter(CollectionLine.collection_date.between(start, end))
     )
     if car_id:
         q = q.filter(CollectionLine.car_id == car_id)
-    q = q.order_by(CollectionTransaction.date.asc(), CollectionTransaction.id.asc())
+    q = q.order_by(CollectionLine.collection_date.asc(), Car.code.asc(), CollectionTransaction.id.asc())
 
     rows = []
     total = 0.0
     for line, txn in q.all():
         rows.append(
             {
-                "date": txn.date,
+                "date": line.collection_date,
+                "trans_date": txn.transaction_date,
                 "trans_no": txn.trans_no,
                 "car": line.car.code,
                 "amount": line.amount,
@@ -44,13 +48,38 @@ def collections_rows(start, end, car_id=None):
     return rows, total
 
 
+def reconciliation_rows(start, end):
+    """Transaction-level view (no car breakdown) for matching against the bank
+    agent's own records — keyed off transaction_date, the bank/handover date."""
+    txns = (
+        CollectionTransaction.query.filter(CollectionTransaction.transaction_date.between(start, end))
+        .order_by(CollectionTransaction.transaction_date.asc(), CollectionTransaction.id.asc())
+        .all()
+    )
+    rows = []
+    total = 0.0
+    for txn in txns:
+        rows.append(
+            {
+                "transaction_date": txn.transaction_date,
+                "trans_no": txn.trans_no,
+                "total": txn.total,
+                "note": txn.note or "",
+            }
+        )
+        total += txn.total
+    return rows, total
+
+
 def consumption_rows(start, end, car_id=None, category_id=None):
-    q = ConsumptionEntry.query.filter(ConsumptionEntry.date.between(start, end))
+    q = ConsumptionEntry.query.join(Car, ConsumptionEntry.car_id == Car.id).filter(
+        ConsumptionEntry.date.between(start, end)
+    )
     if car_id:
         q = q.filter(ConsumptionEntry.car_id == car_id)
     if category_id:
         q = q.filter(ConsumptionEntry.category_id == category_id)
-    q = q.order_by(ConsumptionEntry.date.asc(), ConsumptionEntry.id.asc())
+    q = q.order_by(ConsumptionEntry.date.asc(), Car.code.asc(), ConsumptionEntry.id.asc())
 
     rows = []
     total = 0.0

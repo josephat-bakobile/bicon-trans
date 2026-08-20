@@ -5,7 +5,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from ..extensions import db
 from ..models import Car, ConsumptionEntry, ExpenseCategory
 from ..security import require_action_code
-from ..utils import parse_date
+from ..utils import parse_date, validate_entry_date
 
 bp = Blueprint("consumption", __name__)
 
@@ -47,8 +47,14 @@ def new():
     categories = ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all()
 
     if request.method == "POST":
+        entry_date = parse_date(request.form.get("date"), date.today())
+        error = validate_entry_date(entry_date)
+        if error:
+            flash(error, "danger")
+            return render_template("consumption/form.html", cars=cars, categories=categories, entry=None)
+
         entry = ConsumptionEntry(
-            date=parse_date(request.form.get("date"), date.today()),
+            date=entry_date,
             car_id=int(request.form["car_id"]),
             category_id=int(request.form["category_id"]),
             amount=float(request.form["amount"]),
@@ -70,7 +76,13 @@ def edit(entry_id):
     categories = ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all()
 
     if request.method == "POST":
-        entry.date = parse_date(request.form.get("date"), entry.date)
+        new_date = parse_date(request.form.get("date"), entry.date)
+        error = validate_entry_date(new_date)
+        if error:
+            flash(error, "danger")
+            return render_template("consumption/form.html", cars=cars, categories=categories, entry=entry)
+
+        entry.date = new_date
         entry.car_id = int(request.form["car_id"])
         entry.category_id = int(request.form["category_id"])
         entry.amount = float(request.form["amount"])

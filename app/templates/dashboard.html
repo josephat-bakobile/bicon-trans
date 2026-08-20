@@ -122,8 +122,8 @@
           {% for t in recent_transactions %}
           <tr>
             <td><a href="{{ url_for('collections.edit', txn_id=t.id) }}">{{ t.trans_no }}</a></td>
-            <td>{{ t.date.strftime('%d-%m-%Y') }}</td>
-            <td>{{ t.lines | map(attribute='car.code') | join(', ') }}</td>
+            <td>{{ t.transaction_date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ t.lines | sort(attribute='car.code') | map(attribute='car.code') | join(', ') }}</td>
             <td class="amount">{{ t.total | money }}</td>
           </tr>
           {% else %}

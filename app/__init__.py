@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -44,6 +44,7 @@ def create_app():
     from .routes.cars import bp as cars_bp
     from .routes.categories import bp as categories_bp
     from .routes.reports import bp as reports_bp
+    from .routes.reconciliation import bp as reconciliation_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -53,8 +54,21 @@ def create_app():
     app.register_blueprint(cars_bp, url_prefix="/cars")
     app.register_blueprint(categories_bp, url_prefix="/categories")
     app.register_blueprint(reports_bp, url_prefix="/reports")
+    app.register_blueprint(reconciliation_bp, url_prefix="/reconciliation")
 
     app.jinja_env.filters["money"] = lambda v: f"{(v or 0):,.0f}"
+
+    from .utils import MAX_BACKDATE_DAYS, transaction_locked
+
+    app.jinja_env.globals["transaction_locked"] = transaction_locked
+
+    @app.context_processor
+    def _inject_date_bounds():
+        today = date.today()
+        return {
+            "today_iso": today.isoformat(),
+            "min_entry_date_iso": (today - timedelta(days=MAX_BACKDATE_DAYS)).isoformat(),
+        }
 
     @app.before_request
     def _require_login():
@@ -89,6 +103,44 @@ def _migrate_schema():
             )
         )
         db.session.commit()
+
+    car_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(cars)")).fetchall()]
+    if "daily_target" not in car_cols:
+        db.session.execute(text("ALTER TABLE cars ADD COLUMN daily_target FLOAT NOT NULL DEFAULT 0"))
+        db.session.commit()
+
+    txn_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(collection_transactions)")).fetchall()]
+    if "transaction_date" not in txn_cols and "date" in txn_cols:
+        db.session.execute(text("ALTER TABLE collection_transactions RENAME COLUMN date TO transaction_date"))
+        db.session.commit()
+
+    line_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(collection_lines)")).fetchall()]
+    if "collection_date" not in line_cols:
+        db.session.execute(text("ALTER TABLE collection_lines ADD COLUMN collection_date DATE"))
+        db.session.commit()
+
+        db.session.execute(
+            text(
+                "UPDATE collection_lines SET collection_date = ("
+                "SELECT transaction_date FROM collection_transactions "
+                "WHERE collection_transactions.id = collection_lines.transaction_id"
+                ")"
+            )
+        )
+        db.session.commit()
+
+    # Heals orphaned collection_lines left behind by a pre-fix bug where a bulk
+    # delete on collection_transactions skipped the ORM cascade. Safe to run every
+    # startup: a line only matches here if its parent transaction no longer exists.
+    orphaned = db.session.execute(
+        text(
+            "DELETE FROM collection_lines WHERE transaction_id NOT IN "
+            "(SELECT id FROM collection_transactions)"
+        )
+    )
+    if orphaned.rowcount:
+        print(f"[migrate] removed {orphaned.rowcount} orphaned collection_lines row(s)", flush=True)
+    db.session.commit()
 
 
 def _seed_defaults():

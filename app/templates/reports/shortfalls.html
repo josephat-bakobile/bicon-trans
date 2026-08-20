@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Upungufu wa Makusanyo - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3">Ripoti ya Upungufu wa Makusanyo</h4>
+<p class="text-muted small mb-3">
+  Siku ambazo gari halikuleta makusanyo kabisa, au lililoleta ni pungufu ya Kiasi cha Lengo la Siku
+  kilichowekwa kwenye ukurasa wa <a href="{{ url_for('cars.list_view') }}">Magari</a>.
+</p>
+
+<form class="row g-2 mb-3 card-panel" method="get">
+  <div class="col-auto">
+    <label class="form-label small mb-0">Kuanzia</label>
+    <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">Hadi</label>
+    <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
+  </div>
+  <div class="col-auto d-flex align-items-end gap-2">
+    <button class="btn btn-outline-secondary">Onyesha</button>
+    <a class="btn btn-outline-primary" href="{{ url_for('reports.shortfalls_xlsx', start=start.isoformat(), end=end.isoformat()) }}">Excel</a>
+    <a class="btn btn-outline-danger" href="{{ url_for('reports.shortfalls_pdf', start=start.isoformat(), end=end.isoformat()) }}">PDF</a>
+  </div>
+</form>
+
+<div class="card-panel">
+  <table class="table table-sm table-money align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Tarehe</th>
+        <th>Gari</th>
+        <th class="amount">Lengo</th>
+        <th class="amount">Kilichokusanywa</th>
+        <th class="amount">Upungufu</th>
+        <th>Hali</th>
+        <th>Maelezo / Fafanua</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
+        <td>{{ r.car.code }}</td>
+        <td class="amount">{{ r.target | money }}</td>
+        <td class="amount">{{ r.collected | money }}</td>
+        <td class="amount text-danger fw-bold">{{ r.shortfall | money }}</td>
+        <td>
+          {% if r.clearance %}
+            <span class="badge text-bg-success">Imefafanuliwa</span>
+          {% else %}
+            <span class="badge text-bg-danger">Wazi</span>
+          {% endif %}
+        </td>
+        <td style="min-width:280px;">
+          {% if r.clearance %}
+            <span class="small text-muted">{{ r.clearance.description }}</span>
+          {% else %}
+            <form method="post" action="{{ url_for('reports.clear_shortfall') }}" class="d-flex gap-1">
+              <input type="hidden" name="car_id" value="{{ r.car.id }}">
+              <input type="hidden" name="date" value="{{ r.date.isoformat() }}">
+              <input type="hidden" name="start" value="{{ start.isoformat() }}">
+              <input type="hidden" name="end" value="{{ end.isoformat() }}">
+              <input type="text" name="description" class="form-control form-control-sm" placeholder="Maelezo ya upungufu" required>
+              <input type="text" name="action_code" class="form-control form-control-sm" placeholder="Msimbo" style="max-width:110px;" required>
+              <button class="btn btn-sm btn-outline-primary text-nowrap">Fafanua</button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted text-center py-4">Hakuna upungufu katika kipindi hiki.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

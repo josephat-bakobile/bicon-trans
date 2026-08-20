@@ -32,7 +32,7 @@
     <div class="card-panel mb-3">
       <strong>Ongeza Deni (Anadaiwa)</strong>
       <form method="post" action="{{ url_for('debts.new_debt') }}" class="row g-2 mt-1">
-        <div class="col-6"><input type="date" class="form-control" name="date" required></div>
+        <div class="col-6"><input type="date" class="form-control" name="date" required min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></div>
         <div class="col-6">
           <select class="form-select" name="car_id" required>
             {% for c in cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
@@ -76,7 +76,7 @@
     <div class="card-panel mb-3">
       <strong>Ongeza Malipo ya Deni</strong>
       <form method="post" action="{{ url_for('debts.new_payment') }}" class="row g-2 mt-1" id="payment-form">
-        <div class="col-6"><input type="date" class="form-control" name="date" required></div>
+        <div class="col-6"><input type="date" class="form-control" name="date" required min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></div>
         <div class="col-6">
           <select class="form-select" name="car_id" id="payment-car" required>
             {% for r in balances.rows %}

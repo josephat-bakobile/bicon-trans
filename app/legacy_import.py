@@ -120,13 +120,18 @@ def import_legacy(xlsx_path):
             if collection_lines:
                 trans_counter += 1
                 txn = CollectionTransaction(
-                    date=entry_date, note="Imported from legacy sheet",
+                    transaction_date=entry_date, note="Imported from legacy sheet",
                     trans_no=f"TRX-{trans_counter:05d}",
                 )
                 db.session.add(txn)
                 db.session.flush()
                 for car, amount, note in collection_lines:
-                    db.session.add(CollectionLine(transaction_id=txn.id, car_id=car.id, amount=amount, note=note))
+                    db.session.add(
+                        CollectionLine(
+                            transaction_id=txn.id, car_id=car.id, amount=amount, note=note,
+                            collection_date=entry_date,
+                        )
+                    )
                 imported_days += 1
 
         # Opening debt balances from the MADENI/INADAIWA rows, if present.

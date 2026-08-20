@@ -1,11 +1,43 @@
 import calendar
 import re
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy import func
 
 from .extensions import db
-from .models import Car, CollectionLine, CollectionTransaction, ConsumptionEntry, Debt, DebtPayment
+from .models import (
+    Car,
+    CollectionLine,
+    CollectionTransaction,
+    ConsumptionEntry,
+    Debt,
+    DebtPayment,
+    ShortfallClearance,
+)
+
+
+TRANSACTION_EDIT_WINDOW_DAYS = 7
+MAX_BACKDATE_DAYS = 7
+
+
+def transaction_locked(txn_date):
+    """Collection transactions older than the edit window can no longer be changed."""
+    return (date.today() - txn_date).days > TRANSACTION_EDIT_WINDOW_DAYS
+
+
+def min_entry_date():
+    return date.today() - timedelta(days=MAX_BACKDATE_DAYS)
+
+
+def validate_entry_date(d, label="Tarehe"):
+    """None if d is a valid date for new/edited data entry (today or within the last
+    MAX_BACKDATE_DAYS days), otherwise a Swahili error message explaining why not."""
+    today = date.today()
+    if d > today:
+        return f"{label} haiwezi kuwa baadaye ya leo ({today.strftime('%d-%m-%Y')})."
+    if d < min_entry_date():
+        return f"{label} haiwezi kuwa zaidi ya siku {MAX_BACKDATE_DAYS} zilizopita."
+    return None
 
 
 def next_trans_no():
@@ -39,16 +71,14 @@ def period_totals(start=None, end=None):
     grand_collected = 0.0
     grand_consumed = 0.0
     for car in cars:
-        coll_q = (
-            db.session.query(func.coalesce(func.sum(CollectionLine.amount), 0.0))
-            .join(CollectionTransaction, CollectionLine.transaction_id == CollectionTransaction.id)
-            .filter(CollectionLine.car_id == car.id)
+        coll_q = db.session.query(func.coalesce(func.sum(CollectionLine.amount), 0.0)).filter(
+            CollectionLine.car_id == car.id
         )
         cons_q = db.session.query(func.coalesce(func.sum(ConsumptionEntry.amount), 0.0)).filter(
             ConsumptionEntry.car_id == car.id
         )
         if start and end:
-            coll_q = coll_q.filter(CollectionTransaction.date.between(start, end))
+            coll_q = coll_q.filter(CollectionLine.collection_date.between(start, end))
             cons_q = cons_q.filter(ConsumptionEntry.date.between(start, end))
 
         collected = coll_q.scalar() or 0.0
@@ -167,8 +197,7 @@ def car_month_matrix(months=6):
             start, end = month_bounds(y, m)
             collected = (
                 db.session.query(func.coalesce(func.sum(CollectionLine.amount), 0.0))
-                .join(CollectionTransaction, CollectionLine.transaction_id == CollectionTransaction.id)
-                .filter(CollectionLine.car_id == car.id, CollectionTransaction.date.between(start, end))
+                .filter(CollectionLine.car_id == car.id, CollectionLine.collection_date.between(start, end))
                 .scalar()
                 or 0.0
             )
@@ -179,3 +208,46 @@ def car_month_matrix(months=6):
         rows.append({"car": car, "amounts": values, "total": row_total})
 
     return {"labels": labels, "rows": rows, "col_totals": col_totals, "grand_total": grand_total}
+
+
+def shortfall_report(start, end):
+    """Every (car, date) in range where a car with a daily_target either collected
+    nothing or collected less than that target, whether or not it's been explained."""
+    cars = Car.query.filter(Car.daily_target > 0).order_by(Car.code).all()
+    if not cars:
+        return []
+    car_ids = [c.id for c in cars]
+
+    collected_rows = (
+        db.session.query(CollectionLine.collection_date, CollectionLine.car_id, func.sum(CollectionLine.amount))
+        .filter(CollectionLine.car_id.in_(car_ids), CollectionLine.collection_date.between(start, end))
+        .group_by(CollectionLine.collection_date, CollectionLine.car_id)
+        .all()
+    )
+    collected_map = {(car_id, d): total for d, car_id, total in collected_rows}
+
+    clearances = ShortfallClearance.query.filter(
+        ShortfallClearance.car_id.in_(car_ids), ShortfallClearance.date.between(start, end)
+    ).all()
+    clearance_map = {(c.car_id, c.date): c for c in clearances}
+
+    rows = []
+    d = start
+    while d <= end:
+        for car in cars:
+            collected = collected_map.get((car.id, d), 0.0)
+            if collected < car.daily_target:
+                clearance = clearance_map.get((car.id, d))
+                rows.append(
+                    {
+                        "date": d,
+                        "car": car,
+                        "target": car.daily_target,
+                        "collected": collected,
+                        "shortfall": car.daily_target - collected,
+                        "clearance": clearance,
+                    }
+                )
+        d += timedelta(days=1)
+    rows.sort(key=lambda r: (r["date"], r["car"].code))
+    return rows

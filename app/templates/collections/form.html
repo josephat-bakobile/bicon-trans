@@ -4,7 +4,7 @@
 
 <h4 class="mb-3">{{ 'Hariri Muamala ' + values.trans_no if is_edit else 'Muamala Mpya wa Makusanyo' }}</h4>
 
-<div class="card-panel" style="max-width: 760px;">
+<div class="card-panel" style="max-width: 920px;">
   <form method="post">
     <div class="row g-3 mb-3">
       <div class="col-md-4">
@@ -12,8 +12,10 @@
         <input type="text" class="form-control" name="trans_no" required value="{{ values.trans_no }}">
       </div>
       <div class="col-md-4">
-        <label class="form-label">Tarehe</label>
-        <input type="date" class="form-control" name="date" required value="{{ values.date }}">
+        <label class="form-label">Tarehe ya Muamala (Benki)</label>
+        <input type="date" class="form-control" id="txn-date" name="date" required value="{{ values.date }}"
+               min="{{ min_entry_date_iso }}" max="{{ today_iso }}">
+        <div class="form-text">Tarehe ya kupeleka fedha kwa wakala wa benki (kwa ajili ya upatanisho).</div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Maelezo ya Muamala (si lazima)</label>
@@ -22,8 +24,20 @@
     </div>
 
     <label class="form-label">Mgawanyo kwa Magari</label>
+    <p class="text-muted small">
+      Gari moja linaweza kuonekana zaidi ya mara moja likiwa na tarehe tofauti za makusanyo, mfano dereva
+      akilipa deni la siku iliyopita pamoja na la leo katika muamala huo huo.
+    </p>
     <table class="table table-sm" id="lines-table">
-      <thead><tr><th style="width:30%">Gari</th><th style="width:20%">Kiasi</th><th>Maelezo</th><th></th></tr></thead>
+      <thead>
+        <tr>
+          <th style="width:20%">Gari</th>
+          <th style="width:20%">Tarehe ya Makusanyo</th>
+          <th style="width:15%">Kiasi</th>
+          <th>Maelezo</th>
+          <th></th>
+        </tr>
+      </thead>
       <tbody id="lines-body">
         {% for l in values.lines %}
         <tr>
@@ -34,6 +48,8 @@
               {% endfor %}
             </select>
           </td>
+          <td><input type="date" class="form-control" name="collection_date[]" value="{{ l.collection_date }}" required
+                     min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></td>
           <td><input type="number" step="0.01" min="0" class="form-control" name="amount[]" value="{{ l.amount }}" required></td>
           <td><input type="text" class="form-control" name="note[]" value="{{ l.note or '' }}"></td>
           <td><button type="button" class="btn btn-sm btn-outline-danger remove-row">&times;</button></td>
@@ -62,6 +78,8 @@
         {% for c in cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
       </select>
     </td>
+    <td><input type="date" class="form-control" name="collection_date[]" required
+               min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></td>
     <td><input type="number" step="0.01" min="0" class="form-control" name="amount[]" required></td>
     <td><input type="text" class="form-control" name="note[]"></td>
     <td><button type="button" class="btn btn-sm btn-outline-danger remove-row">&times;</button></td>
@@ -74,10 +92,18 @@
 <script>
 const body = document.getElementById('lines-body');
 const tmpl = document.getElementById('row-template');
+const txnDate = document.getElementById('txn-date');
 
-document.getElementById('add-row').addEventListener('click', () => {
-  body.appendChild(tmpl.content.cloneNode(true));
-});
+function addRow() {
+  const row = tmpl.content.cloneNode(true);
+  const dateInput = row.querySelector('input[name="collection_date[]"]');
+  if (dateInput && txnDate.value) {
+    dateInput.value = txnDate.value;
+  }
+  body.appendChild(row);
+}
+
+document.getElementById('add-row').addEventListener('click', addRow);
 
 body.addEventListener('click', (e) => {
   if (e.target.classList.contains('remove-row')) {
@@ -86,7 +112,7 @@ body.addEventListener('click', (e) => {
 });
 
 if (body.children.length === 0) {
-  body.appendChild(tmpl.content.cloneNode(true));
+  addRow();
 }
 </script>
 {% endblock %}

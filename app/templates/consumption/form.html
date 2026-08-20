@@ -8,7 +8,8 @@
   <form method="post">
     <div class="mb-3">
       <label class="form-label">Tarehe</label>
-      <input type="date" class="form-control" name="date" required value="{{ entry.date.isoformat() if entry else '' }}">
+      <input type="date" class="form-control" name="date" required value="{{ entry.date.isoformat() if entry else '' }}"
+             min="{{ min_entry_date_iso }}" max="{{ today_iso }}">
     </div>
     <div class="mb-3">
       <label class="form-label">Gari</label>

@@ -10,6 +10,7 @@ class Car(db.Model):
     code = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100))
     active = db.Column(db.Boolean, default=True, nullable=False)
+    daily_target = db.Column(db.Float, default=0.0, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
@@ -29,11 +30,16 @@ class ExpenseCategory(db.Model):
 
 
 class CollectionTransaction(db.Model):
+    """The bank-facing event: one deposit/handover to the agent, reconciled against
+    the bank statement by trans_no + transaction_date. May bundle contributions from
+    several cars, and each car's contribution may itself cover more than one day's
+    target (see CollectionLine.collection_date)."""
+
     __tablename__ = "collection_transactions"
 
     id = db.Column(db.Integer, primary_key=True)
     trans_no = db.Column(db.String(30), unique=True, nullable=False)
-    date = db.Column(db.Date, nullable=False, default=date_cls.today)
+    transaction_date = db.Column(db.Date, nullable=False, default=date_cls.today)
     note = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -51,6 +57,11 @@ class CollectionTransaction(db.Model):
 
 
 class CollectionLine(db.Model):
+    """One car's contribution within a transaction. collection_date is the day this
+    amount counts toward for that car's daily_target — independent of the parent
+    transaction's bank date, so a driver catching up on an earlier shortfall can have
+    the same transaction split across several collection_date rows for one car."""
+
     __tablename__ = "collection_lines"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +69,7 @@ class CollectionLine(db.Model):
         db.Integer, db.ForeignKey("collection_transactions.id"), nullable=False
     )
     car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
+    collection_date = db.Column(db.Date, nullable=False, default=date_cls.today)
     amount = db.Column(db.Float, nullable=False)
     note = db.Column(db.String(255))
 
@@ -105,6 +117,23 @@ class DebtPayment(db.Model):
     car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    car = db.relationship("Car")
+
+
+class ShortfallClearance(db.Model):
+    """Explanation recorded against a car/date whose collection fell short of
+    (or missed entirely) that car's daily_target. Clears the day off the
+    open-shortfalls report without deleting the underlying shortage."""
+
+    __tablename__ = "shortfall_clearances"
+    __table_args__ = (db.UniqueConstraint("car_id", "date", name="uq_shortfall_car_date"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    description = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")

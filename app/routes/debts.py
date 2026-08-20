@@ -5,7 +5,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from ..extensions import db
 from ..models import Car, Debt, DebtPayment
 from ..security import require_action_code
-from ..utils import car_debt_balance, debt_balances, parse_date
+from ..utils import car_debt_balance, debt_balances, parse_date, validate_entry_date
 
 bp = Blueprint("debts", __name__)
 
@@ -22,9 +22,15 @@ def index():
 @bp.route("/new", methods=["POST"])
 @require_action_code
 def new_debt():
+    debt_date = parse_date(request.form.get("date"), date.today())
+    error = validate_entry_date(debt_date)
+    if error:
+        flash(error, "danger")
+        return redirect(url_for("debts.index"))
+
     db.session.add(
         Debt(
-            date=parse_date(request.form.get("date"), date.today()),
+            date=debt_date,
             car_id=int(request.form["car_id"]),
             amount=float(request.form["amount"]),
             description=(request.form.get("description") or "").strip() or None,
@@ -61,9 +67,15 @@ def new_payment():
         )
         return redirect(url_for("debts.index"))
 
+    payment_date = parse_date(request.form.get("date"), date.today())
+    error = validate_entry_date(payment_date)
+    if error:
+        flash(error, "danger")
+        return redirect(url_for("debts.index"))
+
     db.session.add(
         DebtPayment(
-            date=parse_date(request.form.get("date"), date.today()),
+            date=payment_date,
             car_id=car_id,
             amount=amount,
             description=(request.form.get("description") or "").strip() or None,
