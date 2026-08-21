@@ -2,12 +2,12 @@
 {% block title %}Magari - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Magari</h4>
+<h4 class="mb-3"><i class="bi bi-truck text-primary"></i> Magari</h4>
 
 <div class="row g-4">
   <div class="col-lg-4">
     <div class="card-panel">
-      <strong>Ongeza Gari</strong>
+      <strong><i class="bi bi-plus-circle text-primary"></i> Ongeza Gari</strong>
       <form method="post" action="{{ url_for('cars.new') }}" class="mt-2">
         <div class="mb-2">
           <label class="form-label">Namba ya Gari (code)</label>
@@ -30,7 +30,7 @@
           <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
           <input type="text" class="form-control" name="action_code" required>
         </div>
-        <button class="btn btn-primary btn-sm">Ongeza</button>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ongeza</button>
       </form>
     </div>
   </div>
@@ -48,7 +48,7 @@
                 <input type="text" name="driver_name" value="{{ c.driver_name or '' }}"
                        class="form-control form-control-sm" style="max-width:120px;" placeholder="Dereva">
                 <input type="text" name="action_code" placeholder="Msimbo" class="form-control form-control-sm" style="max-width:100px;" required>
-                <button class="btn btn-sm btn-outline-primary">Hifadhi</button>
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
               </form>
             </td>
             <td class="amount">
@@ -56,7 +56,7 @@
                 <input type="number" step="0.01" min="0" name="daily_target" value="{{ c.daily_target }}"
                        class="form-control form-control-sm" style="max-width:110px;">
                 <input type="text" name="action_code" placeholder="Msimbo" class="form-control form-control-sm" style="max-width:100px;" required>
-                <button class="btn btn-sm btn-outline-primary">Hifadhi</button>
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
               </form>
             </td>
             <td>
@@ -65,7 +65,9 @@
             </td>
             <td class="text-end">
               <form method="post" action="{{ url_for('cars.toggle', car_id=c.id) }}" class="action-code-form">
-                <button class="btn btn-sm btn-outline-secondary">{{ 'Zima' if c.active else 'Washa' }}</button>
+                <button class="btn btn-sm btn-outline-secondary">
+                  <i class="bi {{ 'bi-toggle-off' if c.active else 'bi-toggle-on' }}"></i> {{ 'Zima' if c.active else 'Washa' }}
+                </button>
               </form>
             </td>
           </tr>

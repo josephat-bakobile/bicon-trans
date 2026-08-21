@@ -2,10 +2,10 @@
 {% block title %}Madeni - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Madeni (Debt Tracking)</h4>
+<h4 class="mb-3"><i class="bi bi-wallet2 text-primary"></i> Madeni (Debt Tracking)</h4>
 
 <div class="card-panel mb-4">
-  <strong>Salio la Madeni kwa Gari</strong>
+  <strong><i class="bi bi-list-ul text-primary"></i> Salio la Madeni kwa Gari</strong>
   <table class="table table-sm table-money mt-2 mb-0">
     <thead><tr><th>Gari</th><th class="amount">Anadaiwa (Jumla)</th><th class="amount">Amelipa (Jumla)</th><th class="amount">Baki</th></tr></thead>
     <tbody>
@@ -30,7 +30,7 @@
 <div class="row g-4">
   <div class="col-lg-6">
     <div class="card-panel mb-3">
-      <strong>Ongeza Deni (Anadaiwa)</strong>
+      <strong><i class="bi bi-plus-circle text-danger"></i> Ongeza Deni (Anadaiwa)</strong>
       <form method="post" action="{{ url_for('debts.new_debt') }}" class="row g-2 mt-1">
         <div class="col-6"><input type="date" class="form-control" name="date" required min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></div>
         <div class="col-6">
@@ -44,12 +44,12 @@
           <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
           <input type="text" class="form-control" name="action_code" required>
         </div>
-        <div class="col-12"><button class="btn btn-primary btn-sm">Hifadhi Deni</button></div>
+        <div class="col-12"><button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Hifadhi Deni</button></div>
       </form>
     </div>
 
     <div class="card-panel">
-      <strong>Madeni ya Hivi Karibuni</strong>
+      <strong><i class="bi bi-clock-history text-primary"></i> Madeni ya Hivi Karibuni</strong>
       <table class="table table-sm table-money mt-2 mb-0">
         <thead><tr><th>Tarehe</th><th>Gari</th><th class="amount">Kiasi</th><th></th></tr></thead>
         <tbody>
@@ -60,7 +60,7 @@
             <td class="amount">{{ d.amount | money }}</td>
             <td class="text-end">
               <form method="post" action="{{ url_for('debts.delete_debt', debt_id=d.id) }}" class="action-code-form" data-confirm="Futa deni hili?">
-                <button class="btn btn-sm btn-outline-danger">Futa</button>
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
               </form>
             </td>
           </tr>
@@ -74,7 +74,7 @@
 
   <div class="col-lg-6">
     <div class="card-panel mb-3">
-      <strong>Ongeza Malipo ya Deni</strong>
+      <strong><i class="bi bi-plus-circle text-success"></i> Ongeza Malipo ya Deni</strong>
       <form method="post" action="{{ url_for('debts.new_payment') }}" class="row g-2 mt-1" id="payment-form">
         <div class="col-6"><input type="date" class="form-control" name="date" required min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></div>
         <div class="col-6">
@@ -93,12 +93,12 @@
           <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
           <input type="text" class="form-control" name="action_code" required>
         </div>
-        <div class="col-12"><button class="btn btn-primary btn-sm">Hifadhi Malipo</button></div>
+        <div class="col-12"><button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Hifadhi Malipo</button></div>
       </form>
     </div>
 
     <div class="card-panel">
-      <strong>Malipo ya Hivi Karibuni</strong>
+      <strong><i class="bi bi-clock-history text-primary"></i> Malipo ya Hivi Karibuni</strong>
       <table class="table table-sm table-money mt-2 mb-0">
         <thead><tr><th>Tarehe</th><th>Gari</th><th class="amount">Kiasi</th><th></th></tr></thead>
         <tbody>
@@ -109,7 +109,7 @@
             <td class="amount">{{ p.amount | money }}</td>
             <td class="text-end">
               <form method="post" action="{{ url_for('debts.delete_payment', payment_id=p.id) }}" class="action-code-form" data-confirm="Futa malipo haya?">
-                <button class="btn btn-sm btn-outline-danger">Futa</button>
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
               </form>
             </td>
           </tr>

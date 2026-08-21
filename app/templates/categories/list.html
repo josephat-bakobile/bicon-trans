@@ -2,12 +2,12 @@
 {% block title %}Aina za Matumizi - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Aina za Matumizi (Expense Categories)</h4>
+<h4 class="mb-3"><i class="bi bi-tags text-primary"></i> Aina za Matumizi (Expense Categories)</h4>
 
 <div class="row g-4">
   <div class="col-lg-4">
     <div class="card-panel">
-      <strong>Ongeza Aina</strong>
+      <strong><i class="bi bi-plus-circle text-primary"></i> Ongeza Aina</strong>
       <form method="post" action="{{ url_for('categories.new') }}" class="mt-2">
         <div class="mb-2">
           <label class="form-label">Jina la Aina</label>
@@ -17,7 +17,7 @@
           <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
           <input type="text" class="form-control" name="action_code" required>
         </div>
-        <button class="btn btn-primary btn-sm">Ongeza</button>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ongeza</button>
       </form>
     </div>
   </div>
@@ -35,7 +35,9 @@
             </td>
             <td class="text-end">
               <form method="post" action="{{ url_for('categories.toggle', category_id=cat.id) }}" class="action-code-form">
-                <button class="btn btn-sm btn-outline-secondary">{{ 'Zima' if cat.active else 'Washa' }}</button>
+                <button class="btn btn-sm btn-outline-secondary">
+                  <i class="bi {{ 'bi-toggle-off' if cat.active else 'bi-toggle-on' }}"></i> {{ 'Zima' if cat.active else 'Washa' }}
+                </button>
               </form>
             </td>
           </tr>

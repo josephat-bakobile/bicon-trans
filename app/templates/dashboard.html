@@ -2,40 +2,55 @@
 {% block title %}Dashboard - BICON TRANS{% endblock %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0">Dashboard</h4>
-  <span class="text-muted small">Mwezi huu: {{ today.strftime('%B %Y') }}</span>
+<div class="page-header">
+  <h4><i class="bi bi-speedometer2"></i> Dashboard</h4>
+  <span class="text-muted small"><i class="bi bi-calendar3"></i> Mwezi huu: {{ today.strftime('%B %Y') }}</span>
 </div>
 
 <div class="row g-3 mb-4">
   <div class="col-6 col-lg-3">
     <div class="stat-tile collected">
-      <div class="label">Makusanyo (mwezi huu)</div>
-      <div class="value">{{ month_totals.grand_collected | money }}</div>
+      <div class="icon-badge"><i class="bi bi-cash-coin"></i></div>
+      <div class="body">
+        <div class="label">Makusanyo (mwezi huu)</div>
+        <div class="value">{{ month_totals.grand_collected | money }}</div>
+      </div>
     </div>
   </div>
   <div class="col-6 col-lg-3">
     <div class="stat-tile consumed">
-      <div class="label">Matumizi (mwezi huu)</div>
-      <div class="value">{{ month_totals.grand_consumed | money }}</div>
+      <div class="icon-badge"><i class="bi bi-fuel-pump"></i></div>
+      <div class="body">
+        <div class="label">Matumizi (mwezi huu)</div>
+        <div class="value">{{ month_totals.grand_consumed | money }}</div>
+      </div>
     </div>
   </div>
   <div class="col-6 col-lg-3">
     <div class="stat-tile net">
-      <div class="label">Baki (mwezi huu)</div>
-      <div class="value">{{ month_totals.grand_net | money }}</div>
+      <div class="icon-badge"><i class="bi bi-graph-up-arrow"></i></div>
+      <div class="body">
+        <div class="label">Baki (mwezi huu)</div>
+        <div class="value">{{ month_totals.grand_net | money }}</div>
+      </div>
     </div>
   </div>
   <div class="col-6 col-lg-3">
     <div class="stat-tile net">
-      <div class="label">Baki Kuu (Muda Wote)</div>
-      <div class="value">{{ all_time_totals.grand_net | money }}</div>
+      <div class="icon-badge"><i class="bi bi-bank"></i></div>
+      <div class="body">
+        <div class="label">Baki Kuu (Muda Wote)</div>
+        <div class="value">{{ all_time_totals.grand_net | money }}</div>
+      </div>
     </div>
   </div>
   <div class="col-6 col-lg-3">
     <div class="stat-tile debt">
-      <div class="label">Madeni yaliyobaki</div>
-      <div class="value">{{ balances.grand_balance | money }}</div>
+      <div class="icon-badge"><i class="bi bi-wallet2"></i></div>
+      <div class="body">
+        <div class="label">Madeni yaliyobaki</div>
+        <div class="value">{{ balances.grand_balance | money }}</div>
+      </div>
     </div>
   </div>
 </div>
@@ -43,14 +58,20 @@
 <div class="row g-3 mb-4">
   <div class="col-6 col-lg-3">
     <div class="stat-tile shortfall-open">
-      <div class="label">Upungufu Ambao Haujafafanuliwa (Wazi)</div>
-      <div class="value">{{ shortfalls.open_total | money }}</div>
+      <div class="icon-badge"><i class="bi bi-exclamation-triangle"></i></div>
+      <div class="body">
+        <div class="label">Upungufu Ambao Haujafafanuliwa (Wazi)</div>
+        <div class="value">{{ shortfalls.open_total | money }}</div>
+      </div>
     </div>
   </div>
   <div class="col-6 col-lg-3">
     <div class="stat-tile shortfall-cleared">
-      <div class="label">Upungufu Uliofafanuliwa</div>
-      <div class="value">{{ shortfalls.cleared_total | money }}</div>
+      <div class="icon-badge"><i class="bi bi-check-circle"></i></div>
+      <div class="body">
+        <div class="label">Upungufu Uliofafanuliwa</div>
+        <div class="value">{{ shortfalls.cleared_total | money }}</div>
+      </div>
     </div>
   </div>
 </div>
@@ -60,8 +81,8 @@
   <div class="col-12">
     <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong>Magari Yanayohitaji Huduma</strong>
-        <a href="{{ url_for('service.index') }}" class="small">Ona zote &rarr;</a>
+        <strong><i class="bi bi-tools text-primary"></i> Magari Yanayohitaji Huduma</strong>
+        <a href="{{ url_for('service.index') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
       </div>
       <table class="table table-sm mb-0">
         <thead><tr><th>Gari</th><th>Huduma Inayofuata</th><th>Siku Zilizobaki</th><th>Hali</th></tr></thead>
@@ -88,7 +109,7 @@
   <div class="col-12">
     <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong>Makusanyo dhidi ya Matumizi (miezi 6)</strong>
+        <strong><i class="bi bi-bar-chart-line text-primary"></i> Makusanyo dhidi ya Matumizi (miezi 6)</strong>
         <span>
           <span class="legend-dot" style="background:#2a78d6"></span>Makusanyo
           <span class="legend-dot ms-3" style="background:#eb6834"></span>Matumizi
@@ -103,9 +124,9 @@
   <div class="col-12">
     <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong>Mchango wa Kila Gari kwa Mwezi (Car Contribution by Month) &mdash; MAKUSANYO</strong>
+        <strong><i class="bi bi-pie-chart text-primary"></i> Mchango wa Kila Gari kwa Mwezi (Car Contribution by Month) &mdash; MAKUSANYO</strong>
         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#contribTable">
-          Onyesha kama Jedwali
+          <i class="bi bi-table"></i> Onyesha kama Jedwali
         </button>
       </div>
       <canvas id="contributionChart" height="90"></canvas>
@@ -145,8 +166,8 @@
   <div class="col-lg-7">
     <div class="card-panel h-100">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong>Miamala ya Hivi Karibuni (Makusanyo)</strong>
-        <a href="{{ url_for('collections.list_view') }}" class="small">Ona zote &rarr;</a>
+        <strong><i class="bi bi-clock-history text-primary"></i> Miamala ya Hivi Karibuni (Makusanyo)</strong>
+        <a href="{{ url_for('collections.list_view') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
       </div>
       <table class="table table-sm table-money mb-0">
         <thead><tr><th>Trans No</th><th>Tarehe</th><th>Magari</th><th class="amount">Jumla</th></tr></thead>
@@ -168,8 +189,8 @@
   <div class="col-lg-5">
     <div class="card-panel h-100">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong>Matumizi ya Hivi Karibuni</strong>
-        <a href="{{ url_for('consumption.list_view') }}" class="small">Ona zote &rarr;</a>
+        <strong><i class="bi bi-fuel-pump text-primary"></i> Matumizi ya Hivi Karibuni</strong>
+        <a href="{{ url_for('consumption.list_view') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
       </div>
       <table class="table table-sm table-money mb-0">
         <thead><tr><th>Tarehe</th><th>Gari</th><th class="amount">Kiasi</th></tr></thead>
@@ -191,12 +212,14 @@
 
 <div class="row g-3">
   <div class="col-12">
-    <div class="card-panel d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="card-panel d-flex justify-content-between align-items-center flex-wrap gap-2 tw-transition tw-duration-300 hover:tw-border-blue-300">
       <div>
-        <strong>Uchambuzi wa Kina</strong>
+        <strong><i class="bi bi-graph-up text-primary"></i> Uchambuzi wa Kina</strong>
         <div class="text-muted small">Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na madeni &mdash; kwa kipindi chochote unachochagua.</div>
       </div>
-      <a class="btn btn-outline-primary" href="{{ url_for('reports.analytics') }}">Ona Uchambuzi Kamili &rarr;</a>
+      <a class="btn btn-outline-primary" href="{{ url_for('reports.analytics') }}">
+        Ona Uchambuzi Kamili <i class="bi bi-arrow-right"></i>
+      </a>
     </div>
   </div>
 </div>

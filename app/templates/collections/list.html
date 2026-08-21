@@ -2,9 +2,9 @@
 {% block title %}Makusanyo - BICON TRANS{% endblock %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0">Makusanyo (Miamala)</h4>
-  <a href="{{ url_for('collections.new') }}" class="btn btn-primary">+ Muamala Mpya</a>
+<div class="page-header">
+  <h4><i class="bi bi-cash-coin"></i> Makusanyo (Miamala)</h4>
+  <a href="{{ url_for('collections.new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Muamala Mpya</a>
 </div>
 
 <form class="row g-2 mb-3" method="get">
@@ -15,8 +15,8 @@
     <input type="date" class="form-control" name="end" value="{{ end }}">
   </div>
   <div class="col-auto">
-    <button class="btn btn-outline-secondary">Chuja</button>
-    <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary">Futa</a>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Chuja</button>
+    <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> Futa</a>
   </div>
 </form>
 
@@ -50,10 +50,10 @@
           {% if transaction_locked(t.transaction_date) %}
             <span class="badge text-bg-secondary" title="Zaidi ya wiki 1 tangu tarehe ya muamala">Imefungwa</span>
           {% else %}
-            <a href="{{ url_for('collections.edit', txn_id=t.id) }}" class="btn btn-sm btn-outline-secondary">Hariri</a>
+            <a href="{{ url_for('collections.edit', txn_id=t.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Hariri</a>
             <form method="post" action="{{ url_for('collections.delete', txn_id=t.id) }}" class="d-inline action-code-form"
                   data-confirm="Una uhakika unataka kufuta muamala {{ t.trans_no }}?">
-              <button class="btn btn-sm btn-outline-danger">Futa</button>
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
             </form>
           {% endif %}
         </td>

@@ -3,7 +3,7 @@
 {% block title %}Upungufu wa Makusanyo - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Ripoti ya Upungufu wa Makusanyo</h4>
+<h4 class="mb-3"><i class="bi bi-exclamation-triangle text-primary"></i> Ripoti ya Upungufu wa Makusanyo</h4>
 <p class="text-muted small mb-3">
   Siku ambazo gari halikuleta makusanyo kabisa, au lililoleta ni pungufu ya Kiasi cha Lengo la Siku
   kilichowekwa kwenye ukurasa wa <a href="{{ url_for('cars.list_view') }}">Magari</a>.
@@ -19,9 +19,9 @@
     <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
   </div>
   <div class="col-auto d-flex align-items-end gap-2">
-    <button class="btn btn-outline-secondary">Onyesha</button>
-    <a class="btn btn-outline-primary" href="{{ url_for('reports.shortfalls_xlsx', start=start.isoformat(), end=end.isoformat()) }}">Excel</a>
-    <a class="btn btn-outline-danger" href="{{ url_for('reports.shortfalls_pdf', start=start.isoformat(), end=end.isoformat()) }}">PDF</a>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Onyesha</button>
+    <a class="btn btn-outline-primary" href="{{ url_for('reports.shortfalls_xlsx', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    <a class="btn btn-outline-danger" href="{{ url_for('reports.shortfalls_pdf', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
   </div>
 </form>
 
@@ -57,7 +57,7 @@
             <input type="hidden" name="end" value="{{ end.isoformat() }}">
             <input type="text" name="description" class="form-control form-control-sm" placeholder="Maelezo ya upungufu" required>
             <input type="text" name="action_code" class="form-control form-control-sm" placeholder="Msimbo" style="max-width:110px;" required>
-            <button class="btn btn-sm btn-outline-primary text-nowrap">Fafanua</button>
+            <button class="btn btn-sm btn-outline-primary text-nowrap"><i class="bi bi-check2"></i> Fafanua</button>
           </form>
         </td>
       </tr>
@@ -70,7 +70,7 @@
       {'start': start.isoformat(), 'end': end.isoformat(), 'cleared_page': cleared_page}) }}
 </div>
 
-<h5 class="mb-3">Upungufu Uliofafanuliwa</h5>
+<h5 class="mb-3"><i class="bi bi-check-circle text-success"></i> Upungufu Uliofafanuliwa</h5>
 <div class="card-panel">
   <table class="table table-sm table-money align-middle mb-0">
     <thead>

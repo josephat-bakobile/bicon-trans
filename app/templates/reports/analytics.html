@@ -2,7 +2,7 @@
 {% block title %}Uchambuzi - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Uchambuzi wa Magari na Madereva</h4>
+<h4 class="mb-3"><i class="bi bi-graph-up text-primary"></i> Uchambuzi wa Magari na Madereva</h4>
 <p class="text-muted small mb-3">
   Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na madeni &mdash;
   yote kwa kipindi ulichochagua hapa chini.
@@ -18,14 +18,14 @@
     <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
   </div>
   <div class="col-auto d-flex align-items-end">
-    <button class="btn btn-outline-secondary">Onyesha</button>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Onyesha</button>
   </div>
 </form>
 
 <div class="row g-3 mb-4">
   <div class="col-lg-7">
     <div class="card-panel h-100">
-      <strong>Muhtasari kwa Gari (kwa kipindi)</strong>
+      <strong><i class="bi bi-truck text-primary"></i> Muhtasari kwa Gari (kwa kipindi)</strong>
       <table class="table table-sm table-money mt-2 mb-0">
         <thead><tr><th>Gari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th><th class="amount">Kiwango cha Lengo</th></tr></thead>
         <tbody>
@@ -63,7 +63,7 @@
   </div>
   <div class="col-lg-5">
     <div class="card-panel h-100">
-      <strong>Magari Yenye Tatizo (Siku Mfululizo Bila Kufikia Lengo)</strong>
+      <strong><i class="bi bi-exclamation-triangle text-danger"></i> Magari Yenye Tatizo (Siku Mfululizo Bila Kufikia Lengo)</strong>
       <table class="table table-sm mt-2 mb-0">
         <thead><tr><th>Gari</th><th>Dereva</th><th class="amount">Siku Mfululizo</th></tr></thead>
         <tbody>
@@ -87,7 +87,7 @@
 </div>
 
 <div class="card-panel mb-4">
-  <strong>Muhtasari kwa Dereva (kwa kipindi)</strong>
+  <strong><i class="bi bi-people text-primary"></i> Muhtasari kwa Dereva (kwa kipindi)</strong>
   <table class="table table-sm table-money mt-2 mb-0">
     <thead><tr><th>Dereva</th><th>Magari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th><th class="amount">Upungufu Wazi</th></tr></thead>
     <tbody>
@@ -121,7 +121,7 @@
 <div class="row g-3">
   <div class="col-lg-5">
     <div class="card-panel h-100">
-      <strong>Matumizi kwa Aina (kwa kipindi)</strong>
+      <strong><i class="bi bi-pie-chart text-primary"></i> Matumizi kwa Aina (kwa kipindi)</strong>
       <canvas id="categoryChart" height="160" class="mt-2"></canvas>
       <table class="table table-sm table-money mt-3 mb-0">
         <thead><tr><th>Aina</th><th class="amount">Kiasi</th></tr></thead>
@@ -141,7 +141,7 @@
   <div class="col-lg-7">
     <div class="card-panel h-100">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong>Madeni kwa Mwezi (kwa kipindi)</strong>
+        <strong><i class="bi bi-wallet2 text-primary"></i> Madeni kwa Mwezi (kwa kipindi)</strong>
         <span>
           <span class="legend-dot" style="background:#d03b3b"></span>Deni Jipya
           <span class="legend-dot ms-3" style="background:#0ca30c"></span>Malipo

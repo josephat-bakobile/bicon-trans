@@ -2,10 +2,10 @@
 {% block title %}Huduma za Gari - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Huduma za Gari (Service Prediction)</h4>
+<h4 class="mb-3"><i class="bi bi-tools text-primary"></i> Huduma za Gari (Service Prediction)</h4>
 
 <div class="card-panel mb-4">
-  <strong>Utabiri wa Huduma Inayofuata</strong>
+  <strong><i class="bi bi-calendar-check text-primary"></i> Utabiri wa Huduma Inayofuata</strong>
   <div class="table-responsive">
   <table class="table table-sm align-middle mt-2 mb-0">
     <thead>
@@ -29,7 +29,7 @@
             <input type="number" min="1" step="1" name="service_interval_days" value="{{ p.car.service_interval_days }}"
                    class="form-control form-control-sm" style="max-width:80px;">
             <input type="text" name="action_code" placeholder="Msimbo" class="form-control form-control-sm" style="max-width:100px;" required>
-            <button class="btn btn-sm btn-outline-primary">Hifadhi</button>
+            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
           </form>
         </td>
         <td>{{ p.excused_days }}</td>
@@ -57,7 +57,7 @@
 <div class="row g-4">
   <div class="col-lg-4">
     <div class="card-panel">
-      <strong>Andika Huduma Mpya</strong>
+      <strong><i class="bi bi-plus-circle text-primary"></i> Andika Huduma Mpya</strong>
       <form method="post" action="{{ url_for('service.new') }}" class="mt-2">
         <div class="mb-2">
           <label class="form-label">Tarehe ya Huduma</label>
@@ -89,7 +89,7 @@
           <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
           <input type="text" class="form-control" name="action_code" required>
         </div>
-        <button class="btn btn-primary btn-sm">Hifadhi Huduma</button>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Hifadhi Huduma</button>
       </form>
     </div>
   </div>
@@ -97,7 +97,7 @@
   <div class="col-lg-8">
     <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong>Historia ya Huduma</strong>
+        <strong><i class="bi bi-clock-history text-primary"></i> Historia ya Huduma</strong>
         <form method="get" class="d-flex gap-2">
           <select class="form-select form-select-sm" name="car_id" onchange="this.form.submit()">
             <option value="">Magari Yote</option>
@@ -117,9 +117,9 @@
             <td>{{ s.description or '-' }}</td>
             <td class="amount">{{ s.cost | money }}</td>
             <td class="text-end text-nowrap">
-              <a href="{{ url_for('service.edit', service_id=s.id) }}" class="btn btn-sm btn-outline-secondary">Hariri</a>
+              <a href="{{ url_for('service.edit', service_id=s.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Hariri</a>
               <form method="post" action="{{ url_for('service.delete', service_id=s.id) }}" class="action-code-form d-inline" data-confirm="Futa huduma hii?">
-                <button class="btn btn-sm btn-outline-danger">Futa</button>
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
               </form>
             </td>
           </tr>

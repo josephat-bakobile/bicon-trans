@@ -11,20 +11,82 @@
   --critical: #d03b3b;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   background: var(--page);
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* ---------- Navbar ---------- */
+
 .app-navbar {
-  background: linear-gradient(90deg, #12233f, #1d3a63);
+  background: linear-gradient(90deg, #0f1e37, #1d3a63 55%, #234a80);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  padding-top: .55rem;
+  padding-bottom: .55rem;
 }
 
 .brand-logo {
   height: 36px;
   width: auto;
   display: block;
+  border-radius: 6px;
+  transition: transform .25s ease;
+}
+
+.navbar-brand:hover .brand-logo {
+  transform: scale(1.05) rotate(-1deg);
+}
+
+.app-navbar .nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  color: rgba(255, 255, 255, .82) !important;
+  font-size: .92rem;
+  border-radius: 8px;
+  padding: .45rem .7rem !important;
+  transition: color .18s ease, background-color .18s ease, transform .18s ease;
+}
+
+.app-navbar .nav-link i {
+  font-size: 1rem;
+  opacity: .85;
+}
+
+.app-navbar .nav-link:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, .08);
+  transform: translateY(-1px);
+}
+
+.app-navbar .nav-link.active {
+  color: #fff !important;
+  background: rgba(255, 255, 255, .12);
+}
+
+.app-navbar .nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: .7rem;
+  right: .7rem;
+  bottom: -2px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--brand-orange), #ffb27a);
+}
+
+.app-navbar .btn-outline-light {
+  transition: transform .18s ease, background-color .18s ease;
+}
+
+.app-navbar .btn-outline-light:hover {
+  transform: translateY(-1px);
 }
 
 .login-logo {
@@ -32,14 +94,75 @@ body {
   width: auto;
   display: block;
   margin: 0 auto 12px;
+  animation: fadeInUp .5s ease both;
 }
+
+/* ---------- Page entrance animation ---------- */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-fade > * {
+  animation: fadeInUp .45s ease both;
+}
+
+.page-fade > *:nth-child(2) { animation-delay: .04s; }
+.page-fade > *:nth-child(3) { animation-delay: .08s; }
+.page-fade > *:nth-child(4) { animation-delay: .12s; }
+.page-fade > *:nth-child(5) { animation-delay: .16s; }
+.page-fade > *:nth-child(n+6) { animation-delay: .2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-fade > *, .login-logo, .brand-logo, .stat-tile, .card-panel, .btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Stat tiles ---------- */
 
 .stat-tile {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 18px 20px;
   height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.stat-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(11, 11, 11, 0.08);
+  border-color: rgba(0, 0, 0, .08);
+}
+
+.stat-tile .icon-badge {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background: rgba(42, 120, 214, .1);
+  color: var(--brand-blue);
+}
+
+.stat-tile.collected .icon-badge { background: rgba(42, 120, 214, .1); color: var(--brand-blue); }
+.stat-tile.consumed .icon-badge { background: rgba(235, 104, 52, .1); color: var(--brand-orange); }
+.stat-tile.net .icon-badge { background: rgba(12, 163, 12, .1); color: var(--good); }
+.stat-tile.debt .icon-badge { background: rgba(208, 59, 59, .1); color: var(--critical); }
+.stat-tile.shortfall-open .icon-badge { background: rgba(208, 59, 59, .1); color: var(--critical); }
+.stat-tile.shortfall-cleared .icon-badge { background: rgba(12, 163, 12, .1); color: var(--good); }
+
+.stat-tile .body {
+  min-width: 0;
 }
 
 .stat-tile .label {
@@ -64,16 +187,74 @@ body {
 .stat-tile.shortfall-open .value { color: var(--critical); }
 .stat-tile.shortfall-cleared .value { color: var(--good); }
 
+/* ---------- Cards ---------- */
+
 .card-panel {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 20px;
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+.card-panel:hover {
+  box-shadow: 0 8px 22px rgba(11, 11, 11, 0.06);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+.page-header h4 {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin: 0;
+}
+
+.page-header h4 i {
+  color: var(--brand-blue);
+}
+
+/* ---------- Buttons & icons ---------- */
+
+.btn {
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn i {
+  font-size: .95em;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-blue), #1e5fb0);
+  border-color: var(--brand-blue);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(42, 120, 214, .3);
 }
 
 table.table-money td.amount, table.table-money th.amount {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.table > tbody > tr {
+  transition: background-color .15s ease;
 }
 
 .legend-dot {
@@ -82,4 +263,36 @@ table.table-money td.amount, table.table-money th.amount {
   height: 10px;
   border-radius: 50%;
   margin-right: 6px;
+}
+
+.badge {
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
+.badge.text-bg-danger {
+  animation: pulseSoft 2.2s ease-in-out infinite;
+}
+
+@keyframes pulseSoft {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(208, 59, 59, .35); }
+  50% { box-shadow: 0 0 0 4px rgba(208, 59, 59, 0); }
+}
+
+.form-control, .form-select {
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-muted);
 }

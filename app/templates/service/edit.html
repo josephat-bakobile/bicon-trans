@@ -2,7 +2,7 @@
 {% block title %}Hariri Huduma - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Hariri Huduma ya Gari</h4>
+<h4 class="mb-3"><i class="bi bi-pencil text-primary"></i> Hariri Huduma ya Gari</h4>
 
 <div class="card-panel" style="max-width: 560px;">
   <form method="post">
@@ -41,8 +41,8 @@
       <input type="text" class="form-control" name="action_code" required>
     </div>
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary">Hifadhi</button>
-      <a href="{{ url_for('service.index') }}" class="btn btn-outline-secondary">Ghairi</a>
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Hifadhi</button>
+      <a href="{{ url_for('service.index') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> Ghairi</a>
     </div>
   </form>
 </div>

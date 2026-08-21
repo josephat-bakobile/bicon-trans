@@ -2,7 +2,7 @@
 {% block title %}Upatanisho na Benki - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">Upatanisho na Wakala wa Benki (Bank Reconciliation)</h4>
+<h4 class="mb-3"><i class="bi bi-arrow-left-right text-primary"></i> Upatanisho na Wakala wa Benki (Bank Reconciliation)</h4>
 <p class="text-muted small mb-3">
   Historia kamili ya miamala kwa Trans No na Tarehe ya Muamala (tarehe ya benki), bila mgawanyo wa magari &mdash;
   kwa ajili ya kulinganisha na taarifa za wakala wa benki.
@@ -18,9 +18,9 @@
     <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
   </div>
   <div class="col-auto d-flex align-items-end gap-2">
-    <button class="btn btn-outline-secondary">Onyesha</button>
-    <a class="btn btn-outline-primary" href="{{ url_for('reconciliation.export_xlsx', start=start.isoformat(), end=end.isoformat()) }}">Excel</a>
-    <a class="btn btn-outline-danger" href="{{ url_for('reconciliation.export_pdf', start=start.isoformat(), end=end.isoformat()) }}">PDF</a>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Onyesha</button>
+    <a class="btn btn-outline-primary" href="{{ url_for('reconciliation.export_xlsx', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    <a class="btn btn-outline-danger" href="{{ url_for('reconciliation.export_pdf', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
   </div>
 </form>
 

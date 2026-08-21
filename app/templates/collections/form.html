@@ -2,7 +2,7 @@
 {% block title %}{{ 'Hariri' if is_edit else 'Muamala Mpya' }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3">{{ 'Hariri Muamala ' + values.trans_no if is_edit else 'Muamala Mpya wa Makusanyo' }}</h4>
+<h4 class="mb-3"><i class="bi {{ 'bi-pencil' if is_edit else 'bi-cash-coin' }} text-primary"></i> {{ 'Hariri Muamala ' + values.trans_no if is_edit else 'Muamala Mpya wa Makusanyo' }}</h4>
 
 <div class="card-panel" style="max-width: 920px;">
   <form method="post">
@@ -52,12 +52,12 @@
                      min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></td>
           <td><input type="number" step="0.01" min="0" class="form-control" name="amount[]" value="{{ l.amount }}" required></td>
           <td><input type="text" class="form-control" name="note[]" value="{{ l.note or '' }}"></td>
-          <td><button type="button" class="btn btn-sm btn-outline-danger remove-row">&times;</button></td>
+          <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button></td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
-    <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="add-row">+ Ongeza Gari</button>
+    <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="add-row"><i class="bi bi-plus-lg"></i> Ongeza Gari</button>
 
     <div class="mb-3" style="max-width:300px;">
       <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
@@ -65,8 +65,8 @@
     </div>
 
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary">Hifadhi</button>
-      <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary">Ghairi</a>
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Hifadhi</button>
+      <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> Ghairi</a>
     </div>
   </form>
 </div>
@@ -82,7 +82,7 @@
                min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></td>
     <td><input type="number" step="0.01" min="0" class="form-control" name="amount[]" required></td>
     <td><input type="text" class="form-control" name="note[]"></td>
-    <td><button type="button" class="btn btn-sm btn-outline-danger remove-row">&times;</button></td>
+    <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button></td>
   </tr>
 </template>
 
