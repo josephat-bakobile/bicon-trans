@@ -61,6 +61,8 @@ body {
 .stat-tile.consumed .value { color: var(--brand-orange); }
 .stat-tile.net .value { color: var(--good); }
 .stat-tile.debt .value { color: var(--critical); }
+.stat-tile.shortfall-open .value { color: var(--critical); }
+.stat-tile.shortfall-cleared .value { color: var(--good); }
 
 .card-panel {
   background: var(--surface);

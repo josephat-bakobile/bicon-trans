@@ -1,0 +1,19 @@
+{% macro render_pagination(endpoint, page, pages, page_param, extra_args) %}
+{% if pages > 1 %}
+<nav aria-label="Kurasa">
+  <ul class="pagination pagination-sm mb-0 mt-2">
+    <li class="page-item {{ 'disabled' if page <= 1 }}">
+      <a class="page-link" href="{{ url_for(endpoint, **dict(extra_args, **{page_param: page - 1})) }}">&laquo;</a>
+    </li>
+    {% for p in range(1, pages + 1) %}
+    <li class="page-item {{ 'active' if p == page }}">
+      <a class="page-link" href="{{ url_for(endpoint, **dict(extra_args, **{page_param: p})) }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+    <li class="page-item {{ 'disabled' if page >= pages }}">
+      <a class="page-link" href="{{ url_for(endpoint, **dict(extra_args, **{page_param: page + 1})) }}">&raquo;</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endmacro %}

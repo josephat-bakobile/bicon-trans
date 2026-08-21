@@ -108,6 +108,9 @@ def _migrate_schema():
     if "daily_target" not in car_cols:
         db.session.execute(text("ALTER TABLE cars ADD COLUMN daily_target FLOAT NOT NULL DEFAULT 0"))
         db.session.commit()
+    if "driver_name" not in car_cols:
+        db.session.execute(text("ALTER TABLE cars ADD COLUMN driver_name VARCHAR(100)"))
+        db.session.commit()
 
     txn_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(collection_transactions)")).fetchall()]
     if "transaction_date" not in txn_cols and "date" in txn_cols:

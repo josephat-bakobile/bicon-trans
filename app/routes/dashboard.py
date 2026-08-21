@@ -3,7 +3,7 @@ from datetime import date
 from flask import Blueprint, render_template
 
 from ..models import CollectionTransaction, ConsumptionEntry
-from ..utils import car_month_matrix, debt_balances, month_bounds, monthly_trend, period_totals
+from ..utils import car_month_matrix, debt_balances, month_bounds, monthly_trend, period_totals, shortfall_totals
 
 bp = Blueprint("dashboard", __name__)
 
@@ -16,6 +16,7 @@ def index():
     month_totals = period_totals(month_start, month_end)
     all_time_totals = period_totals()
     balances = debt_balances()
+    shortfalls = shortfall_totals()
     trend = monthly_trend(6)
     contribution_matrix = car_month_matrix(6)
 
@@ -37,6 +38,7 @@ def index():
         month_totals=month_totals,
         all_time_totals=all_time_totals,
         balances=balances,
+        shortfalls=shortfalls,
         trend=trend,
         recent_transactions=recent_transactions,
         recent_consumption=recent_consumption,

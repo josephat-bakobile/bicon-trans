@@ -13,15 +13,27 @@ from ..extensions import db
 from ..models import Car, ExpenseCategory, ShortfallClearance
 from ..report_data import collections_rows, consumption_rows, summary_rows
 from ..security import require_action_code
-from ..utils import parse_date, shortfall_report
+from ..utils import (
+    LAUNCH_DATE,
+    car_achievement_rates,
+    category_totals,
+    debt_monthly_trend,
+    driver_totals,
+    paginate,
+    parse_date,
+    period_totals,
+    shortfall_report,
+    shortfall_streaks,
+)
+
+PER_PAGE = 20
 
 bp = Blueprint("reports", __name__)
 
 
 def _range():
-    today = date.today()
-    start = parse_date(request.args.get("start"), today.replace(day=1))
-    end = parse_date(request.args.get("end"), today)
+    start = parse_date(request.args.get("start"), LAUNCH_DATE)
+    end = parse_date(request.args.get("end"), date.today())
     return start, end
 
 
@@ -106,11 +118,53 @@ def consumption_pdf():
     return _send(buf, f"matumizi_{start}_{end}.pdf", "pdf")
 
 
+@bp.route("/analytics")
+def analytics():
+    start, end = _range()
+    car_totals = period_totals(start, end)
+    achievement_rates = car_achievement_rates(start, end)
+    achievement_by_car = {r["car"].id: r for r in achievement_rates}
+    streaks = shortfall_streaks(start, end)
+    driver_summary = driver_totals(start, end)
+    category_summary = category_totals(start, end)
+    debt_trend = debt_monthly_trend(start, end)
+
+    return render_template(
+        "reports/analytics.html",
+        start=start,
+        end=end,
+        car_totals=car_totals,
+        achievement_by_car=achievement_by_car,
+        streaks=streaks,
+        driver_summary=driver_summary,
+        category_summary=category_summary,
+        debt_trend=debt_trend,
+    )
+
+
 @bp.route("/shortfalls")
 def shortfalls():
     start, end = _range()
     rows = shortfall_report(start, end)
-    return render_template("reports/shortfalls.html", start=start, end=end, rows=rows)
+    open_rows = [r for r in rows if not r["clearance"]]
+    cleared_rows = [r for r in rows if r["clearance"]]
+
+    open_rows, open_page, open_pages = paginate(open_rows, request.args.get("open_page", 1, type=int), PER_PAGE)
+    cleared_rows, cleared_page, cleared_pages = paginate(
+        cleared_rows, request.args.get("cleared_page", 1, type=int), PER_PAGE
+    )
+
+    return render_template(
+        "reports/shortfalls.html",
+        start=start,
+        end=end,
+        open_rows=open_rows,
+        open_page=open_page,
+        open_pages=open_pages,
+        cleared_rows=cleared_rows,
+        cleared_page=cleared_page,
+        cleared_pages=cleared_pages,
+    )
 
 
 @bp.route("/shortfalls/clear", methods=["POST"])

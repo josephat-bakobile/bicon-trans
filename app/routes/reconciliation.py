@@ -5,15 +5,14 @@ from flask import Blueprint, Response, render_template, request
 from ..export_excel import build_reconciliation_excel
 from ..export_pdf import build_reconciliation_pdf
 from ..report_data import reconciliation_rows
-from ..utils import parse_date
+from ..utils import LAUNCH_DATE, parse_date
 
 bp = Blueprint("reconciliation", __name__)
 
 
 def _range():
-    today = date.today()
-    start = parse_date(request.args.get("start"), today.replace(day=1))
-    end = parse_date(request.args.get("end"), today)
+    start = parse_date(request.args.get("start"), LAUNCH_DATE)
+    end = parse_date(request.args.get("end"), date.today())
     return start, end
 
 

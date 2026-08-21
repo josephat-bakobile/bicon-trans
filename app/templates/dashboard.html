@@ -27,6 +27,12 @@
     </div>
   </div>
   <div class="col-6 col-lg-3">
+    <div class="stat-tile net">
+      <div class="label">Baki Kuu (Muda Wote)</div>
+      <div class="value">{{ all_time_totals.grand_net | money }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
     <div class="stat-tile debt">
       <div class="label">Madeni yaliyobaki</div>
       <div class="value">{{ balances.grand_balance | money }}</div>
@@ -35,8 +41,23 @@
 </div>
 
 <div class="row g-3 mb-4">
-  <div class="col-lg-7">
-    <div class="card-panel h-100">
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile shortfall-open">
+      <div class="label">Upungufu Ambao Haujafafanuliwa (Wazi)</div>
+      <div class="value">{{ shortfalls.open_total | money }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile shortfall-cleared">
+      <div class="label">Upungufu Uliofafanuliwa</div>
+      <div class="value">{{ shortfalls.cleared_total | money }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <strong>Makusanyo dhidi ya Matumizi (miezi 6)</strong>
         <span>
@@ -44,25 +65,7 @@
           <span class="legend-dot ms-3" style="background:#eb6834"></span>Matumizi
         </span>
       </div>
-      <canvas id="trendChart" height="110"></canvas>
-    </div>
-  </div>
-  <div class="col-lg-5">
-    <div class="card-panel h-100">
-      <strong>Muhtasari kwa Gari (jumla)</strong>
-      <table class="table table-sm table-money mt-2 mb-0">
-        <thead><tr><th>Gari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th></tr></thead>
-        <tbody>
-          {% for r in all_time_totals.rows %}
-          <tr>
-            <td>{{ r.car.code }}</td>
-            <td class="amount">{{ r.collected | money }}</td>
-            <td class="amount">{{ r.consumed | money }}</td>
-            <td class="amount">{{ r.net | money }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <canvas id="trendChart" height="90"></canvas>
     </div>
   </div>
 </div>
@@ -109,7 +112,7 @@
   </div>
 </div>
 
-<div class="row g-3">
+<div class="row g-3 mb-4">
   <div class="col-lg-7">
     <div class="card-panel h-100">
       <div class="d-flex justify-content-between align-items-center mb-2">
@@ -153,6 +156,18 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12">
+    <div class="card-panel d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <strong>Uchambuzi wa Kina</strong>
+        <div class="text-muted small">Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na madeni &mdash; kwa kipindi chochote unachochagua.</div>
+      </div>
+      <a class="btn btn-outline-primary" href="{{ url_for('reports.analytics') }}">Ona Uchambuzi Kamili &rarr;</a>
     </div>
   </div>
 </div>

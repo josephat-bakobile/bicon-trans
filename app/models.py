@@ -9,6 +9,7 @@ class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100))
+    driver_name = db.Column(db.String(100))
     active = db.Column(db.Boolean, default=True, nullable=False)
     daily_target = db.Column(db.Float, default=0.0, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -12,17 +12,27 @@ from .models import (
     ConsumptionEntry,
     Debt,
     DebtPayment,
+    ExpenseCategory,
     ShortfallClearance,
 )
 
 
 TRANSACTION_EDIT_WINDOW_DAYS = 7
 MAX_BACKDATE_DAYS = 7
+LAUNCH_DATE = date(2026, 8, 16)
 
 
 def transaction_locked(txn_date):
     """Collection transactions older than the edit window can no longer be changed."""
     return (date.today() - txn_date).days > TRANSACTION_EDIT_WINDOW_DAYS
+
+
+def paginate(items, page, per_page=20):
+    """Slice items for the given 1-indexed page, clamped to the valid range."""
+    total_pages = max(1, -(-len(items) // per_page))
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * per_page
+    return items[start : start + per_page], page, total_pages
 
 
 def min_entry_date():
@@ -251,3 +261,202 @@ def shortfall_report(start, end):
         d += timedelta(days=1)
     rows.sort(key=lambda r: (r["date"], r["car"].code))
     return rows
+
+
+def shortfall_totals(start=None, end=None):
+    """Sum of shortfall amounts since LAUNCH_DATE, split into open (Wazi) and
+    explained (Imefafanuliwa) buckets."""
+    rows = shortfall_report(start or LAUNCH_DATE, end or date.today())
+    open_total = sum(r["shortfall"] for r in rows if not r["clearance"])
+    cleared_total = sum(r["shortfall"] for r in rows if r["clearance"])
+    return {"open_total": open_total, "cleared_total": cleared_total}
+
+
+def car_achievement_rates(start, end):
+    """Per-car % of days in range the collected amount met/exceeded daily_target."""
+    cars = Car.query.filter(Car.daily_target > 0).order_by(Car.code).all()
+    if not cars:
+        return []
+    car_ids = [c.id for c in cars]
+
+    collected_rows = (
+        db.session.query(CollectionLine.collection_date, CollectionLine.car_id, func.sum(CollectionLine.amount))
+        .filter(CollectionLine.car_id.in_(car_ids), CollectionLine.collection_date.between(start, end))
+        .group_by(CollectionLine.collection_date, CollectionLine.car_id)
+        .all()
+    )
+    collected_map = {(car_id, d): total for d, car_id, total in collected_rows}
+
+    total_days = (end - start).days + 1
+    rows = []
+    for car in cars:
+        days_hit = 0
+        d = start
+        while d <= end:
+            if collected_map.get((car.id, d), 0.0) >= car.daily_target:
+                days_hit += 1
+            d += timedelta(days=1)
+        rate = (days_hit / total_days * 100) if total_days else 0.0
+        rows.append({"car": car, "days_hit": days_hit, "days_total": total_days, "rate": rate})
+    rows.sort(key=lambda r: r["rate"], reverse=True)
+    return rows
+
+
+def shortfall_streaks(start=None, end=None):
+    """Current run of consecutive days (ending at `end`, default today) each car has
+    had an unresolved open shortfall, back to `start` (default LAUNCH_DATE). Cars with
+    no active streak are omitted."""
+    end = end or date.today()
+    lookback_start = start or LAUNCH_DATE
+    cars = Car.query.filter(Car.daily_target > 0).order_by(Car.code).all()
+    if not cars:
+        return []
+    car_ids = [c.id for c in cars]
+
+    collected_rows = (
+        db.session.query(CollectionLine.collection_date, CollectionLine.car_id, func.sum(CollectionLine.amount))
+        .filter(CollectionLine.car_id.in_(car_ids), CollectionLine.collection_date.between(lookback_start, end))
+        .group_by(CollectionLine.collection_date, CollectionLine.car_id)
+        .all()
+    )
+    collected_map = {(car_id, d): total for d, car_id, total in collected_rows}
+
+    cleared_dates = {
+        (c.car_id, c.date)
+        for c in ShortfallClearance.query.filter(
+            ShortfallClearance.car_id.in_(car_ids), ShortfallClearance.date.between(lookback_start, end)
+        ).all()
+    }
+
+    rows = []
+    for car in cars:
+        streak = 0
+        d = end
+        while d >= lookback_start:
+            collected = collected_map.get((car.id, d), 0.0)
+            is_open_shortfall = collected < car.daily_target and (car.id, d) not in cleared_dates
+            if not is_open_shortfall:
+                break
+            streak += 1
+            d -= timedelta(days=1)
+        if streak > 0:
+            rows.append({"car": car, "streak_days": streak})
+    rows.sort(key=lambda r: r["streak_days"], reverse=True)
+    return rows
+
+
+def driver_totals(start=None, end=None):
+    """Per-driver (current Car.driver_name assignment) collected/consumed/net and
+    open-shortfall totals. Reflects each car's current driver, not historical
+    assignment at the time of each transaction."""
+    cars = Car.query.filter(Car.driver_name.isnot(None), Car.driver_name != "").order_by(Car.driver_name).all()
+    if not cars:
+        return {"rows": [], "grand_collected": 0.0, "grand_consumed": 0.0, "grand_net": 0.0, "grand_shortfall_open": 0.0}
+
+    shortfall_rows = shortfall_report(start or LAUNCH_DATE, end or date.today())
+    open_shortfall_by_car = {}
+    for r in shortfall_rows:
+        if not r["clearance"]:
+            open_shortfall_by_car[r["car"].id] = open_shortfall_by_car.get(r["car"].id, 0.0) + r["shortfall"]
+
+    by_driver = {}
+    for car in cars:
+        coll_q = db.session.query(func.coalesce(func.sum(CollectionLine.amount), 0.0)).filter(
+            CollectionLine.car_id == car.id
+        )
+        cons_q = db.session.query(func.coalesce(func.sum(ConsumptionEntry.amount), 0.0)).filter(
+            ConsumptionEntry.car_id == car.id
+        )
+        if start and end:
+            coll_q = coll_q.filter(CollectionLine.collection_date.between(start, end))
+            cons_q = cons_q.filter(ConsumptionEntry.date.between(start, end))
+        collected = coll_q.scalar() or 0.0
+        consumed = cons_q.scalar() or 0.0
+
+        entry = by_driver.setdefault(
+            car.driver_name, {"driver": car.driver_name, "cars": [], "collected": 0.0, "consumed": 0.0, "shortfall_open": 0.0}
+        )
+        entry["cars"].append(car.code)
+        entry["collected"] += collected
+        entry["consumed"] += consumed
+        entry["shortfall_open"] += open_shortfall_by_car.get(car.id, 0.0)
+
+    rows = []
+    grand_collected = grand_consumed = grand_shortfall_open = 0.0
+    for entry in sorted(by_driver.values(), key=lambda e: e["driver"] or ""):
+        net = entry["collected"] - entry["consumed"]
+        rows.append(
+            {
+                "driver": entry["driver"],
+                "cars": ", ".join(sorted(entry["cars"])),
+                "collected": entry["collected"],
+                "consumed": entry["consumed"],
+                "net": net,
+                "shortfall_open": entry["shortfall_open"],
+            }
+        )
+        grand_collected += entry["collected"]
+        grand_consumed += entry["consumed"]
+        grand_shortfall_open += entry["shortfall_open"]
+
+    return {
+        "rows": rows,
+        "grand_collected": grand_collected,
+        "grand_consumed": grand_consumed,
+        "grand_net": grand_collected - grand_consumed,
+        "grand_shortfall_open": grand_shortfall_open,
+    }
+
+
+def category_totals(start=None, end=None):
+    """Total consumption per expense category (default all time), largest first."""
+    categories = ExpenseCategory.query.order_by(ExpenseCategory.name).all()
+    rows = []
+    grand_total = 0.0
+    for cat in categories:
+        q = db.session.query(func.coalesce(func.sum(ConsumptionEntry.amount), 0.0)).filter(
+            ConsumptionEntry.category_id == cat.id
+        )
+        if start and end:
+            q = q.filter(ConsumptionEntry.date.between(start, end))
+        total = q.scalar() or 0.0
+        if total:
+            rows.append({"category": cat, "total": total})
+            grand_total += total
+    rows.sort(key=lambda r: r["total"], reverse=True)
+    return {"rows": rows, "grand_total": grand_total}
+
+
+def debt_monthly_trend(start, end):
+    """Debt owed vs paid per calendar month overlapping [start, end], oldest first."""
+    points = []
+    y, m = start.year, start.month
+    while (y, m) <= (end.year, end.month):
+        m_start, m_end = month_bounds(y, m)
+        bucket_start = max(m_start, start)
+        bucket_end = min(m_end, end)
+        owed = (
+            db.session.query(func.coalesce(func.sum(Debt.amount), 0.0))
+            .filter(Debt.date.between(bucket_start, bucket_end))
+            .scalar()
+            or 0.0
+        )
+        paid = (
+            db.session.query(func.coalesce(func.sum(DebtPayment.amount), 0.0))
+            .filter(DebtPayment.date.between(bucket_start, bucket_end))
+            .scalar()
+            or 0.0
+        )
+        points.append(
+            {
+                "label": f"{calendar.month_abbr[m].upper()} {y % 100:02d}",
+                "owed": owed,
+                "paid": paid,
+                "net": owed - paid,
+            }
+        )
+        m += 1
+        if m == 13:
+            m = 1
+            y += 1
+    return points

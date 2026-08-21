@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}Uchambuzi - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3">Uchambuzi wa Magari na Madereva</h4>
+<p class="text-muted small mb-3">
+  Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na madeni &mdash;
+  yote kwa kipindi ulichochagua hapa chini.
+</p>
+
+<form class="row g-2 mb-4 card-panel" method="get">
+  <div class="col-auto">
+    <label class="form-label small mb-0">Kuanzia</label>
+    <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">Hadi</label>
+    <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
+  </div>
+  <div class="col-auto d-flex align-items-end">
+    <button class="btn btn-outline-secondary">Onyesha</button>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-7">
+    <div class="card-panel h-100">
+      <strong>Muhtasari kwa Gari (kwa kipindi)</strong>
+      <table class="table table-sm table-money mt-2 mb-0">
+        <thead><tr><th>Gari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th><th class="amount">Kiwango cha Lengo</th></tr></thead>
+        <tbody>
+          {% for r in car_totals.rows %}
+          {% set ach = achievement_by_car.get(r.car.id) %}
+          <tr>
+            <td>{{ r.car.code }}</td>
+            <td class="amount">{{ r.collected | money }}</td>
+            <td class="amount">{{ r.consumed | money }}</td>
+            <td class="amount">{{ r.net | money }}</td>
+            <td class="amount">
+              {% if ach %}
+                <span class="{% if ach.rate >= 80 %}text-success{% elif ach.rate >= 50 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                  {{ "%.0f"|format(ach.rate) }}%
+                </span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="table-light fw-bold">
+            <td>JUMLA</td>
+            <td class="amount">{{ car_totals.grand_collected | money }}</td>
+            <td class="amount">{{ car_totals.grand_consumed | money }}</td>
+            <td class="amount">{{ car_totals.grand_net | money }}</td>
+            <td class="amount"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="form-text mt-1">Kiwango cha Lengo = asilimia ya siku katika kipindi hiki ambazo gari lilifikia lengo lake la siku.</div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card-panel h-100">
+      <strong>Magari Yenye Tatizo (Siku Mfululizo Bila Kufikia Lengo)</strong>
+      <table class="table table-sm mt-2 mb-0">
+        <thead><tr><th>Gari</th><th>Dereva</th><th class="amount">Siku Mfululizo</th></tr></thead>
+        <tbody>
+          {% for s in streaks %}
+          <tr>
+            <td>{{ s.car.code }}</td>
+            <td>{{ s.car.driver_name or '-' }}</td>
+            <td class="amount">
+              <span class="badge {% if s.streak_days >= 3 %}text-bg-danger{% else %}text-bg-warning{% endif %}">
+                {{ s.streak_days }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="text-muted text-center py-3">Hakuna gari lenye tatizo kwa kipindi hiki.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card-panel mb-4">
+  <strong>Muhtasari kwa Dereva (kwa kipindi)</strong>
+  <table class="table table-sm table-money mt-2 mb-0">
+    <thead><tr><th>Dereva</th><th>Magari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th><th class="amount">Upungufu Wazi</th></tr></thead>
+    <tbody>
+      {% for r in driver_summary.rows %}
+      <tr>
+        <td>{{ r.driver }}</td>
+        <td>{{ r.cars }}</td>
+        <td class="amount">{{ r.collected | money }}</td>
+        <td class="amount">{{ r.consumed | money }}</td>
+        <td class="amount">{{ r.net | money }}</td>
+        <td class="amount {% if r.shortfall_open %}text-danger{% endif %}">{{ r.shortfall_open | money }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted text-center py-3">Hakuna gari lenye dereva bado. Ongeza dereva kwenye ukurasa wa Magari.</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if driver_summary.rows %}
+    <tfoot>
+      <tr class="table-light fw-bold">
+        <td colspan="2">JUMLA</td>
+        <td class="amount">{{ driver_summary.grand_collected | money }}</td>
+        <td class="amount">{{ driver_summary.grand_consumed | money }}</td>
+        <td class="amount">{{ driver_summary.grand_net | money }}</td>
+        <td class="amount">{{ driver_summary.grand_shortfall_open | money }}</td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card-panel h-100">
+      <strong>Matumizi kwa Aina (kwa kipindi)</strong>
+      <canvas id="categoryChart" height="160" class="mt-2"></canvas>
+      <table class="table table-sm table-money mt-3 mb-0">
+        <thead><tr><th>Aina</th><th class="amount">Kiasi</th></tr></thead>
+        <tbody>
+          {% for r in category_summary.rows %}
+          <tr>
+            <td>{{ r.category.name }}</td>
+            <td class="amount">{{ r.total | money }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="2" class="text-muted text-center py-3">Hakuna matumizi kwa kipindi hiki.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card-panel h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>Madeni kwa Mwezi (kwa kipindi)</strong>
+        <span>
+          <span class="legend-dot" style="background:#d03b3b"></span>Deni Jipya
+          <span class="legend-dot ms-3" style="background:#0ca30c"></span>Malipo
+        </span>
+      </div>
+      <canvas id="debtTrendChart" height="110"></canvas>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+const carPalette = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
+
+const categoryLabels = {{ category_summary.rows | map(attribute='category.name') | list | tojson }};
+const categoryData = {{ category_summary.rows | map(attribute='total') | list | tojson }};
+new Chart(document.getElementById('categoryChart'), {
+  type: 'doughnut',
+  data: {
+    labels: categoryLabels,
+    datasets: [{ data: categoryData, backgroundColor: carPalette }],
+  },
+  options: {
+    plugins: { legend: { position: 'bottom' } },
+  }
+});
+
+const debtTrend = {{ debt_trend | tojson }};
+new Chart(document.getElementById('debtTrendChart'), {
+  type: 'bar',
+  data: {
+    labels: debtTrend.map(p => p.label),
+    datasets: [
+      { label: 'Deni Jipya', data: debtTrend.map(p => p.owed), backgroundColor: '#d03b3b', borderRadius: 4 },
+      { label: 'Malipo', data: debtTrend.map(p => p.paid), backgroundColor: '#0ca30c', borderRadius: 4 },
+    ]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: '#e1e0d9' }, ticks: { callback: v => v.toLocaleString() } },
+    }
+  }
+});
+</script>
+{% endblock %}

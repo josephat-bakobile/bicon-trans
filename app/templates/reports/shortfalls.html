@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_pagination.html" import render_pagination %}
 {% block title %}Upungufu wa Makusanyo - BICON TRANS{% endblock %}
 {% block content %}
 
@@ -24,6 +25,52 @@
   </div>
 </form>
 
+<div class="card-panel mb-4">
+  <table class="table table-sm table-money align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Tarehe</th>
+        <th>Gari</th>
+        <th class="amount">Lengo</th>
+        <th class="amount">Kilichokusanywa</th>
+        <th class="amount">Upungufu</th>
+        <th>Hali</th>
+        <th>Fafanua</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in open_rows %}
+      <tr>
+        <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
+        <td>{{ r.car.code }}</td>
+        <td class="amount">{{ r.target | money }}</td>
+        <td class="amount">{{ r.collected | money }}</td>
+        <td class="amount text-danger fw-bold">{{ r.shortfall | money }}</td>
+        <td>
+          <span class="badge text-bg-danger">Wazi</span>
+        </td>
+        <td style="min-width:280px;">
+          <form method="post" action="{{ url_for('reports.clear_shortfall') }}" class="d-flex gap-1">
+            <input type="hidden" name="car_id" value="{{ r.car.id }}">
+            <input type="hidden" name="date" value="{{ r.date.isoformat() }}">
+            <input type="hidden" name="start" value="{{ start.isoformat() }}">
+            <input type="hidden" name="end" value="{{ end.isoformat() }}">
+            <input type="text" name="description" class="form-control form-control-sm" placeholder="Maelezo ya upungufu" required>
+            <input type="text" name="action_code" class="form-control form-control-sm" placeholder="Msimbo" style="max-width:110px;" required>
+            <button class="btn btn-sm btn-outline-primary text-nowrap">Fafanua</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted text-center py-4">Hakuna upungufu wazi katika kipindi hiki.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {{ render_pagination('reports.shortfalls', open_page, open_pages, 'open_page',
+      {'start': start.isoformat(), 'end': end.isoformat(), 'cleared_page': cleared_page}) }}
+</div>
+
+<h5 class="mb-3">Upungufu Uliofafanuliwa</h5>
 <div class="card-panel">
   <table class="table table-sm table-money align-middle mb-0">
     <thead>
@@ -34,45 +81,31 @@
         <th class="amount">Kilichokusanywa</th>
         <th class="amount">Upungufu</th>
         <th>Hali</th>
-        <th>Maelezo / Fafanua</th>
+        <th>Maelezo</th>
       </tr>
     </thead>
     <tbody>
-      {% for r in rows %}
+      {% for r in cleared_rows %}
       <tr>
         <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
         <td>{{ r.car.code }}</td>
         <td class="amount">{{ r.target | money }}</td>
         <td class="amount">{{ r.collected | money }}</td>
-        <td class="amount text-danger fw-bold">{{ r.shortfall | money }}</td>
+        <td class="amount text-success fw-bold">{{ r.shortfall | money }}</td>
         <td>
-          {% if r.clearance %}
-            <span class="badge text-bg-success">Imefafanuliwa</span>
-          {% else %}
-            <span class="badge text-bg-danger">Wazi</span>
-          {% endif %}
+          <span class="badge text-bg-success">Imefafanuliwa</span>
         </td>
         <td style="min-width:280px;">
-          {% if r.clearance %}
-            <span class="small text-muted">{{ r.clearance.description }}</span>
-          {% else %}
-            <form method="post" action="{{ url_for('reports.clear_shortfall') }}" class="d-flex gap-1">
-              <input type="hidden" name="car_id" value="{{ r.car.id }}">
-              <input type="hidden" name="date" value="{{ r.date.isoformat() }}">
-              <input type="hidden" name="start" value="{{ start.isoformat() }}">
-              <input type="hidden" name="end" value="{{ end.isoformat() }}">
-              <input type="text" name="description" class="form-control form-control-sm" placeholder="Maelezo ya upungufu" required>
-              <input type="text" name="action_code" class="form-control form-control-sm" placeholder="Msimbo" style="max-width:110px;" required>
-              <button class="btn btn-sm btn-outline-primary text-nowrap">Fafanua</button>
-            </form>
-          {% endif %}
+          <span class="small text-muted">{{ r.clearance.description }}</span>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="7" class="text-muted text-center py-4">Hakuna upungufu katika kipindi hiki.</td></tr>
+      <tr><td colspan="7" class="text-muted text-center py-4">Hakuna upungufu uliofafanuliwa katika kipindi hiki.</td></tr>
       {% endfor %}
     </tbody>
   </table>
+  {{ render_pagination('reports.shortfalls', cleared_page, cleared_pages, 'cleared_page',
+      {'start': start.isoformat(), 'end': end.isoformat(), 'open_page': open_page}) }}
 </div>
 
 {% endblock %}
