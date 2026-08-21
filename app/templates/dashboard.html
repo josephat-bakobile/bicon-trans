@@ -55,6 +55,35 @@
   </div>
 </div>
 
+{% if service_alerts %}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card-panel">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>Magari Yanayohitaji Huduma</strong>
+        <a href="{{ url_for('service.index') }}" class="small">Ona zote &rarr;</a>
+      </div>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Gari</th><th>Huduma Inayofuata</th><th>Siku Zilizobaki</th><th>Hali</th></tr></thead>
+        <tbody>
+          {% for p in service_alerts %}
+          <tr>
+            <td>{{ p.car.code }}</td>
+            <td>{{ p.due_date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ p.days_remaining }}</td>
+            <td>
+              {% if p.status == 'overdue' %}<span class="badge text-bg-danger">Imechelewa</span>
+              {% else %}<span class="badge text-bg-warning">Inakaribia</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-4">
   <div class="col-12">
     <div class="card-panel">

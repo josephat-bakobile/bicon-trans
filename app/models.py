@@ -12,6 +12,7 @@ class Car(db.Model):
     driver_name = db.Column(db.String(100))
     active = db.Column(db.Boolean, default=True, nullable=False)
     daily_target = db.Column(db.Float, default=0.0, nullable=False)
+    service_interval_days = db.Column(db.Integer, default=20, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
@@ -138,3 +139,29 @@ class ShortfallClearance(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")
+
+
+class CarService(db.Model):
+    """A service event performed on a car. The most recent row per car is the
+    baseline the next-service prediction counts forward from; the first row ever
+    entered for a car (which may be backfilled) is simply its baseline. If a cost
+    is recorded, a linked ConsumptionEntry is auto-created so it flows into the
+    existing consumption totals/reports without double entry."""
+
+    __tablename__ = "car_services"
+
+    id = db.Column(db.Integer, primary_key=True)
+    car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
+    service_date = db.Column(db.Date, nullable=False, default=date_cls.today)
+    description = db.Column(db.String(255))
+    consumption_entry_id = db.Column(
+        db.Integer, db.ForeignKey("consumption_entries.id"), unique=True
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    car = db.relationship("Car")
+    consumption_entry = db.relationship("ConsumptionEntry")
+
+    @property
+    def cost(self):
+        return self.consumption_entry.amount if self.consumption_entry else 0.0

@@ -45,6 +45,7 @@ def create_app():
     from .routes.categories import bp as categories_bp
     from .routes.reports import bp as reports_bp
     from .routes.reconciliation import bp as reconciliation_bp
+    from .routes.service import bp as service_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -55,6 +56,7 @@ def create_app():
     app.register_blueprint(categories_bp, url_prefix="/categories")
     app.register_blueprint(reports_bp, url_prefix="/reports")
     app.register_blueprint(reconciliation_bp, url_prefix="/reconciliation")
+    app.register_blueprint(service_bp, url_prefix="/service")
 
     app.jinja_env.filters["money"] = lambda v: f"{(v or 0):,.0f}"
 
@@ -111,6 +113,11 @@ def _migrate_schema():
     if "driver_name" not in car_cols:
         db.session.execute(text("ALTER TABLE cars ADD COLUMN driver_name VARCHAR(100)"))
         db.session.commit()
+    if "service_interval_days" not in car_cols:
+        db.session.execute(
+            text("ALTER TABLE cars ADD COLUMN service_interval_days INTEGER NOT NULL DEFAULT 20")
+        )
+        db.session.commit()
 
     txn_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(collection_transactions)")).fetchall()]
     if "transaction_date" not in txn_cols and "date" in txn_cols:
@@ -154,6 +161,8 @@ def _seed_defaults():
             db.session.add(Car(code=code))
     if ExpenseCategory.query.count() == 0:
         db.session.add(ExpenseCategory(name="MATUMIZI"))
+    if not ExpenseCategory.query.filter_by(name="SERVICE").first():
+        db.session.add(ExpenseCategory(name="SERVICE"))
     db.session.commit()
 
 

@@ -2,6 +2,7 @@ from datetime import date
 
 from flask import Blueprint, render_template
 
+from ..car_service import service_predictions
 from ..models import CollectionTransaction, ConsumptionEntry
 from ..utils import car_month_matrix, debt_balances, month_bounds, monthly_trend, period_totals, shortfall_totals
 
@@ -19,6 +20,7 @@ def index():
     shortfalls = shortfall_totals()
     trend = monthly_trend(6)
     contribution_matrix = car_month_matrix(6)
+    service_alerts = [p for p in service_predictions() if p["status"] in ("overdue", "due_soon")]
 
     recent_transactions = (
         CollectionTransaction.query.order_by(
@@ -43,5 +45,6 @@ def index():
         recent_transactions=recent_transactions,
         recent_consumption=recent_consumption,
         contribution_matrix=contribution_matrix,
+        service_alerts=service_alerts,
         today=today,
     )

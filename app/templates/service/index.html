@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Huduma za Gari - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3">Huduma za Gari (Service Prediction)</h4>
+
+<div class="card-panel mb-4">
+  <strong>Utabiri wa Huduma Inayofuata</strong>
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mt-2 mb-0">
+    <thead>
+      <tr>
+        <th>Gari</th>
+        <th>Huduma ya Mwisho</th>
+        <th>Muda wa Huduma (siku)</th>
+        <th>Siku Zilizosamehewa</th>
+        <th>Huduma Inayofuata</th>
+        <th>Siku Zilizobaki</th>
+        <th>Hali</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in predictions %}
+      <tr>
+        <td>{{ p.car.code }}</td>
+        <td>{{ p.last_service.service_date.strftime('%d-%m-%Y') if p.last_service else '-' }}</td>
+        <td>
+          <form method="post" action="{{ url_for('service.update_interval', car_id=p.car.id) }}" class="d-flex gap-1">
+            <input type="number" min="1" step="1" name="service_interval_days" value="{{ p.car.service_interval_days }}"
+                   class="form-control form-control-sm" style="max-width:80px;">
+            <input type="text" name="action_code" placeholder="Msimbo" class="form-control form-control-sm" style="max-width:100px;" required>
+            <button class="btn btn-sm btn-outline-primary">Hifadhi</button>
+          </form>
+        </td>
+        <td>{{ p.excused_days }}</td>
+        <td>{{ p.due_date.strftime('%d-%m-%Y') if p.due_date else '-' }}</td>
+        <td>{{ p.days_remaining if p.days_remaining is not none else '-' }}</td>
+        <td>
+          {% if p.status == 'overdue' %}<span class="badge text-bg-danger">Imechelewa</span>
+          {% elif p.status == 'due_soon' %}<span class="badge text-bg-warning">Inakaribia</span>
+          {% elif p.status == 'ok' %}<span class="badge text-bg-success">Sawa</span>
+          {% else %}<span class="badge text-bg-secondary">Haijaanzishwa</span>{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted text-center py-3">Hakuna magari.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="form-text mt-2">
+    Siku ambazo gari halikukusanya kabisa au lilikusanya kiasi kidogo (upungufu uliofafanuliwa) hazihesabiwi
+    kwenye muda wa huduma &mdash; huongeza tarehe ya huduma inayofuata kwa siku moja kwa kila siku iliyosamehewa.
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-panel">
+      <strong>Andika Huduma Mpya</strong>
+      <form method="post" action="{{ url_for('service.new') }}" class="mt-2">
+        <div class="mb-2">
+          <label class="form-label">Tarehe ya Huduma</label>
+          <input type="date" class="form-control" name="service_date" required value="{{ today_iso }}" max="{{ today_iso }}">
+          <div class="form-text">Kwa huduma ya awali (baseline), weka tarehe halisi ya huduma ya mwisho hata kama ni ya zamani.</div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Gari</label>
+          <select class="form-select" name="car_id" required>
+            {% for c in cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Gharama (si lazima)</label>
+          <input type="number" step="0.01" min="0" class="form-control" name="cost" placeholder="0">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Aina ya Matumizi (kama kuna gharama)</label>
+          <select class="form-select" name="category_id">
+            <option value="">-- chagua --</option>
+            {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Maelezo (si lazima)</label>
+          <textarea class="form-control" name="description" rows="2"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
+          <input type="text" class="form-control" name="action_code" required>
+        </div>
+        <button class="btn btn-primary btn-sm">Hifadhi Huduma</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card-panel">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>Historia ya Huduma</strong>
+        <form method="get" class="d-flex gap-2">
+          <select class="form-select form-select-sm" name="car_id" onchange="this.form.submit()">
+            <option value="">Magari Yote</option>
+            {% for c in cars %}
+            <option value="{{ c.id }}" {{ 'selected' if car_id == c.id else '' }}>{{ c.code }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+      <table class="table table-sm table-money mb-0">
+        <thead><tr><th>Tarehe</th><th>Gari</th><th>Maelezo</th><th class="amount">Gharama</th><th></th></tr></thead>
+        <tbody>
+          {% for s in history %}
+          <tr>
+            <td>{{ s.service_date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ s.car.code }}</td>
+            <td>{{ s.description or '-' }}</td>
+            <td class="amount">{{ s.cost | money }}</td>
+            <td class="text-end text-nowrap">
+              <a href="{{ url_for('service.edit', service_id=s.id) }}" class="btn btn-sm btn-outline-secondary">Hariri</a>
+              <form method="post" action="{{ url_for('service.delete', service_id=s.id) }}" class="action-code-form d-inline" data-confirm="Futa huduma hii?">
+                <button class="btn btn-sm btn-outline-danger">Futa</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-muted text-center py-3">Hakuna huduma zilizohifadhiwa.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
