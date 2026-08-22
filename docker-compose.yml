@@ -13,4 +13,8 @@ services:
       - SECRET_KEY=change-me-in-production
       # Login password for the whole system.
       - SITE_PASSWORD=BAKOBILE
+      # Beem Africa SMS (driver notifications). Leave unset to disable SMS sending.
+      # - BULK_SMS_SECRET_KEY=change-me-beem-secret-key
+      # - API_KEY=change-me-beem-api-key
+      # - BEEM_SENDER_ID=change-me-registered-sender-id
     restart: unless-stopped

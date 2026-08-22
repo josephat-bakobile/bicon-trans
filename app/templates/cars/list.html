@@ -2,7 +2,10 @@
 {% block title %}Magari - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi bi-truck text-primary"></i> Magari</h4>
+<div class="page-header">
+  <h4><i class="bi bi-truck text-primary"></i> Magari</h4>
+  <a href="{{ url_for('drivers.list_view') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-badge"></i> Madereva</a>
+</div>
 
 <div class="row g-4">
   <div class="col-lg-4">
@@ -19,7 +22,11 @@
         </div>
         <div class="mb-2">
           <label class="form-label">Dereva (si lazima)</label>
-          <input type="text" class="form-control" name="driver_name">
+          <select class="form-select" name="driver_id">
+            <option value="">-- hakuna --</option>
+            {% for d in unassigned_drivers %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+          </select>
+          <div class="form-text">Dereva mmoja anaendesha gari moja tu. Ongeza dereva mpya kwenye ukurasa wa <a href="{{ url_for('drivers.list_view') }}">Madereva</a>.</div>
         </div>
         <div class="mb-2">
           <label class="form-label">Kiasi cha Lengo la Siku (si lazima)</label>
@@ -35,14 +42,18 @@
       <table class="table table-sm table-money align-middle mb-0">
         <thead><tr><th>Code</th><th>Jina</th><th>Dereva</th><th class="amount">Lengo la Siku</th><th>Hali</th><th></th></tr></thead>
         <tbody>
-          {% for c in cars %}
+          {% for c, driver_options in car_rows %}
           <tr>
             <td>{{ c.code }}</td>
             <td>{{ c.name or '-' }}</td>
             <td>
               <form method="post" action="{{ url_for('cars.update_driver', car_id=c.id) }}" class="d-flex gap-1">
-                <input type="text" name="driver_name" value="{{ c.driver_name or '' }}"
-                       class="form-control form-control-sm" style="max-width:120px;" placeholder="Dereva">
+                <select name="driver_id" class="form-select form-select-sm" style="max-width:150px;">
+                  <option value="">-- hakuna --</option>
+                  {% for d in driver_options %}
+                  <option value="{{ d.id }}" {{ 'selected' if c.driver_id == d.id }}>{{ d.name }}</option>
+                  {% endfor %}
+                </select>
                 <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
               </form>
             </td>

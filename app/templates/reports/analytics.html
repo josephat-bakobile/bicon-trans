@@ -65,20 +65,30 @@
     <div class="card-panel h-100">
       <strong><i class="bi bi-exclamation-triangle text-danger"></i> Magari Yenye Tatizo (Siku Mfululizo Bila Kufikia Lengo)</strong>
       <table class="table table-sm mt-2 mb-0">
-        <thead><tr><th>Gari</th><th>Dereva</th><th class="amount">Siku Mfululizo</th></tr></thead>
+        <thead><tr><th>Gari</th><th>Dereva</th><th class="amount">Siku Mfululizo</th><th></th></tr></thead>
         <tbody>
           {% for s in streaks %}
           <tr>
             <td>{{ s.car.code }}</td>
-            <td>{{ s.car.driver_name or '-' }}</td>
+            <td>{{ s.car.driver.name if s.car.driver else '-' }}</td>
             <td class="amount">
               <span class="badge {% if s.streak_days >= 3 %}text-bg-danger{% else %}text-bg-warning{% endif %}">
                 {{ s.streak_days }}
               </span>
             </td>
+            <td class="text-end">
+              {% if current_user.has_permission('sms') and sms_ready(s.car) %}
+              <form method="post" action="{{ url_for('reports.send_streak_sms', car_id=s.car.id) }}" class="confirm-form"
+                    data-confirm="Tuma SMS ya tatizo kwa dereva wa {{ s.car.code }}?">
+                <input type="hidden" name="start" value="{{ start.isoformat() }}">
+                <input type="hidden" name="end" value="{{ end.isoformat() }}">
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
+              </form>
+              {% endif %}
+            </td>
           </tr>
           {% else %}
-          <tr><td colspan="3" class="text-muted text-center py-3">Hakuna gari lenye tatizo kwa kipindi hiki.</td></tr>
+          <tr><td colspan="4" class="text-muted text-center py-3">Hakuna gari lenye tatizo kwa kipindi hiki.</td></tr>
           {% endfor %}
         </tbody>
       </table>

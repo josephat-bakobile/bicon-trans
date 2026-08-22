@@ -17,11 +17,13 @@ PERMISSION_MAP = {
     "consumption": "consumption",
     "debts": "debts",
     "cars": "cars",
+    "drivers": "cars",
     "service": "service",
     "renewals": "renewals",
     "categories": "categories",
     "reports": "reports",
     "admin": "users",
+    "smslog": "sms",
 }
 
 # Passenger/cPanel (and any WSGI host that isn't Docker) does not source a shell
@@ -58,12 +60,14 @@ def create_app():
     from .routes.consumption import bp as consumption_bp
     from .routes.debts import bp as debts_bp
     from .routes.cars import bp as cars_bp
+    from .routes.drivers import bp as drivers_bp
     from .routes.categories import bp as categories_bp
     from .routes.reports import bp as reports_bp
     from .routes.reconciliation import bp as reconciliation_bp
     from .routes.service import bp as service_bp
     from .routes.renewals import bp as renewals_bp
     from .routes.admin import bp as admin_bp
+    from .routes.smslog import bp as smslog_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -71,12 +75,14 @@ def create_app():
     app.register_blueprint(consumption_bp, url_prefix="/consumption")
     app.register_blueprint(debts_bp, url_prefix="/debts")
     app.register_blueprint(cars_bp, url_prefix="/cars")
+    app.register_blueprint(drivers_bp, url_prefix="/drivers")
     app.register_blueprint(categories_bp, url_prefix="/categories")
     app.register_blueprint(reports_bp, url_prefix="/reports")
     app.register_blueprint(reconciliation_bp, url_prefix="/reconciliation")
     app.register_blueprint(service_bp, url_prefix="/service")
     app.register_blueprint(renewals_bp, url_prefix="/renewals")
     app.register_blueprint(admin_bp, url_prefix="/admin")
+    app.register_blueprint(smslog_bp, url_prefix="/sms-log")
 
     app.jinja_env.filters["money"] = lambda v: f"{(v or 0):,.0f}"
 
@@ -93,9 +99,11 @@ def create_app():
 
     app.jinja_env.filters["money_short"] = _money_short
 
+    from .sms import can_send as sms_can_send
     from .utils import MAX_BACKDATE_DAYS, transaction_locked
 
     app.jinja_env.globals["transaction_locked"] = transaction_locked
+    app.jinja_env.globals["sms_ready"] = lambda car: sms_can_send(car)[0]
 
     @app.context_processor
     def _inject_date_bounds():
@@ -152,14 +160,45 @@ def _migrate_schema():
     if "daily_target" not in car_cols:
         db.session.execute(text("ALTER TABLE cars ADD COLUMN daily_target FLOAT NOT NULL DEFAULT 0"))
         db.session.commit()
-    if "driver_name" not in car_cols:
-        db.session.execute(text("ALTER TABLE cars ADD COLUMN driver_name VARCHAR(100)"))
-        db.session.commit()
     if "service_interval_days" not in car_cols:
         db.session.execute(
             text("ALTER TABLE cars ADD COLUMN service_interval_days INTEGER NOT NULL DEFAULT 20")
         )
         db.session.commit()
+    if "driver_id" not in car_cols:
+        db.session.execute(text("ALTER TABLE cars ADD COLUMN driver_id INTEGER REFERENCES drivers(id)"))
+        db.session.commit()
+        db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_cars_driver_id ON cars (driver_id)"))
+        db.session.commit()
+
+    # One-time backfill: cars used to carry driver_name/driver_phone/sms_enabled
+    # directly. Turn any existing values into real Driver rows (one driver, one
+    # car) before dropping the old columns.
+    if "driver_name" in car_cols:
+        from .models import Driver
+
+        legacy_rows = (
+            db.session.execute(text("SELECT * FROM cars WHERE driver_name IS NOT NULL AND driver_name != ''"))
+            .mappings()
+            .fetchall()
+        )
+        for row in legacy_rows:
+            driver_name = row["driver_name"]
+            driver = Driver.query.filter_by(name=driver_name).first()
+            if driver is None:
+                driver = Driver(name=driver_name, phone=row.get("driver_phone"), sms_enabled=bool(row.get("sms_enabled", 1)))
+                db.session.add(driver)
+                db.session.flush()
+            db.session.execute(text("UPDATE cars SET driver_id = :did WHERE id = :cid"), {"did": driver.id, "cid": row["id"]})
+        db.session.commit()
+
+        for legacy_col in ("driver_name", "driver_phone", "sms_enabled"):
+            if legacy_col in car_cols:
+                try:
+                    db.session.execute(text(f"ALTER TABLE cars DROP COLUMN {legacy_col}"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
     txn_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(collection_transactions)")).fetchall()]
     if "transaction_date" not in txn_cols and "date" in txn_cols:
@@ -223,6 +262,7 @@ PERMISSIONS = [
     ("categories", "Aina za Matumizi"),
     ("reports", "Ripoti"),
     ("users", "Watumiaji na Majukumu"),
+    ("sms", "Kutuma SMS kwa Madereva"),
 ]
 
 DEFAULT_SUPER_ADMIN_USERNAME = "josephat.bakobile"

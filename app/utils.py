@@ -12,6 +12,7 @@ from .models import (
     ConsumptionEntry,
     Debt,
     DebtPayment,
+    Driver,
     ExpenseCategory,
     ShortfallClearance,
 )
@@ -346,10 +347,10 @@ def shortfall_streaks(start=None, end=None):
 
 
 def driver_totals(start=None, end=None):
-    """Per-driver (current Car.driver_name assignment) collected/consumed/net and
-    open-shortfall totals. Reflects each car's current driver, not historical
-    assignment at the time of each transaction."""
-    cars = Car.query.filter(Car.driver_name.isnot(None), Car.driver_name != "").order_by(Car.driver_name).all()
+    """Per-driver (current car assignment) collected/consumed/net and open-shortfall
+    totals. Each driver operates at most one car, so this is one row per car with
+    an assigned driver -- reflects the current assignment, not historical."""
+    cars = Car.query.filter(Car.driver_id.isnot(None)).join(Car.driver).order_by(Driver.name).all()
     if not cars:
         return {"rows": [], "grand_collected": 0.0, "grand_consumed": 0.0, "grand_net": 0.0, "grand_shortfall_open": 0.0}
 
@@ -359,7 +360,8 @@ def driver_totals(start=None, end=None):
         if not r["clearance"]:
             open_shortfall_by_car[r["car"].id] = open_shortfall_by_car.get(r["car"].id, 0.0) + r["shortfall"]
 
-    by_driver = {}
+    rows = []
+    grand_collected = grand_consumed = grand_shortfall_open = 0.0
     for car in cars:
         coll_q = db.session.query(func.coalesce(func.sum(CollectionLine.amount), 0.0)).filter(
             CollectionLine.car_id == car.id
@@ -372,32 +374,21 @@ def driver_totals(start=None, end=None):
             cons_q = cons_q.filter(ConsumptionEntry.date.between(start, end))
         collected = coll_q.scalar() or 0.0
         consumed = cons_q.scalar() or 0.0
+        shortfall_open = open_shortfall_by_car.get(car.id, 0.0)
 
-        entry = by_driver.setdefault(
-            car.driver_name, {"driver": car.driver_name, "cars": [], "collected": 0.0, "consumed": 0.0, "shortfall_open": 0.0}
-        )
-        entry["cars"].append(car.code)
-        entry["collected"] += collected
-        entry["consumed"] += consumed
-        entry["shortfall_open"] += open_shortfall_by_car.get(car.id, 0.0)
-
-    rows = []
-    grand_collected = grand_consumed = grand_shortfall_open = 0.0
-    for entry in sorted(by_driver.values(), key=lambda e: e["driver"] or ""):
-        net = entry["collected"] - entry["consumed"]
         rows.append(
             {
-                "driver": entry["driver"],
-                "cars": ", ".join(sorted(entry["cars"])),
-                "collected": entry["collected"],
-                "consumed": entry["consumed"],
-                "net": net,
-                "shortfall_open": entry["shortfall_open"],
+                "driver": car.driver.name,
+                "cars": car.code,
+                "collected": collected,
+                "consumed": consumed,
+                "net": collected - consumed,
+                "shortfall_open": shortfall_open,
             }
         )
-        grand_collected += entry["collected"]
-        grand_consumed += entry["consumed"]
-        grand_shortfall_open += entry["shortfall_open"]
+        grand_collected += collected
+        grand_consumed += consumed
+        grand_shortfall_open += shortfall_open
 
     return {
         "rows": rows,

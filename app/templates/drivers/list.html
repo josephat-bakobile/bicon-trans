@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Madereva - BICON TRANS{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h4><i class="bi bi-person-badge text-primary"></i> Madereva</h4>
+  <a href="{{ url_for('cars.list_view') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-truck"></i> Magari</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-panel">
+      <strong><i class="bi bi-person-plus text-primary"></i> Ongeza Dereva</strong>
+      <form method="post" action="{{ url_for('drivers.new') }}" class="mt-2">
+        <div class="mb-2">
+          <label class="form-label">Jina la Dereva</label>
+          <input type="text" class="form-control" name="name" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Namba ya Simu (si lazima)</label>
+          <input type="text" class="form-control" name="phone" placeholder="mfano: 0712345678">
+          <div class="form-text">Inatumika kutuma SMS kwa dereva (makusanyo, tatizo, huduma).</div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Gari (si lazima)</label>
+          <select class="form-select" name="car_id">
+            <option value="">-- hakuna --</option>
+            {% for c in unassigned_cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
+          </select>
+          <div class="form-text">Dereva mmoja anaendesha gari moja tu.</div>
+        </div>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ongeza</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card-panel">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Jina</th><th>Namba ya Simu</th><th>Gari</th><th>SMS</th><th>Hali</th><th></th></tr></thead>
+        <tbody>
+          {% for d in drivers %}
+          <tr>
+            <td>
+              <form method="post" action="{{ url_for('drivers.edit', driver_id=d.id) }}" class="d-flex gap-1">
+                <input type="text" name="name" value="{{ d.name }}" class="form-control form-control-sm" style="max-width:120px;" required>
+                <input type="text" name="phone" value="{{ d.phone or '' }}" class="form-control form-control-sm" style="max-width:110px;" placeholder="Namba ya Simu">
+                <select name="car_id" class="form-select form-select-sm" style="max-width:100px;">
+                  <option value="">-- hakuna --</option>
+                  {% for c in unassigned_cars %}<option value="{{ c.id }}" {{ 'selected' if d.car and d.car.id == c.id }}>{{ c.code }}</option>{% endfor %}
+                  {% if d.car and d.car not in unassigned_cars %}<option value="{{ d.car.id }}" selected>{{ d.car.code }}</option>{% endif %}
+                </select>
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
+              </form>
+            </td>
+            <td>{{ d.phone or '-' }}</td>
+            <td>{{ d.car.code if d.car else '-' }}</td>
+            <td>
+              <form method="post" action="{{ url_for('drivers.toggle_sms', driver_id=d.id) }}">
+                <button class="btn btn-sm {{ 'btn-outline-success' if d.sms_enabled else 'btn-outline-secondary' }}"
+                        title="{{ 'SMS zinaruhusiwa' if d.sms_enabled else 'SMS zimezimwa' }}">
+                  <i class="bi {{ 'bi-bell' if d.sms_enabled else 'bi-bell-slash' }}"></i>
+                </button>
+              </form>
+            </td>
+            <td>
+              {% if d.active %}<span class="badge text-bg-success">Active</span>
+              {% else %}<span class="badge text-bg-secondary">Imezimwa</span>{% endif %}
+            </td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('drivers.toggle', driver_id=d.id) }}" class="confirm-form"
+                    data-confirm="{{ ('Kuzima dereva ' + d.name + ' kutamwondoa kwenye gari lake pia. Endelea?') if d.active and d.car else '' }}">
+                <button class="btn btn-sm btn-outline-secondary">
+                  <i class="bi {{ 'bi-toggle-off' if d.active else 'bi-toggle-on' }}"></i> {{ 'Zima' if d.active else 'Washa' }}
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-muted text-center py-3">Hakuna madereva bado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -71,17 +71,37 @@ class User(db.Model):
         return self.username
 
 
+class Driver(db.Model):
+    """A driver, independent of any car. One driver may operate at most one car
+    at a time -- enforced by the unique constraint on Car.driver_id -- so a
+    driver is reassigned (not duplicated) when they move to a different car."""
+
+    __tablename__ = "drivers"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20))
+    sms_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return self.name
+
+
 class Car(db.Model):
     __tablename__ = "cars"
 
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100))
-    driver_name = db.Column(db.String(100))
+    driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"), unique=True)
     active = db.Column(db.Boolean, default=True, nullable=False)
     daily_target = db.Column(db.Float, default=0.0, nullable=False)
     service_interval_days = db.Column(db.Integer, default=20, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    driver = db.relationship("Driver", backref=db.backref("car", uselist=False))
 
     def __repr__(self):
         return self.code
@@ -269,3 +289,25 @@ class CarDocument(db.Model):
 
     car = db.relationship("Car")
     document_type = db.relationship("DocumentType")
+
+
+class SmsLog(db.Model):
+    """One attempted SMS send (whether it succeeded or not), for audit/troubleshooting
+    -- e.g. a driver claiming they never got a notification, or checking Beem usage."""
+
+    __tablename__ = "sms_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    car_id = db.Column(db.Integer, db.ForeignKey("cars.id"))
+    driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"))
+    phone = db.Column(db.String(20))
+    scenario = db.Column(db.String(30), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(10), nullable=False)
+    error = db.Column(db.String(255))
+    sent_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    car = db.relationship("Car")
+    driver = db.relationship("Driver")
+    sent_by = db.relationship("User")

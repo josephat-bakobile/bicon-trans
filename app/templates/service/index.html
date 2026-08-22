@@ -17,6 +17,7 @@
         <th>Huduma Inayofuata</th>
         <th>Siku Zilizobaki</th>
         <th>Hali</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -40,9 +41,17 @@
           {% elif p.status == 'ok' %}<span class="badge text-bg-success">Sawa</span>
           {% else %}<span class="badge text-bg-secondary">Haijaanzishwa</span>{% endif %}
         </td>
+        <td class="text-end">
+          {% if p.status in ('overdue', 'due_soon') and current_user.has_permission('sms') and sms_ready(p.car) %}
+          <form method="post" action="{{ url_for('service.send_service_sms', car_id=p.car.id) }}" class="confirm-form"
+                data-confirm="Tuma SMS ya huduma kwa dereva wa {{ p.car.code }}?">
+            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
+          </form>
+          {% endif %}
+        </td>
       </tr>
       {% else %}
-      <tr><td colspan="7" class="text-muted text-center py-3">Hakuna magari.</td></tr>
+      <tr><td colspan="8" class="text-muted text-center py-3">Hakuna magari.</td></tr>
       {% endfor %}
     </tbody>
   </table>

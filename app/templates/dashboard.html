@@ -115,7 +115,7 @@
         <a href="{{ url_for('service.index') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
       </div>
       <table class="table table-sm mb-0">
-        <thead><tr><th>Gari</th><th>Huduma Inayofuata</th><th>Siku Zilizobaki</th><th>Hali</th></tr></thead>
+        <thead><tr><th>Gari</th><th>Huduma Inayofuata</th><th>Siku Zilizobaki</th><th>Hali</th><th></th></tr></thead>
         <tbody>
           {% for p in service_alerts %}
           <tr>
@@ -125,6 +125,15 @@
             <td>
               {% if p.status == 'overdue' %}<span class="badge text-bg-danger">Imechelewa</span>
               {% else %}<span class="badge text-bg-warning">Inakaribia</span>{% endif %}
+            </td>
+            <td class="text-end">
+              {% if current_user.has_permission('sms') and sms_ready(p.car) %}
+              <form method="post" action="{{ url_for('service.send_service_sms', car_id=p.car.id) }}" class="confirm-form"
+                    data-confirm="Tuma SMS ya huduma kwa dereva wa {{ p.car.code }}?">
+                <input type="hidden" name="next" value="{{ url_for('dashboard.index') }}">
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
+              </form>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}

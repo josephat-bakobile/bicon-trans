@@ -2,9 +2,11 @@ from datetime import date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 
-from ..car_service import service_predictions
+from ..car_service import predict_for_car, service_predictions
 from ..extensions import db
 from ..models import Car, CarService, ConsumptionEntry, ExpenseCategory
+from ..security import get_current_user, require_permission
+from ..sms import can_send, send_and_log
 from ..utils import parse_date
 
 bp = Blueprint("service", __name__)
@@ -145,3 +147,35 @@ def update_interval(car_id):
     db.session.commit()
     flash(f"Muda wa huduma wa {car.code} umesasishwa.", "success")
     return redirect(url_for("service.index"))
+
+
+@bp.route("/car/<int:car_id>/sms", methods=["POST"])
+@require_permission("sms")
+def send_service_sms(car_id):
+    car = Car.query.get_or_404(car_id)
+    prediction = predict_for_car(car)
+    next_url = request.form.get("next") or url_for("service.index")
+
+    if prediction["status"] not in ("overdue", "due_soon"):
+        flash(f"Gari {car.code} halihitaji huduma kwa sasa.", "danger")
+        return redirect(next_url)
+
+    ok, reason = can_send(car)
+    if not ok:
+        flash(reason, "danger")
+        return redirect(next_url)
+
+    if prediction["status"] == "overdue":
+        timing = f"lilipaswa kufanyiwa huduma tarehe {prediction['due_date'].strftime('%d-%m-%Y')} (limechelewa)"
+    else:
+        timing = f"linahitaji huduma tarehe {prediction['due_date'].strftime('%d-%m-%Y')} (siku {prediction['days_remaining']} zijazo)"
+    message = (
+        f"Habari {car.driver.name}, gari {car.code} {timing}. "
+        f"Tafadhali panga huduma haraka. - BICON TRANS"
+    )
+    sent, error = send_and_log(car, "service", message, get_current_user())
+    if sent:
+        flash(f"SMS ya huduma imetumwa kwa dereva wa {car.code}.", "success")
+    else:
+        flash(error, "danger")
+    return redirect(next_url)

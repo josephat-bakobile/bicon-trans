@@ -42,6 +42,12 @@
             <span class="badge text-bg-light border">
               {{ l.car.code }} ({{ l.collection_date.strftime('%d/%m') }}): {{ l.amount | money }}
             </span>
+            {% if current_user.has_permission('sms') and sms_ready(l.car) %}
+            <form method="post" action="{{ url_for('collections.send_collection_sms', txn_id=t.id, car_id=l.car_id) }}"
+                  class="d-inline confirm-form" data-confirm="Tuma SMS ya makusanyo kwa dereva wa {{ l.car.code }}?">
+              <button class="btn btn-sm btn-outline-primary py-0 px-1" title="Tuma SMS"><i class="bi bi-send"></i></button>
+            </form>
+            {% endif %}
           {% endfor %}
         </td>
         <td class="amount">{{ t.total | money }}</td>

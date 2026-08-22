@@ -4,6 +4,8 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..extensions import db
 from ..models import Car, CollectionLine, CollectionTransaction
+from ..security import get_current_user, require_permission
+from ..sms import can_send, send_and_log
 from ..utils import next_trans_no, parse_date, transaction_locked, validate_entry_date
 
 bp = Blueprint("collections", __name__)
@@ -218,4 +220,33 @@ def delete(txn_id):
     db.session.delete(txn)
     db.session.commit()
     flash(f"Muamala {trans_no} umefutwa.", "info")
+    return redirect(url_for("collections.list_view"))
+
+
+@bp.route("/<int:txn_id>/sms/<int:car_id>", methods=["POST"])
+@require_permission("sms")
+def send_collection_sms(txn_id, car_id):
+    txn = CollectionTransaction.query.get_or_404(txn_id)
+    car = Car.query.get_or_404(car_id)
+    line = next((l for l in txn.lines if l.car_id == car_id), None)
+
+    if line is None:
+        flash(f"Gari {car.code} halipo kwenye muamala {txn.trans_no}.", "danger")
+        return redirect(url_for("collections.list_view"))
+
+    ok, reason = can_send(car)
+    if not ok:
+        flash(reason, "danger")
+        return redirect(url_for("collections.list_view"))
+
+    message = (
+        f"Habari {car.driver.name}, tumepokea makusanyo ya TSh {line.amount:,.0f} "
+        f"kwa gari {car.code} tarehe {line.collection_date.strftime('%d-%m-%Y')} "
+        f"(Trans No: {txn.trans_no}). Asante. - BICON TRANS"
+    )
+    sent, error = send_and_log(car, "collection", message, get_current_user())
+    if sent:
+        flash(f"SMS ya makusanyo imetumwa kwa dereva wa {car.code}.", "success")
+    else:
+        flash(error, "danger")
     return redirect(url_for("collections.list_view"))

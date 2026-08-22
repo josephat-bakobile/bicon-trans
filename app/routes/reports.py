@@ -12,6 +12,8 @@ from ..export_pdf import build_collections_pdf, build_consumption_pdf, build_sho
 from ..extensions import db
 from ..models import Car, ExpenseCategory, ShortfallClearance
 from ..report_data import collections_rows, consumption_rows, summary_rows
+from ..security import get_current_user, require_permission
+from ..sms import can_send, send_and_log
 from ..utils import (
     LAUNCH_DATE,
     car_achievement_rates,
@@ -139,6 +141,35 @@ def analytics():
         category_summary=category_summary,
         debt_trend=debt_trend,
     )
+
+
+@bp.route("/streak-sms/<int:car_id>", methods=["POST"])
+@require_permission("sms")
+def send_streak_sms(car_id):
+    start = parse_date(request.form.get("start"), LAUNCH_DATE)
+    end = parse_date(request.form.get("end"), date.today())
+    car = Car.query.get_or_404(car_id)
+
+    streak_row = next((s for s in shortfall_streaks(start, end) if s["car"].id == car_id), None)
+    if streak_row is None:
+        flash(f"Gari {car.code} halina tatizo la siku mfululizo kwa sasa.", "danger")
+        return redirect(url_for("reports.analytics", start=start.isoformat(), end=end.isoformat()))
+
+    ok, reason = can_send(car)
+    if not ok:
+        flash(reason, "danger")
+        return redirect(url_for("reports.analytics", start=start.isoformat(), end=end.isoformat()))
+
+    message = (
+        f"Habari {car.driver.name}, gari {car.code} halijafikia lengo la siku kwa siku "
+        f"{streak_row['streak_days']} mfululizo. Tafadhali wasiliana na ofisi haraka. - BICON TRANS"
+    )
+    sent, error = send_and_log(car, "streak", message, get_current_user())
+    if sent:
+        flash(f"SMS ya tatizo imetumwa kwa dereva wa {car.code}.", "success")
+    else:
+        flash(error, "danger")
+    return redirect(url_for("reports.analytics", start=start.isoformat(), end=end.isoformat()))
 
 
 @bp.route("/shortfalls")
