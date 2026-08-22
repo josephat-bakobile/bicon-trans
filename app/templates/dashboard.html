@@ -76,6 +76,36 @@
   </div>
 </div>
 
+{% if renewal_alerts %}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card-panel border-danger">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong class="text-danger"><i class="bi bi-exclamation-octagon-fill"></i> Dharura: Nyaraka Zinazoisha Muda / Zilizokwisha</strong>
+        <a href="{{ url_for('renewals.index') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Gari</th><th>Aina</th><th>Inaisha</th><th>Muda Uliobaki</th><th>Hali</th></tr></thead>
+        <tbody>
+          {% for p in renewal_alerts %}
+          <tr>
+            <td>{{ p.car.code }}</td>
+            <td>{{ p.document_type.name }}</td>
+            <td>{{ p.document.expire_date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ p.label }}</td>
+            <td>
+              {% if p.status == 'expired' %}<span class="badge text-bg-danger">Imekwisha Muda</span>
+              {% else %}<span class="badge text-bg-danger">Dharura</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% if service_alerts %}
 <div class="row g-3 mb-4">
   <div class="col-12">

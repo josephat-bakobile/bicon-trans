@@ -46,6 +46,7 @@ def create_app():
     from .routes.reports import bp as reports_bp
     from .routes.reconciliation import bp as reconciliation_bp
     from .routes.service import bp as service_bp
+    from .routes.renewals import bp as renewals_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -57,6 +58,7 @@ def create_app():
     app.register_blueprint(reports_bp, url_prefix="/reports")
     app.register_blueprint(reconciliation_bp, url_prefix="/reconciliation")
     app.register_blueprint(service_bp, url_prefix="/service")
+    app.register_blueprint(renewals_bp, url_prefix="/renewals")
 
     app.jinja_env.filters["money"] = lambda v: f"{(v or 0):,.0f}"
 
@@ -154,7 +156,7 @@ def _migrate_schema():
 
 
 def _seed_defaults():
-    from .models import Car, ExpenseCategory
+    from .models import Car, DocumentType, ExpenseCategory
 
     if Car.query.count() == 0:
         for code in ["DES", "DDS", "AAX", "CJK"]:
@@ -163,6 +165,9 @@ def _seed_defaults():
         db.session.add(ExpenseCategory(name="MATUMIZI"))
     if not ExpenseCategory.query.filter_by(name="SERVICE").first():
         db.session.add(ExpenseCategory(name="SERVICE"))
+    if DocumentType.query.count() == 0:
+        for name in ["LATRA", "BIMA (INSURANCE)", "LESENI YA BARABARA"]:
+            db.session.add(DocumentType(name=name))
     db.session.commit()
 
 

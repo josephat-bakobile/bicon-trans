@@ -165,3 +165,39 @@ class CarService(db.Model):
     @property
     def cost(self):
         return self.consumption_entry.amount if self.consumption_entry else 0.0
+
+
+class DocumentType(db.Model):
+    """A category of yearly renewal a car must keep current, e.g. LATRA, BIMA
+    (insurance), Leseni ya Barabara. Configurable so new renewal types can be
+    added without a code change, same pattern as ExpenseCategory."""
+
+    __tablename__ = "document_types"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return self.name
+
+
+class CarDocument(db.Model):
+    """One renewal period of a given document type for a car. expire_date is
+    always start_date + 1 year - 1 day, computed at creation time. The most
+    recent row (by start_date) per car/document_type pair is the current
+    renewal period that alerts/status are calculated from."""
+
+    __tablename__ = "car_documents"
+
+    id = db.Column(db.Integer, primary_key=True)
+    car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
+    document_type_id = db.Column(db.Integer, db.ForeignKey("document_types.id"), nullable=False)
+    start_date = db.Column(db.Date, nullable=False, default=date_cls.today)
+    expire_date = db.Column(db.Date, nullable=False)
+    note = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    car = db.relationship("Car")
+    document_type = db.relationship("DocumentType")

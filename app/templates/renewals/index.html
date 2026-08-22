@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Nyaraka za Gari - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3"><i class="bi bi-file-earmark-text text-primary"></i> Nyaraka za Gari (LATRA, Bima, n.k.)</h4>
+
+<div class="card-panel mb-4">
+  <strong><i class="bi bi-calendar-check text-primary"></i> Hali ya Nyaraka kwa Kila Gari</strong>
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mt-2 mb-0">
+    <thead>
+      <tr>
+        <th>Gari</th>
+        <th>Aina</th>
+        <th>Ilianza</th>
+        <th>Inaisha</th>
+        <th>Muda Uliobaki</th>
+        <th>Hali</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in predictions %}
+      <tr>
+        <td>{{ p.car.code }}</td>
+        <td>{{ p.document_type.name }}</td>
+        <td>{{ p.document.start_date.strftime('%d-%m-%Y') if p.document else '-' }}</td>
+        <td>{{ p.document.expire_date.strftime('%d-%m-%Y') if p.document else '-' }}</td>
+        <td>{{ p.label }}</td>
+        <td>
+          {% if p.status == 'expired' %}<span class="badge text-bg-danger">Imekwisha Muda</span>
+          {% elif p.status == 'urgent' %}<span class="badge text-bg-danger">Dharura</span>
+          {% elif p.status == 'due_soon' %}<span class="badge text-bg-warning">Inakaribia</span>
+          {% elif p.status == 'ok' %}<span class="badge text-bg-success">Sawa</span>
+          {% else %}<span class="badge text-bg-secondary">Haijaanzishwa</span>{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted text-center py-3">Hakuna magari au aina za nyaraka.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="form-text mt-2">
+    Tarehe ya kuisha inahesabiwa moja kwa moja: mwaka mmoja baada ya tarehe ya kuanza, ukiondoa siku moja
+    (mfano: ikianza 22-08-2026, itaisha 21-08-2027). Nyaraka zenye siku 7 au chini kubaki (au zilizokwisha muda)
+    zinaonekana kwa dharura kwenye Dashboard.
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-panel mb-4">
+      <strong><i class="bi bi-plus-circle text-primary"></i> Andika Upya wa Nyaraka</strong>
+      <form method="post" action="{{ url_for('renewals.new') }}" class="mt-2">
+        <div class="mb-2">
+          <label class="form-label">Gari</label>
+          <select class="form-select" name="car_id" required>
+            {% for c in cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Aina ya Nyaraka</label>
+          <select class="form-select" name="document_type_id" required>
+            {% for dt in document_types %}<option value="{{ dt.id }}">{{ dt.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Tarehe ya Kuanza</label>
+          <input type="date" class="form-control" name="start_date" required value="{{ today_iso }}" max="{{ today_iso }}">
+          <div class="form-text">Tarehe ya kuisha itahesabiwa moja kwa moja (mwaka mmoja - siku 1).</div>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Maelezo (si lazima)</label>
+          <textarea class="form-control" name="note" rows="2"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
+          <input type="text" class="form-control" name="action_code" required>
+        </div>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Hifadhi</button>
+      </form>
+    </div>
+
+    <div class="card-panel">
+      <strong><i class="bi bi-tags text-primary"></i> Aina za Nyaraka</strong>
+      <form method="post" action="{{ url_for('renewals.new_type') }}" class="mt-2 d-flex gap-1">
+        <input type="text" class="form-control form-control-sm text-uppercase" name="name" placeholder="mfano: FITNESS" required>
+        <input type="text" name="action_code" placeholder="Msimbo" class="form-control form-control-sm" style="max-width:100px;" required>
+        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i></button>
+      </form>
+      <table class="table table-sm align-middle mt-2 mb-0">
+        <tbody>
+          {% for dt in document_types %}
+          <tr>
+            <td>{{ dt.name }}</td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('renewals.toggle_type', type_id=dt.id) }}" class="action-code-form">
+                <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-toggle-off"></i> Zima</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card-panel">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong><i class="bi bi-clock-history text-primary"></i> Historia ya Nyaraka</strong>
+        <form method="get" class="d-flex gap-2">
+          <select class="form-select form-select-sm" name="car_id" onchange="this.form.submit()">
+            <option value="">Magari Yote</option>
+            {% for c in cars %}
+            <option value="{{ c.id }}" {{ 'selected' if car_id == c.id else '' }}>{{ c.code }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>Gari</th><th>Aina</th><th>Ilianza</th><th>Inaisha</th><th>Maelezo</th><th></th></tr></thead>
+        <tbody>
+          {% for d in history %}
+          <tr>
+            <td>{{ d.car.code }}</td>
+            <td>{{ d.document_type.name }}</td>
+            <td>{{ d.start_date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ d.expire_date.strftime('%d-%m-%Y') }}</td>
+            <td>{{ d.note or '-' }}</td>
+            <td class="text-end text-nowrap">
+              <form method="post" action="{{ url_for('renewals.delete', document_id=d.id) }}" class="action-code-form d-inline" data-confirm="Futa rekodi hii?">
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-muted text-center py-3">Hakuna rekodi za nyaraka bado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
