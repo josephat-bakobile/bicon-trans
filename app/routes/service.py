@@ -5,7 +5,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from ..car_service import service_predictions
 from ..extensions import db
 from ..models import Car, CarService, ConsumptionEntry, ExpenseCategory
-from ..security import require_action_code
 from ..utils import parse_date
 
 bp = Blueprint("service", __name__)
@@ -73,7 +72,6 @@ def index():
 
 
 @bp.route("/new", methods=["POST"])
-@require_action_code
 def new():
     service_date = parse_date(request.form.get("service_date"), date.today())
     error = _validate_service_date(service_date)
@@ -97,7 +95,6 @@ def new():
 
 
 @bp.route("/<int:service_id>/edit", methods=["GET", "POST"])
-@require_action_code
 def edit(service_id):
     service = CarService.query.get_or_404(service_id)
     cars = Car.query.order_by(Car.code).all()
@@ -130,7 +127,6 @@ def edit(service_id):
 
 
 @bp.route("/<int:service_id>/delete", methods=["POST"])
-@require_action_code
 def delete(service_id):
     service = CarService.query.get_or_404(service_id)
     linked = service.consumption_entry
@@ -143,7 +139,6 @@ def delete(service_id):
 
 
 @bp.route("/car/<int:car_id>/interval", methods=["POST"])
-@require_action_code
 def update_interval(car_id):
     car = Car.query.get_or_404(car_id)
     car.service_interval_days = int(request.form.get("service_interval_days") or 20)

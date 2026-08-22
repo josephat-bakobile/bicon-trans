@@ -13,7 +13,7 @@
       <div class="icon-badge"><i class="bi bi-cash-coin"></i></div>
       <div class="body">
         <div class="label">Makusanyo (mwezi huu)</div>
-        <div class="value">{{ month_totals.grand_collected | money }}</div>
+        <div class="value counter-value" data-target="{{ month_totals.grand_collected }}">0</div>
       </div>
     </div>
   </div>
@@ -22,7 +22,7 @@
       <div class="icon-badge"><i class="bi bi-fuel-pump"></i></div>
       <div class="body">
         <div class="label">Matumizi (mwezi huu)</div>
-        <div class="value">{{ month_totals.grand_consumed | money }}</div>
+        <div class="value counter-value" data-target="{{ month_totals.grand_consumed }}">0</div>
       </div>
     </div>
   </div>
@@ -31,7 +31,7 @@
       <div class="icon-badge"><i class="bi bi-graph-up-arrow"></i></div>
       <div class="body">
         <div class="label">Baki (mwezi huu)</div>
-        <div class="value">{{ month_totals.grand_net | money }}</div>
+        <div class="value counter-value" data-target="{{ month_totals.grand_net }}">0</div>
       </div>
     </div>
   </div>
@@ -40,7 +40,7 @@
       <div class="icon-badge"><i class="bi bi-bank"></i></div>
       <div class="body">
         <div class="label">Baki Kuu (Muda Wote)</div>
-        <div class="value">{{ all_time_totals.grand_net | money }}</div>
+        <div class="value counter-value" data-target="{{ all_time_totals.grand_net }}">0</div>
       </div>
     </div>
   </div>
@@ -49,7 +49,7 @@
       <div class="icon-badge"><i class="bi bi-wallet2"></i></div>
       <div class="body">
         <div class="label">Madeni yaliyobaki</div>
-        <div class="value">{{ balances.grand_balance | money }}</div>
+        <div class="value counter-value" data-target="{{ balances.grand_balance }}">0</div>
       </div>
     </div>
   </div>
@@ -61,7 +61,7 @@
       <div class="icon-badge"><i class="bi bi-exclamation-triangle"></i></div>
       <div class="body">
         <div class="label">Upungufu Ambao Haujafafanuliwa (Wazi)</div>
-        <div class="value">{{ shortfalls.open_total | money }}</div>
+        <div class="value counter-value" data-target="{{ shortfalls.open_total }}">0</div>
       </div>
     </div>
   </div>
@@ -70,7 +70,7 @@
       <div class="icon-badge"><i class="bi bi-check-circle"></i></div>
       <div class="body">
         <div class="label">Upungufu Uliofafanuliwa</div>
-        <div class="value">{{ shortfalls.cleared_total | money }}</div>
+        <div class="value counter-value" data-target="{{ shortfalls.cleared_total }}">0</div>
       </div>
     </div>
   </div>
@@ -259,6 +259,30 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
+function formatAmountShort(n) {
+  const sign = n < 0 ? '-' : '';
+  const abs = Math.abs(n);
+  if (abs >= 1000000) {
+    let s = Math.round((abs / 1000000) * 10) / 10;
+    return sign + s + 'M';
+  }
+  return sign + Math.round(abs).toLocaleString();
+}
+
+document.querySelectorAll('.counter-value').forEach(el => {
+  const target = parseFloat(el.dataset.target) || 0;
+  const duration = 900;
+  const start = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = formatAmountShort(target * eased);
+    if (progress < 1) requestAnimationFrame(tick);
+    else el.textContent = formatAmountShort(target);
+  }
+  requestAnimationFrame(tick);
+});
+
 const trend = {{ trend | tojson }};
 new Chart(document.getElementById('trendChart'), {
   type: 'bar',

@@ -3,9 +3,26 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, redirect, request, session, url_for
+from flask import Flask, flash, redirect, request, url_for
 
 from .extensions import db
+from .security import get_current_user
+
+# One permission code per admin-gated blueprint; dashboard and auth need no entry
+# since every logged-in user may reach them. Kept next to create_app() (rather than
+# in security.py) since it's really routing config, not an auth primitive.
+PERMISSION_MAP = {
+    "collections": "collections",
+    "reconciliation": "reconciliation",
+    "consumption": "consumption",
+    "debts": "debts",
+    "cars": "cars",
+    "service": "service",
+    "renewals": "renewals",
+    "categories": "categories",
+    "reports": "reports",
+    "admin": "users",
+}
 
 # Passenger/cPanel (and any WSGI host that isn't Docker) does not source a shell
 # environment for us, so .env is loaded explicitly here. Real environment variables
@@ -17,8 +34,6 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "bicon-trans-dev-key")
-    app.config["SITE_PASSWORD"] = os.environ.get("SITE_PASSWORD", "bicontrans2026")
-    app.config["ACTION_CODE"] = os.environ.get("ACTION_CODE", "BAKOBILE")
     app.permanent_session_lifetime = timedelta(hours=8)
 
     db_path = os.environ.get("DATABASE_PATH", os.path.join(os.getcwd(), "data", "bicon_trans.db"))
@@ -34,6 +49,7 @@ def create_app():
         db.create_all()
         _migrate_schema()
         _seed_defaults()
+        _seed_auth()
         _run_legacy_import()
 
     from .routes.auth import bp as auth_bp
@@ -47,6 +63,7 @@ def create_app():
     from .routes.reconciliation import bp as reconciliation_bp
     from .routes.service import bp as service_bp
     from .routes.renewals import bp as renewals_bp
+    from .routes.admin import bp as admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -59,8 +76,22 @@ def create_app():
     app.register_blueprint(reconciliation_bp, url_prefix="/reconciliation")
     app.register_blueprint(service_bp, url_prefix="/service")
     app.register_blueprint(renewals_bp, url_prefix="/renewals")
+    app.register_blueprint(admin_bp, url_prefix="/admin")
 
     app.jinja_env.filters["money"] = lambda v: f"{(v or 0):,.0f}"
+
+    def _money_short(v):
+        v = v or 0
+        sign = "-" if v < 0 else ""
+        v = abs(v)
+        if v >= 1_000_000:
+            s = round(v / 1_000_000, 1)
+            if s == int(s):
+                s = int(s)
+            return f"{sign}{s}M"
+        return f"{sign}{v:,.0f}"
+
+    app.jinja_env.filters["money_short"] = _money_short
 
     from .utils import MAX_BACKDATE_DAYS, transaction_locked
 
@@ -74,12 +105,21 @@ def create_app():
             "min_entry_date_iso": (today - timedelta(days=MAX_BACKDATE_DAYS)).isoformat(),
         }
 
+    @app.context_processor
+    def _inject_current_user():
+        return {"current_user": get_current_user()}
+
     @app.before_request
     def _require_login():
         if request.endpoint in (None, "auth.login", "static"):
             return None
-        if not session.get("logged_in"):
+        user = get_current_user()
+        if not user:
             return redirect(url_for("auth.login", next=request.path))
+        required_permission = PERMISSION_MAP.get(request.blueprint)
+        if required_permission and not user.has_permission(required_permission):
+            flash("Huna ruhusa ya kufikia ukurasa huu.", "danger")
+            return redirect(url_for("dashboard.index"))
         return None
 
     return app
@@ -169,6 +209,52 @@ def _seed_defaults():
         for name in ["LATRA", "BIMA (INSURANCE)", "LESENI YA BARABARA"]:
             db.session.add(DocumentType(name=name))
     db.session.commit()
+
+
+# (code, display name) — code values must match PERMISSION_MAP's targets above.
+PERMISSIONS = [
+    ("collections", "Makusanyo"),
+    ("reconciliation", "Upatanisho"),
+    ("consumption", "Matumizi"),
+    ("debts", "Madeni"),
+    ("cars", "Magari"),
+    ("service", "Huduma"),
+    ("renewals", "Nyaraka"),
+    ("categories", "Aina za Matumizi"),
+    ("reports", "Ripoti"),
+    ("users", "Watumiaji na Majukumu"),
+]
+
+DEFAULT_SUPER_ADMIN_USERNAME = "josephat.bakobile"
+DEFAULT_SUPER_ADMIN_PASSWORD = "Bicon#123"
+
+
+def _seed_auth():
+    """Ensures the fixed permission set, a Super Admin role (always all-access,
+    see Role.has_permission), and one Super Admin login exist. Runs on every
+    startup but each step is a no-op once already seeded."""
+    from .models import Permission, Role, User
+
+    for code, name in PERMISSIONS:
+        if not Permission.query.filter_by(code=code).first():
+            db.session.add(Permission(code=code, name=name))
+    db.session.commit()
+
+    super_role = Role.query.filter_by(is_super_admin=True).first()
+    if not super_role:
+        super_role = Role(name="Msimamizi Mkuu", is_super_admin=True)
+        db.session.add(super_role)
+        db.session.commit()
+
+    if User.query.count() == 0:
+        admin = User(
+            username=DEFAULT_SUPER_ADMIN_USERNAME,
+            full_name="Josephat Bakobile",
+            role=super_role,
+        )
+        admin.set_password(DEFAULT_SUPER_ADMIN_PASSWORD)
+        db.session.add(admin)
+        db.session.commit()
 
 
 def _run_legacy_import():

@@ -2,7 +2,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..extensions import db
 from ..models import Car
-from ..security import require_action_code
 
 bp = Blueprint("cars", __name__)
 
@@ -14,7 +13,6 @@ def list_view():
 
 
 @bp.route("/new", methods=["POST"])
-@require_action_code
 def new():
     code = (request.form.get("code") or "").strip().upper()
     name = (request.form.get("name") or "").strip() or None
@@ -32,7 +30,6 @@ def new():
 
 
 @bp.route("/<int:car_id>/toggle", methods=["POST"])
-@require_action_code
 def toggle(car_id):
     car = Car.query.get_or_404(car_id)
     car.active = not car.active
@@ -41,7 +38,6 @@ def toggle(car_id):
 
 
 @bp.route("/<int:car_id>/target", methods=["POST"])
-@require_action_code
 def update_target(car_id):
     car = Car.query.get_or_404(car_id)
     car.daily_target = float(request.form.get("daily_target") or 0)
@@ -51,7 +47,6 @@ def update_target(car_id):
 
 
 @bp.route("/<int:car_id>/driver", methods=["POST"])
-@require_action_code
 def update_driver(car_id):
     car = Car.query.get_or_404(car_id)
     car.driver_name = (request.form.get("driver_name") or "").strip() or None

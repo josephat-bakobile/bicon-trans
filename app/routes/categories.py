@@ -2,7 +2,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..extensions import db
 from ..models import ExpenseCategory
-from ..security import require_action_code
 
 bp = Blueprint("categories", __name__)
 
@@ -14,7 +13,6 @@ def list_view():
 
 
 @bp.route("/new", methods=["POST"])
-@require_action_code
 def new():
     name = (request.form.get("name") or "").strip().upper()
     if not name:
@@ -29,7 +27,6 @@ def new():
 
 
 @bp.route("/<int:category_id>/toggle", methods=["POST"])
-@require_action_code
 def toggle(category_id):
     category = ExpenseCategory.query.get_or_404(category_id)
     category.active = not category.active

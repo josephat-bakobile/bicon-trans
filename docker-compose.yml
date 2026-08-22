@@ -13,6 +13,4 @@ services:
       - SECRET_KEY=change-me-in-production
       # Login password for the whole system.
       - SITE_PASSWORD=BAKOBILE
-      # Confirmation code required on every add/update/delete action.
-      - ACTION_CODE=BAKOBILE
     restart: unless-stopped

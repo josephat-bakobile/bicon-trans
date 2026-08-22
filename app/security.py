@@ -1,21 +1,37 @@
 from functools import wraps
 
-from flask import current_app, flash, redirect, request, url_for
+from flask import flash, g, redirect, session, url_for
 
 
-def require_action_code(f):
-    """Guard for every create/update/delete POST: a shared confirmation code must be
-    submitted correctly, independent of whether the user is logged in. Checked purely
-    server-side so the code never appears in any page's HTML/JS source."""
+def get_current_user():
+    """Loads and caches (per-request, via g) the User for the logged-in session,
+    or None if there isn't one / the account was deactivated after login."""
+    if "user" not in g:
+        from .models import User
 
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if request.method == "POST":
-            submitted = (request.form.get("action_code") or "").strip()
-            expected = current_app.config["ACTION_CODE"]
-            if not submitted or submitted != expected:
-                flash("Msimbo wa uthibitisho si sahihi. Hakuna kilichobadilishwa.", "danger")
-                return redirect(request.referrer or url_for("dashboard.index"))
-        return f(*args, **kwargs)
+        user = None
+        user_id = session.get("user_id")
+        if user_id is not None:
+            user = User.query.get(user_id)
+            if user is not None and not user.active:
+                user = None
+        g.user = user
+    return g.user
 
-    return wrapper
+
+def require_permission(code):
+    """Guard for an individual view when blueprint-level PERMISSION_MAP checking
+    (see app/__init__.py) isn't granular enough."""
+
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            user = get_current_user()
+            if not user or not user.has_permission(code):
+                flash("Huna ruhusa ya kufikia ukurasa huu.", "danger")
+                return redirect(url_for("dashboard.index"))
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

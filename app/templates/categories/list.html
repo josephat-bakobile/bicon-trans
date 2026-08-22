@@ -13,10 +13,6 @@
           <label class="form-label">Jina la Aina</label>
           <input type="text" class="form-control text-uppercase" name="name" placeholder="mfano: MAFUTA" required>
         </div>
-        <div class="mb-2">
-          <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
-          <input type="text" class="form-control" name="action_code" required>
-        </div>
         <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ongeza</button>
       </form>
     </div>
@@ -34,7 +30,7 @@
               {% else %}<span class="badge text-bg-secondary">Imezimwa</span>{% endif %}
             </td>
             <td class="text-end">
-              <form method="post" action="{{ url_for('categories.toggle', category_id=cat.id) }}" class="action-code-form">
+              <form method="post" action="{{ url_for('categories.toggle', category_id=cat.id) }}">
                 <button class="btn btn-sm btn-outline-secondary">
                   <i class="bi {{ 'bi-toggle-off' if cat.active else 'bi-toggle-on' }}"></i> {{ 'Zima' if cat.active else 'Washa' }}
                 </button>

@@ -73,10 +73,6 @@
           <label class="form-label">Maelezo (si lazima)</label>
           <textarea class="form-control" name="note" rows="2"></textarea>
         </div>
-        <div class="mb-2">
-          <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
-          <input type="text" class="form-control" name="action_code" required>
-        </div>
         <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Hifadhi</button>
       </form>
     </div>
@@ -85,7 +81,6 @@
       <strong><i class="bi bi-tags text-primary"></i> Aina za Nyaraka</strong>
       <form method="post" action="{{ url_for('renewals.new_type') }}" class="mt-2 d-flex gap-1">
         <input type="text" class="form-control form-control-sm text-uppercase" name="name" placeholder="mfano: FITNESS" required>
-        <input type="text" name="action_code" placeholder="Msimbo" class="form-control form-control-sm" style="max-width:100px;" required>
         <button class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg"></i></button>
       </form>
       <table class="table table-sm align-middle mt-2 mb-0">
@@ -94,7 +89,7 @@
           <tr>
             <td>{{ dt.name }}</td>
             <td class="text-end">
-              <form method="post" action="{{ url_for('renewals.toggle_type', type_id=dt.id) }}" class="action-code-form">
+              <form method="post" action="{{ url_for('renewals.toggle_type', type_id=dt.id) }}">
                 <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-toggle-off"></i> Zima</button>
               </form>
             </td>
@@ -129,7 +124,7 @@
             <td>{{ d.expire_date.strftime('%d-%m-%Y') }}</td>
             <td>{{ d.note or '-' }}</td>
             <td class="text-end text-nowrap">
-              <form method="post" action="{{ url_for('renewals.delete', document_id=d.id) }}" class="action-code-form d-inline" data-confirm="Futa rekodi hii?">
+              <form method="post" action="{{ url_for('renewals.delete', document_id=d.id) }}" class="confirm-form d-inline" data-confirm="Futa rekodi hii?">
                 <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
               </form>
             </td>

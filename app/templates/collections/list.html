@@ -51,7 +51,7 @@
             <span class="badge text-bg-secondary" title="Zaidi ya wiki 1 tangu tarehe ya muamala">Imefungwa</span>
           {% else %}
             <a href="{{ url_for('collections.edit', txn_id=t.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Hariri</a>
-            <form method="post" action="{{ url_for('collections.delete', txn_id=t.id) }}" class="d-inline action-code-form"
+            <form method="post" action="{{ url_for('collections.delete', txn_id=t.id) }}" class="d-inline confirm-form"
                   data-confirm="Una uhakika unataka kufuta muamala {{ t.trans_no }}?">
               <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
             </form>

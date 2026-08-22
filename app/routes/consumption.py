@@ -4,7 +4,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..extensions import db
 from ..models import Car, ConsumptionEntry, ExpenseCategory
-from ..security import require_action_code
 from ..utils import parse_date, validate_entry_date
 
 bp = Blueprint("consumption", __name__)
@@ -41,7 +40,6 @@ def list_view():
 
 
 @bp.route("/new", methods=["GET", "POST"])
-@require_action_code
 def new():
     cars = Car.query.filter_by(active=True).order_by(Car.code).all()
     categories = ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all()
@@ -69,7 +67,6 @@ def new():
 
 
 @bp.route("/<int:entry_id>/edit", methods=["GET", "POST"])
-@require_action_code
 def edit(entry_id):
     entry = ConsumptionEntry.query.get_or_404(entry_id)
     cars = Car.query.filter_by(active=True).order_by(Car.code).all()
@@ -95,7 +92,6 @@ def edit(entry_id):
 
 
 @bp.route("/<int:entry_id>/delete", methods=["POST"])
-@require_action_code
 def delete(entry_id):
     entry = ConsumptionEntry.query.get_or_404(entry_id)
     db.session.delete(entry)

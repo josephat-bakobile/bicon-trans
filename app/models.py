@@ -1,6 +1,74 @@
 from datetime import date as date_cls, datetime
 
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from .extensions import db
+
+
+role_permissions = db.Table(
+    "role_permissions",
+    db.Column("role_id", db.Integer, db.ForeignKey("roles.id"), primary_key=True),
+    db.Column("permission_id", db.Integer, db.ForeignKey("permissions.id"), primary_key=True),
+)
+
+
+class Permission(db.Model):
+    """A fixed, code-defined capability (one per menu/module). Seeded once at
+    startup in _seed_auth(); not user-creatable, only assignable to roles."""
+
+    __tablename__ = "permissions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+
+    def __repr__(self):
+        return self.code
+
+
+class Role(db.Model):
+    __tablename__ = "roles"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    is_super_admin = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    permissions = db.relationship("Permission", secondary=role_permissions, backref="roles")
+
+    def has_permission(self, code):
+        if self.is_super_admin:
+            return True
+        return any(p.code == code for p in self.permissions)
+
+    def __repr__(self):
+        return self.name
+
+
+class User(db.Model):
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    full_name = db.Column(db.String(120))
+    password_hash = db.Column(db.String(255), nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    role = db.relationship("Role")
+
+    def set_password(self, raw_password):
+        self.password_hash = generate_password_hash(raw_password)
+
+    def check_password(self, raw_password):
+        return check_password_hash(self.password_hash, raw_password)
+
+    def has_permission(self, code):
+        return self.role.has_permission(code)
+
+    def __repr__(self):
+        return self.username
 
 
 class Car(db.Model):

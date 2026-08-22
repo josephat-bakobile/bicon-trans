@@ -5,7 +5,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from ..extensions import db
 from ..models import Car, CarDocument, DocumentType
 from ..renewals import compute_expire_date, renewal_predictions
-from ..security import require_action_code
 from ..utils import parse_date
 
 bp = Blueprint("renewals", __name__)
@@ -41,7 +40,6 @@ def index():
 
 
 @bp.route("/new", methods=["POST"])
-@require_action_code
 def new():
     start_date = parse_date(request.form.get("start_date"), date.today())
     error = _validate_start_date(start_date)
@@ -70,7 +68,6 @@ def new():
 
 
 @bp.route("/<int:document_id>/delete", methods=["POST"])
-@require_action_code
 def delete(document_id):
     document = CarDocument.query.get_or_404(document_id)
     db.session.delete(document)
@@ -80,7 +77,6 @@ def delete(document_id):
 
 
 @bp.route("/types/new", methods=["POST"])
-@require_action_code
 def new_type():
     name = (request.form.get("name") or "").strip().upper()
     if not name:
@@ -95,7 +91,6 @@ def new_type():
 
 
 @bp.route("/types/<int:type_id>/toggle", methods=["POST"])
-@require_action_code
 def toggle_type(type_id):
     doc_type = DocumentType.query.get_or_404(type_id)
     doc_type.active = not doc_type.active

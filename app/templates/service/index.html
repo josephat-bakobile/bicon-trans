@@ -28,7 +28,6 @@
           <form method="post" action="{{ url_for('service.update_interval', car_id=p.car.id) }}" class="d-flex gap-1">
             <input type="number" min="1" step="1" name="service_interval_days" value="{{ p.car.service_interval_days }}"
                    class="form-control form-control-sm" style="max-width:80px;">
-            <input type="text" name="action_code" placeholder="Msimbo" class="form-control form-control-sm" style="max-width:100px;" required>
             <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
           </form>
         </td>
@@ -85,10 +84,6 @@
           <label class="form-label">Maelezo (si lazima)</label>
           <textarea class="form-control" name="description" rows="2"></textarea>
         </div>
-        <div class="mb-2">
-          <label class="form-label small mb-0">Msimbo wa Uthibitisho</label>
-          <input type="text" class="form-control" name="action_code" required>
-        </div>
         <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Hifadhi Huduma</button>
       </form>
     </div>
@@ -118,7 +113,7 @@
             <td class="amount">{{ s.cost | money }}</td>
             <td class="text-end text-nowrap">
               <a href="{{ url_for('service.edit', service_id=s.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Hariri</a>
-              <form method="post" action="{{ url_for('service.delete', service_id=s.id) }}" class="action-code-form d-inline" data-confirm="Futa huduma hii?">
+              <form method="post" action="{{ url_for('service.delete', service_id=s.id) }}" class="confirm-form d-inline" data-confirm="Futa huduma hii?">
                 <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
               </form>
             </td>

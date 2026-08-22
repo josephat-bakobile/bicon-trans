@@ -43,7 +43,7 @@
         <td class="text-muted small">{{ e.description or '' }}</td>
         <td class="text-end">
           <a href="{{ url_for('consumption.edit', entry_id=e.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Hariri</a>
-          <form method="post" action="{{ url_for('consumption.delete', entry_id=e.id) }}" class="d-inline action-code-form"
+          <form method="post" action="{{ url_for('consumption.delete', entry_id=e.id) }}" class="d-inline confirm-form"
                 data-confirm="Futa taarifa hii ya matumizi?">
             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
           </form>

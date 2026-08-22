@@ -4,7 +4,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..extensions import db
 from ..models import Car, CollectionLine, CollectionTransaction
-from ..security import require_action_code
 from ..utils import next_trans_no, parse_date, transaction_locked, validate_entry_date
 
 bp = Blueprint("collections", __name__)
@@ -99,7 +98,6 @@ def list_view():
 
 
 @bp.route("/new", methods=["GET", "POST"])
-@require_action_code
 def new():
     cars = Car.query.filter_by(active=True).order_by(Car.code).all()
     if request.method == "POST":
@@ -145,7 +143,6 @@ def new():
 
 
 @bp.route("/<int:txn_id>/edit", methods=["GET", "POST"])
-@require_action_code
 def edit(txn_id):
     txn = CollectionTransaction.query.get_or_404(txn_id)
     cars = Car.query.filter_by(active=True).order_by(Car.code).all()
@@ -206,7 +203,6 @@ def edit(txn_id):
 
 
 @bp.route("/<int:txn_id>/delete", methods=["POST"])
-@require_action_code
 def delete(txn_id):
     txn = CollectionTransaction.query.get_or_404(txn_id)
 

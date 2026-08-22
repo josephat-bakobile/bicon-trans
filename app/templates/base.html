@@ -21,6 +21,31 @@
   </a>
 </li>
 {% endmacro %}
+{% macro nav_dropdown(icon, label, items) %}
+{# items: list of (endpoint, icon, label, permission) tuples; dropdown itself is
+   hidden if none of its items pass the user's permission check. #}
+{% set visible_items = [] %}
+{% for endpoint, item_icon, item_label, permission in items %}
+  {% if current_user.has_permission(permission) %}{% set _ = visible_items.append((endpoint, item_icon, item_label)) %}{% endif %}
+{% endfor %}
+{% if visible_items %}
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in visible_items | map(attribute=0) | list }}"
+     href="#" role="button" data-bs-toggle="dropdown">
+    <i class="bi {{ icon }}"></i> {{ label }}
+  </a>
+  <ul class="dropdown-menu">
+    {% for endpoint, item_icon, item_label in visible_items %}
+    <li>
+      <a class="dropdown-item {{ 'active' if request.endpoint == endpoint }}" href="{{ url_for(endpoint) }}">
+        <i class="bi {{ item_icon }}"></i> {{ item_label }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</li>
+{% endif %}
+{% endmacro %}
 <nav class="navbar navbar-expand-lg navbar-dark app-navbar">
   <div class="container-fluid">
     <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
@@ -32,22 +57,40 @@
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav me-auto">
         {{ nav_item('dashboard.index', 'bi-speedometer2', 'Dashboard') }}
-        {{ nav_item('collections.list_view', 'bi-cash-coin', 'Makusanyo') }}
-        {{ nav_item('reconciliation.index', 'bi-arrow-left-right', 'Upatanisho') }}
-        {{ nav_item('consumption.list_view', 'bi-fuel-pump', 'Matumizi') }}
-        {{ nav_item('debts.index', 'bi-wallet2', 'Madeni') }}
-        {{ nav_item('service.index', 'bi-tools', 'Huduma') }}
-        {{ nav_item('renewals.index', 'bi-file-earmark-text', 'Nyaraka') }}
-        {{ nav_item('reports.index', 'bi-bar-chart-line', 'Ripoti') }}
-        {{ nav_item('reports.shortfalls', 'bi-exclamation-triangle', 'Upungufu') }}
-        {{ nav_item('cars.list_view', 'bi-truck', 'Magari') }}
-        {{ nav_item('categories.list_view', 'bi-tags', 'Aina za Matumizi') }}
+        {{ nav_dropdown('bi-cash-coin', 'Fedha', [
+          ('collections.list_view', 'bi-cash-coin', 'Makusanyo', 'collections'),
+          ('reconciliation.index', 'bi-arrow-left-right', 'Upatanisho', 'reconciliation'),
+          ('consumption.list_view', 'bi-fuel-pump', 'Matumizi', 'consumption'),
+          ('debts.index', 'bi-wallet2', 'Madeni', 'debts'),
+        ]) }}
+        {{ nav_dropdown('bi-truck', 'Magari', [
+          ('cars.list_view', 'bi-truck', 'Magari', 'cars'),
+          ('service.index', 'bi-tools', 'Huduma', 'service'),
+          ('renewals.index', 'bi-file-earmark-text', 'Nyaraka', 'renewals'),
+          ('categories.list_view', 'bi-tags', 'Aina za Matumizi', 'categories'),
+        ]) }}
+        {{ nav_dropdown('bi-bar-chart-line', 'Ripoti', [
+          ('reports.index', 'bi-bar-chart-line', 'Ripoti', 'reports'),
+          ('reports.shortfalls', 'bi-exclamation-triangle', 'Upungufu', 'reports'),
+        ]) }}
+        {{ nav_dropdown('bi-shield-lock', 'Utawala', [
+          ('admin.users_list', 'bi-people', 'Watumiaji', 'users'),
+          ('admin.roles_list', 'bi-shield-lock', 'Majukumu', 'users'),
+        ]) }}
       </ul>
-      <form method="post" action="{{ url_for('auth.logout') }}" class="d-flex">
-        <button type="submit" class="btn btn-sm btn-outline-light">
-          <i class="bi bi-box-arrow-right"></i> Toka
-        </button>
-      </form>
+      <div class="d-flex align-items-center gap-3">
+        {% if current_user %}
+        <span class="text-light small">
+          <i class="bi bi-person-circle"></i> {{ current_user.full_name or current_user.username }}
+          <span class="text-white-50">({{ current_user.role.name }})</span>
+        </span>
+        {% endif %}
+        <form method="post" action="{{ url_for('auth.logout') }}" class="d-flex">
+          <button type="submit" class="btn btn-sm btn-outline-light">
+            <i class="bi bi-box-arrow-right"></i> Toka
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </nav>
@@ -68,7 +111,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='js/action-code.js') }}"></script>
+<script src="{{ url_for('static', filename='js/confirm.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

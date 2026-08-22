@@ -12,7 +12,6 @@ from ..export_pdf import build_collections_pdf, build_consumption_pdf, build_sho
 from ..extensions import db
 from ..models import Car, ExpenseCategory, ShortfallClearance
 from ..report_data import collections_rows, consumption_rows, summary_rows
-from ..security import require_action_code
 from ..utils import (
     LAUNCH_DATE,
     car_achievement_rates,
@@ -168,7 +167,6 @@ def shortfalls():
 
 
 @bp.route("/shortfalls/clear", methods=["POST"])
-@require_action_code
 def clear_shortfall():
     start = request.form.get("start", "")
     end = request.form.get("end", "")

@@ -4,7 +4,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..extensions import db
 from ..models import Car, Debt, DebtPayment
-from ..security import require_action_code
 from ..utils import car_debt_balance, debt_balances, parse_date, validate_entry_date
 
 bp = Blueprint("debts", __name__)
@@ -20,7 +19,6 @@ def index():
 
 
 @bp.route("/new", methods=["POST"])
-@require_action_code
 def new_debt():
     debt_date = parse_date(request.form.get("date"), date.today())
     error = validate_entry_date(debt_date)
@@ -42,7 +40,6 @@ def new_debt():
 
 
 @bp.route("/<int:debt_id>/delete", methods=["POST"])
-@require_action_code
 def delete_debt(debt_id):
     d = Debt.query.get_or_404(debt_id)
     db.session.delete(d)
@@ -52,7 +49,6 @@ def delete_debt(debt_id):
 
 
 @bp.route("/payments/new", methods=["POST"])
-@require_action_code
 def new_payment():
     car_id = int(request.form["car_id"])
     amount = float(request.form["amount"])
@@ -87,7 +83,6 @@ def new_payment():
 
 
 @bp.route("/payments/<int:payment_id>/delete", methods=["POST"])
-@require_action_code
 def delete_payment(payment_id):
     p = DebtPayment.query.get_or_404(payment_id)
     db.session.delete(p)
