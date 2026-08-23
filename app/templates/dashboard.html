@@ -272,7 +272,7 @@ function formatAmountShort(n) {
   const sign = n < 0 ? '-' : '';
   const abs = Math.abs(n);
   if (abs >= 1000000) {
-    const s = Math.round((abs / 1000000) * 10) / 10;
+    const s = Math.floor((abs / 1000000) * 100) / 100;
     return sign + s + 'M';
   }
   return sign + Math.round(abs).toLocaleString();
