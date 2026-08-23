@@ -29,7 +29,7 @@ def collections_rows(start, end, car_id=None):
     )
     if car_id:
         q = q.filter(CollectionLine.car_id == car_id)
-    q = q.order_by(CollectionLine.collection_date.asc(), Car.code.asc(), CollectionTransaction.id.asc())
+    q = q.order_by(CollectionLine.collection_date.desc(), Car.code.asc(), CollectionTransaction.id.asc())
 
     rows = []
     total = 0.0
