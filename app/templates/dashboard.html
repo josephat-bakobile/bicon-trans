@@ -270,7 +270,12 @@
 <script>
 function formatAmountShort(n) {
   const sign = n < 0 ? '-' : '';
-  return sign + Math.round(Math.abs(n)).toLocaleString();
+  const abs = Math.abs(n);
+  if (abs >= 1000000) {
+    const s = Math.round((abs / 1000000) * 10) / 10;
+    return sign + s + 'M';
+  }
+  return sign + Math.round(abs).toLocaleString();
 }
 
 document.querySelectorAll('.counter-value').forEach(el => {
