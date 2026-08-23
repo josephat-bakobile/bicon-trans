@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Posho za Madereva - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3"><i class="bi bi-cash-stack text-primary"></i> Posho za Madereva (Driver Allowance Prediction)</h4>
+
+<div class="card-panel mb-4">
+  <strong><i class="bi bi-calendar-check text-primary"></i> Utabiri wa Posho Inayofuata</strong>
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mt-2 mb-0">
+    <thead>
+      <tr>
+        <th>Gari</th>
+        <th>Dereva</th>
+        <th>Kipindi</th>
+        <th>Tarehe Inayotarajiwa</th>
+        <th class="amount">Kiasi</th>
+        <th class="amount">Deni la Gari</th>
+        <th>Hali</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in predictions %}
+      <tr>
+        <td>{{ p.car.code }}</td>
+        <td>{{ p.car.driver.name if p.car.driver else '-' }}</td>
+        <td>{{ p.period_label | capitalize }} {{ p.period_month }}/{{ p.period_year }}</td>
+        <td>{{ p.scheduled_date.strftime('%d-%m-%Y') }}</td>
+        <td class="amount">{{ p.projected_amount | money }}</td>
+        <td class="amount">{{ p.debt_balance | money }}</td>
+        <td>
+          {% if p.status == 'overdue' %}<span class="badge text-bg-danger">Imechelewa</span>
+          {% elif p.status == 'due' %}<span class="badge text-bg-warning">Leo</span>
+          {% elif p.status == 'due_soon' %}<span class="badge text-bg-info">Inakaribia</span>
+          {% else %}<span class="badge text-bg-secondary">Bado</span>{% endif %}
+        </td>
+        <td class="text-end">
+          {% if p.status in ('overdue', 'due') %}
+          <form method="post" action="{{ url_for('allowances.confirm') }}" class="confirm-form"
+                data-confirm="Thibitisha dereva wa {{ p.car.code }} amepokea posho ya {{ p.projected_amount | money }}?">
+            <input type="hidden" name="car_id" value="{{ p.car.id }}">
+            <input type="hidden" name="period_year" value="{{ p.period_year }}">
+            <input type="hidden" name="period_month" value="{{ p.period_month }}">
+            <input type="hidden" name="period_type" value="{{ p.period_type }}">
+            <button class="btn btn-sm btn-primary"><i class="bi bi-check2-circle"></i> Amepokea</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="text-muted text-center py-3">Hakuna magari yenye dereva na lengo la siku.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="form-text mt-2">
+    Dereva hupokea posho mara mbili kwa mwezi (katikati na mwisho wa mwezi), kiasi sawa na lengo la siku la gari
+    lake &mdash; siku hiyo dereva huchukua makusanyo bila kuweka akaunti. Kitufe cha "Amepokea" huonekana tu siku
+    inapofika. Kama gari lina deni, posho hutumika kulipa deni kwanza; kilichobaki ndicho dereva anachochukua.
+  </div>
+</div>
+
+<div class="card-panel">
+  <strong><i class="bi bi-clock-history text-primary"></i> Historia ya Posho</strong>
+  <div class="table-responsive">
+  <table class="table table-sm table-money mt-2 mb-0">
+    <thead>
+      <tr>
+        <th>Tarehe</th>
+        <th>Gari</th>
+        <th>Dereva</th>
+        <th>Kipindi</th>
+        <th class="amount">Kiasi</th>
+        <th class="amount">Kwenye Deni</th>
+        <th class="amount">Fedha Taslimu</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in history %}
+      <tr>
+        <td>{{ a.date.strftime('%d-%m-%Y') }}</td>
+        <td>{{ a.car.code }}</td>
+        <td>{{ a.car.driver.name if a.car.driver else '-' }}</td>
+        <td>{{ (a.period_type|capitalize) }} {{ a.period_month }}/{{ a.period_year }}</td>
+        <td class="amount">{{ a.amount | money }}</td>
+        <td class="amount">{{ a.applied_to_debt | money }}</td>
+        <td class="amount">{{ a.cash_amount | money }}</td>
+        <td class="text-end">
+          <form method="post" action="{{ url_for('allowances.delete', allowance_id=a.id) }}" class="confirm-form"
+                data-confirm="Futa posho hii ya {{ a.car.code }}? Malipo ya deni na ufafanuzi wa upungufu ulioambatana navyo vitafutwa pia.">
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="text-muted text-center py-3">Hakuna posho zilizohifadhiwa.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+{% endblock %}

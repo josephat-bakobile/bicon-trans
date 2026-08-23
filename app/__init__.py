@@ -16,6 +16,7 @@ PERMISSION_MAP = {
     "reconciliation": "reconciliation",
     "consumption": "consumption",
     "debts": "debts",
+    "allowances": "allowances",
     "cars": "cars",
     "drivers": "cars",
     "service": "service",
@@ -51,6 +52,7 @@ def create_app():
         db.create_all()
         _migrate_schema()
         _seed_defaults()
+        _seed_driver_allowances()
         _seed_auth()
         _run_legacy_import()
 
@@ -59,6 +61,7 @@ def create_app():
     from .routes.collections import bp as collections_bp
     from .routes.consumption import bp as consumption_bp
     from .routes.debts import bp as debts_bp
+    from .routes.allowances import bp as allowances_bp
     from .routes.cars import bp as cars_bp
     from .routes.drivers import bp as drivers_bp
     from .routes.categories import bp as categories_bp
@@ -74,6 +77,7 @@ def create_app():
     app.register_blueprint(collections_bp, url_prefix="/collections")
     app.register_blueprint(consumption_bp, url_prefix="/consumption")
     app.register_blueprint(debts_bp, url_prefix="/debts")
+    app.register_blueprint(allowances_bp, url_prefix="/allowances")
     app.register_blueprint(cars_bp, url_prefix="/cars")
     app.register_blueprint(drivers_bp, url_prefix="/drivers")
     app.register_blueprint(categories_bp, url_prefix="/categories")
@@ -152,6 +156,16 @@ def _migrate_schema():
             text(
                 "CREATE UNIQUE INDEX IF NOT EXISTS ix_collection_transactions_trans_no "
                 "ON collection_transactions (trans_no)"
+            )
+        )
+        db.session.commit()
+
+    service_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(car_services)")).fetchall()]
+    if "shortfall_clearance_id" not in service_cols:
+        db.session.execute(
+            text(
+                "ALTER TABLE car_services ADD COLUMN shortfall_clearance_id INTEGER "
+                "REFERENCES shortfall_clearances(id)"
             )
         )
         db.session.commit()
@@ -250,12 +264,31 @@ def _seed_defaults():
     db.session.commit()
 
 
+def _seed_driver_allowances():
+    """One-time bootstrap: every driver already received their mid-month (kati)
+    August 2026 allowance in real life before this module existed, so back-fill
+    those as confirmed records (with their auto shortfall clearances) the first
+    time this runs. After that, predictions correctly pick up from the
+    end-of-month (mwisho) slot onward. No-op once any DriverAllowance exists."""
+    from .driver_allowance import _allowance_cars, give_allowance, scheduled_date_for
+    from .models import DriverAllowance
+
+    if DriverAllowance.query.count() > 0:
+        return
+
+    period_year, period_month, period_type = 2026, 8, "kati"
+    for car in _allowance_cars():
+        given_date = scheduled_date_for(car.id, period_year, period_month, period_type)
+        give_allowance(car, period_year, period_month, period_type, given_date)
+
+
 # (code, display name) — code values must match PERMISSION_MAP's targets above.
 PERMISSIONS = [
     ("collections", "Makusanyo"),
     ("reconciliation", "Upatanisho"),
     ("consumption", "Matumizi"),
     ("debts", "Madeni"),
+    ("allowances", "Posho za Madereva"),
     ("cars", "Magari"),
     ("service", "Huduma"),
     ("renewals", "Nyaraka"),

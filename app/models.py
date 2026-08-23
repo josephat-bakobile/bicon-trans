@@ -229,12 +229,47 @@ class ShortfallClearance(db.Model):
     car = db.relationship("Car")
 
 
+class DriverAllowance(db.Model):
+    """A confirmed Posho ya Dereva disbursement: one of a car's 2 monthly slots
+    (mid-month 'kati' or end-of-month 'mwisho'), amount always the car's
+    daily_target at confirmation time -- the driver keeps that day's collection
+    instead of depositing it. If the car had an outstanding debt, some or all of
+    the amount is redirected to a linked DebtPayment instead of cash; either way
+    the day is auto-explained via a matching ShortfallClearance."""
+
+    __tablename__ = "driver_allowances"
+    __table_args__ = (
+        db.UniqueConstraint("car_id", "period_year", "period_month", "period_type", name="uq_allowance_car_period"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
+    period_year = db.Column(db.Integer, nullable=False)
+    period_month = db.Column(db.Integer, nullable=False)
+    period_type = db.Column(db.String(10), nullable=False)  # 'kati' (mid-month) | 'mwisho' (end-of-month)
+    date = db.Column(db.Date, nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    applied_to_debt = db.Column(db.Float, default=0.0, nullable=False)
+    debt_payment_id = db.Column(db.Integer, db.ForeignKey("debt_payments.id"))
+    note = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    car = db.relationship("Car")
+    debt_payment = db.relationship("DebtPayment")
+
+    @property
+    def cash_amount(self):
+        return self.amount - self.applied_to_debt
+
+
 class CarService(db.Model):
     """A service event performed on a car. The most recent row per car is the
     baseline the next-service prediction counts forward from; the first row ever
     entered for a car (which may be backfilled) is simply its baseline. If a cost
     is recorded, a linked ConsumptionEntry is auto-created so it flows into the
-    existing consumption totals/reports without double entry."""
+    existing consumption totals/reports without double entry. A car doesn't
+    collect on the day it's serviced either, so a linked ShortfallClearance is
+    kept in sync the same way, auto-explaining that day's shortfall."""
 
     __tablename__ = "car_services"
 
@@ -245,10 +280,14 @@ class CarService(db.Model):
     consumption_entry_id = db.Column(
         db.Integer, db.ForeignKey("consumption_entries.id"), unique=True
     )
+    shortfall_clearance_id = db.Column(
+        db.Integer, db.ForeignKey("shortfall_clearances.id"), unique=True
+    )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")
     consumption_entry = db.relationship("ConsumptionEntry")
+    shortfall_clearance = db.relationship("ShortfallClearance")
 
     @property
     def cost(self):

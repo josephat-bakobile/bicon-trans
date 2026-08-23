@@ -4,7 +4,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 
 from ..car_service import predict_for_car, service_predictions
 from ..extensions import db
-from ..models import Car, CarService, ConsumptionEntry, ExpenseCategory
+from ..models import Car, CarService, ConsumptionEntry, ExpenseCategory, ShortfallClearance
 from ..security import get_current_user, require_permission
 from ..sms import can_send, send_and_log
 from ..utils import parse_date
@@ -52,6 +52,47 @@ def _apply_cost(service, car_id, cost, category_id, service_date, description):
         db.session.delete(entry)
 
 
+def _sync_service_clearance(service, car, service_date):
+    """Keeps the linked ShortfallClearance in sync with the service's car/date --
+    a car doesn't collect on the day it's serviced, so that day is auto-explained
+    the same way a driver-allowance day is (see driver_allowance.give_allowance)."""
+    note = (
+        f"Gari {car.code} lilikuwa kwenye huduma tarehe {service_date.strftime('%d-%m-%Y')}"
+        f"{' (' + service.description + ')' if service.description else ''} "
+        "- halikutegemewa kukusanya siku hiyo."
+    )
+
+    if service.shortfall_clearance_id:
+        clearance = service.shortfall_clearance
+        if clearance.car_id != car.id or clearance.date != service_date:
+            clash = ShortfallClearance.query.filter(
+                ShortfallClearance.car_id == car.id,
+                ShortfallClearance.date == service_date,
+                ShortfallClearance.id != clearance.id,
+            ).first()
+            if clash:
+                service.shortfall_clearance_id = None
+                db.session.flush()
+                db.session.delete(clearance)
+                clearance = clash
+                service.shortfall_clearance_id = clearance.id
+            else:
+                clearance.car_id = car.id
+                clearance.date = service_date
+        clearance.description = note
+        return
+
+    existing = ShortfallClearance.query.filter_by(car_id=car.id, date=service_date).first()
+    if existing:
+        existing.description = note
+        clearance = existing
+    else:
+        clearance = ShortfallClearance(car_id=car.id, date=service_date, description=note)
+        db.session.add(clearance)
+        db.session.flush()
+    service.shortfall_clearance_id = clearance.id
+
+
 @bp.route("/")
 def index():
     car_id = request.args.get("car_id", type=int)
@@ -87,9 +128,12 @@ def new():
     elif cost > 0 and not category_id:
         flash("Chagua aina ya matumizi kwa gharama ya huduma.", "danger")
     else:
+        car = Car.query.get_or_404(car_id)
         service = CarService(car_id=car_id, service_date=service_date, description=description)
         db.session.add(service)
+        db.session.flush()
         _apply_cost(service, car_id, cost, category_id, service_date, description)
+        _sync_service_clearance(service, car, service_date)
         db.session.commit()
         flash("Huduma ya gari imehifadhiwa.", "success")
 
@@ -117,10 +161,12 @@ def edit(service_id):
             flash("Chagua aina ya matumizi kwa gharama ya huduma.", "danger")
             return render_template("service/edit.html", service=service, cars=cars, categories=categories)
 
+        car = Car.query.get_or_404(car_id)
         service.service_date = service_date
         service.car_id = car_id
         service.description = description
         _apply_cost(service, car_id, cost, category_id, service_date, description)
+        _sync_service_clearance(service, car, service_date)
         db.session.commit()
         flash("Huduma ya gari imesasishwa.", "success")
         return redirect(url_for("service.index"))
@@ -132,9 +178,12 @@ def edit(service_id):
 def delete(service_id):
     service = CarService.query.get_or_404(service_id)
     linked = service.consumption_entry
+    clearance = service.shortfall_clearance
     db.session.delete(service)
     if linked:
         db.session.delete(linked)
+    if clearance:
+        db.session.delete(clearance)
     db.session.commit()
     flash("Huduma ya gari imefutwa.", "info")
     return redirect(url_for("service.index"))
