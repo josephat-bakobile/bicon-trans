@@ -166,9 +166,10 @@
             <td>
               {% if s.shop_id %}
                 {% if s.is_open %}<span class="badge text-bg-secondary">{{ _('Inasubiri Vipengele') }}</span>
+                {% elif s.is_submitted %}<span class="badge text-bg-info">{{ _('Inasubiri Uthibitisho') }}</span>
                 {% elif s.payment_status == 'paid' %}<span class="badge text-bg-success">{{ _('Imelipwa Kikamilifu') }}</span>
                 {% elif s.payment_status == 'partial' %}<span class="badge text-bg-warning">{{ _('Malipo Sehemu') }}</span>
-                {% else %}<span class="badge text-bg-info">{{ _('Imewasilishwa') }}</span>{% endif %}
+                {% else %}<span class="badge text-bg-primary">{{ _('Imethibitishwa') }}</span>{% endif %}
               {% else %}
                 {% if s.is_open %}<span class="badge text-bg-warning">{{ _('Wazi') }}</span>
                 {% else %}<span class="badge text-bg-success">{{ _('Imefungwa') }}</span>{% endif %}

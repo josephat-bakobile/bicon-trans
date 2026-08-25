@@ -226,6 +226,26 @@ def _migrate_schema():
             )
         )
         db.session.commit()
+    if "approved_at" not in service_cols:
+        db.session.execute(text("ALTER TABLE car_services ADD COLUMN approved_at DATETIME"))
+        db.session.commit()
+    if "approved_by_id" not in service_cols:
+        db.session.execute(
+            text("ALTER TABLE car_services ADD COLUMN approved_by_id INTEGER REFERENCES users(id)")
+        )
+        db.session.commit()
+        # Payments used to be recordable as soon as a shop ticket was
+        # "submitted" -- the "approved" gate is new, so any already-submitted
+        # ticket that already has a payment against it clearly passed that
+        # (until-now implicit) approval already. Advance it so it isn't stuck
+        # unable to take further payments.
+        db.session.execute(
+            text(
+                "UPDATE car_services SET status = 'approved' WHERE status = 'submitted' AND id IN "
+                "(SELECT DISTINCT service_id FROM shop_service_payments)"
+            )
+        )
+        db.session.commit()
 
     car_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(cars)")).fetchall()]
     if "daily_target" not in car_cols:

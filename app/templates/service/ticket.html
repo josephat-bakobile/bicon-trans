@@ -7,9 +7,10 @@
     <i class="bi bi-receipt text-primary"></i> {{ _('Tiketi ya Huduma') }} #{{ service.id }} -- {{ service.car.code }}
     {% if service.shop_id %}
       {% if service.is_open %}<span class="badge text-bg-secondary">{{ _('Rasimu ya Muuza') }}</span>
+      {% elif service.is_submitted %}<span class="badge text-bg-info">{{ _('Imewasilishwa - Inasubiri Uthibitisho') }}</span>
       {% elif service.payment_status == 'paid' %}<span class="badge text-bg-success">{{ _('Imelipwa Kikamilifu') }}</span>
       {% elif service.payment_status == 'partial' %}<span class="badge text-bg-warning">{{ _('Malipo Sehemu') }}</span>
-      {% else %}<span class="badge text-bg-info">{{ _('Imewasilishwa') }}</span>{% endif %}
+      {% else %}<span class="badge text-bg-primary">{{ _('Imethibitishwa - Tayari kwa Malipo') }}</span>{% endif %}
     {% else %}
       {% if service.is_open %}<span class="badge text-bg-warning">{{ _('Wazi') }}</span>
       {% else %}<span class="badge text-bg-success">{{ _('Imefungwa') }}</span>{% endif %}
@@ -33,6 +34,10 @@
           <tr><th>{{ _('Imefungwa') }}</th><td>{{ service.confirmed_at.strftime('%d-%m-%Y %H:%M') if service.confirmed_at else '-' }}</td></tr>
           <tr><th>{{ _('Aliyefunga') }}</th><td>{{ service.confirmed_by.full_name or service.confirmed_by.username if service.confirmed_by else '-' }}</td></tr>
           {% endif %}
+          {% if service.shop_id and service.approved_at %}
+          <tr><th>{{ _('Imethibitishwa') }}</th><td>{{ service.approved_at.strftime('%d-%m-%Y %H:%M') }}</td></tr>
+          <tr><th>{{ _('Aliyethibitisha') }}</th><td>{{ service.approved_by.full_name or service.approved_by.username if service.approved_by else '-' }}</td></tr>
+          {% endif %}
           <tr><th>{{ _('Gharama Jumla') }}</th><td class="fw-bold">{{ service.total_cost | money }}</td></tr>
           {% if service.shop_id and not service.is_open %}
           <tr><th>{{ _('Kimelipwa') }}</th><td>{{ service.paid_amount | money }}</td></tr>
@@ -53,13 +58,20 @@
         <div class="form-text">{{ _('Tiketi hii bado ni rasimu ya muuza %(shop_name)s -- inasubiri awasilishe kabla ya kulipwa.', shop_name=service.shop.name) }}</div>
         {% elif service.is_submitted %}
         <hr>
-        {% if not service.payments %}
-        <form method="post" action="{{ url_for('service.reopen', service_id=service.id) }}" class="confirm-form mb-3"
+        <strong><i class="bi bi-patch-check text-primary"></i> {{ _('Thibitisha Tiketi') }}</strong>
+        <div class="form-text mb-2">{{ _('Kagua vipengele vilivyowasilishwa kisha uthibitishe ili malipo yaanze kurekodiwa. Baada ya kuthibitisha, huwezi tena kuirudisha kwa muuza.') }}</div>
+        <form method="post" action="{{ url_for('service.approve', service_id=service.id) }}" class="confirm-form"
+              data-confirm="{{ _('Thibitisha tiketi hii ya %(shop_name)s? Baada ya hapo utaweza kurekodi malipo, na huwezi tena kuirudisha kwa muuza.', shop_name=service.shop.name) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-success btn-sm w-100"><i class="bi bi-patch-check-fill"></i> {{ _('Thibitisha Tiketi') }}</button>
+        </form>
+        <form method="post" action="{{ url_for('service.return_to_shop', service_id=service.id) }}" class="confirm-form mt-2"
               data-confirm="{{ _('Rudisha tiketi hii kwa muuza %(shop_name)s kwa marekebisho? Wataweza kuongeza/kufuta vipengele kisha kuwasilisha tena.', shop_name=service.shop.name) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-outline-warning btn-sm w-100"><i class="bi bi-arrow-return-left"></i> {{ _('Rudisha kwa Muuza kwa Marekebisho') }}</button>
         </form>
-        {% endif %}
+        {% elif service.is_approved %}
+        <hr>
         <strong><i class="bi bi-cash-coin text-primary"></i> {{ _('Rekodi Malipo') }}</strong>
         <form method="post" action="{{ url_for('service.add_payment', service_id=service.id) }}" class="mt-2 confirm-form"
               data-confirm="{{ _('Rekodi malipo kwa %(shop_name)s? Kiasi hiki kitapelekwa kwenye matumizi ya gari %(car_code)s mara moja.', shop_name=service.shop.name, car_code=service.car.code) }}">
@@ -128,7 +140,7 @@
       {% endif %}
     </div>
 
-    {% if service.shop_id and not service.is_open %}
+    {% if service.shop_id and not service.is_open and not service.is_submitted %}
     <div class="card-panel mt-4">
       <strong><i class="bi bi-clock-history text-primary"></i> {{ _('Historia ya Malipo') }}</strong>
       <div class="table-responsive">

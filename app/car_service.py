@@ -86,14 +86,14 @@ def shop_dashboard():
     broken down per shop so the office can see who to pay next. Shared by the
     main Dashboard and the Huduma/service ticket list."""
     shop_tickets = CarService.query.filter(CarService.shop_id.isnot(None)).all()
-    active = [t for t in shop_tickets if t.is_open or t.is_submitted]
-    unpaid_total = sum(t.balance_due for t in shop_tickets if t.is_submitted)
+    active = [t for t in shop_tickets if t.is_open or t.is_submitted or t.is_approved]
+    unpaid_total = sum(t.balance_due for t in shop_tickets if t.is_submitted or t.is_approved)
 
     by_shop = {}
     for t in active:
         row = by_shop.setdefault(t.shop_id, {"shop": t.shop, "active": 0, "unpaid": 0.0})
         row["active"] += 1
-        if t.is_submitted:
+        if t.is_submitted or t.is_approved:
             row["unpaid"] += t.balance_due
 
     return {

@@ -33,6 +33,7 @@
       <option value="">{{ _('Zote') }}</option>
       <option value="open" {{ 'selected' if status=='open' else '' }}>{{ _('Wazi') }}</option>
       <option value="submitted" {{ 'selected' if status=='submitted' else '' }}>{{ _('Imewasilishwa') }}</option>
+      <option value="approved" {{ 'selected' if status=='approved' else '' }}>{{ _('Imethibitishwa') }}</option>
       <option value="confirmed" {{ 'selected' if status=='confirmed' else '' }}>{{ _('Imefungwa') }}</option>
     </select>
   </div>
@@ -133,6 +134,7 @@
           <td>
             {% if r.status == 'open' %}<span class="badge text-bg-warning">{{ _('Wazi') }}</span>
             {% elif r.status == 'submitted' %}<span class="badge text-bg-info">{{ _('Imewasilishwa') }}</span>
+            {% elif r.status == 'approved' %}<span class="badge text-bg-primary">{{ _('Imethibitishwa') }}</span>
             {% else %}<span class="badge text-bg-success">{{ _('Imefungwa') }}</span>{% endif %}
           </td>
           <td>{{ r.category }}</td>

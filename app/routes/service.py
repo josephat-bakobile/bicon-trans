@@ -245,19 +245,46 @@ def confirm(service_id):
 @bp.route("/<int:service_id>/reopen", methods=["POST"])
 def reopen(service_id):
     service = CarService.query.get_or_404(service_id)
-    if service.is_open:
+    if service.shop_id:
+        flash(_("Tiketi ya muuza inarudishwa kwa muuza kwa kitufe cha 'Rudisha kwa Muuza', siyo hiki."), "danger")
+    elif service.is_open:
         flash(_("Tiketi hii tayari iko wazi."), "danger")
-    elif service.shop_id and service.payments:
-        flash(_("Tiketi hii tayari ina malipo -- futa malipo kwanza kabla ya kuifungua tena."), "danger")
     else:
         service.status = "open"
         service.confirmed_at = None
         service.confirmed_by_id = None
         db.session.commit()
-        if service.shop_id:
-            flash(_("Tiketi imerudishwa kwa muuza %(shop_name)s kwa marekebisho. Wataweza kuongeza/kufuta vipengele kisha kuwasilisha tena.", shop_name=service.shop.name), "success")
-        else:
-            flash(_("Tiketi imefunguliwa tena. Unaweza kuongeza/kufuta vipengele kisha kufunga tena."), "success")
+        flash(_("Tiketi imefunguliwa tena. Unaweza kuongeza/kufuta vipengele kisha kufunga tena."), "success")
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+
+@bp.route("/<int:service_id>/approve", methods=["POST"])
+def approve(service_id):
+    service = CarService.query.get_or_404(service_id)
+    if not service.shop_id:
+        flash(_("Tiketi hii siyo ya muuza."), "danger")
+    elif not service.is_submitted:
+        flash(_("Tiketi hii siyo katika hatua ya kuwasilishwa."), "danger")
+    else:
+        service.status = "approved"
+        service.approved_at = datetime.utcnow()
+        service.approved_by_id = get_current_user().id
+        db.session.commit()
+        flash(_("Tiketi imethibitishwa. Sasa unaweza kurekodi malipo. Haiwezi tena kurudishwa kwa muuza."), "success")
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+
+@bp.route("/<int:service_id>/return_to_shop", methods=["POST"])
+def return_to_shop(service_id):
+    service = CarService.query.get_or_404(service_id)
+    if not service.shop_id:
+        flash(_("Tiketi hii siyo ya muuza."), "danger")
+    elif not service.is_submitted:
+        flash(_("Tiketi hii haiwezi tena kurudishwa kwa muuza -- tayari imethibitishwa."), "danger")
+    else:
+        service.status = "open"
+        db.session.commit()
+        flash(_("Tiketi imerudishwa kwa muuza %(shop_name)s kwa marekebisho. Wataweza kuongeza/kufuta vipengele kisha kuwasilisha tena.", shop_name=service.shop.name), "success")
     return redirect(url_for("service.ticket_detail", service_id=service.id))
 
 
@@ -267,8 +294,8 @@ def add_payment(service_id):
     if not service.shop_id:
         flash(_("Tiketi hii siyo ya muuza."), "danger")
         return redirect(url_for("service.ticket_detail", service_id=service.id))
-    if not service.is_submitted:
-        flash(_("Tiketi hii haijawasilishwa au tayari imelipwa kikamilifu."), "danger")
+    if not service.is_approved:
+        flash(_("Tiketi hii haijathibitishwa bado au tayari imelipwa kikamilifu."), "danger")
         return redirect(url_for("service.ticket_detail", service_id=service.id))
 
     payment_date = parse_date(request.form.get("date"), date.today())
@@ -334,7 +361,7 @@ def delete_payment(service_id, payment_id):
         db.session.delete(entry)
     db.session.flush()
     if was_confirmed and service.paid_amount < service.total_cost:
-        service.status = "submitted"
+        service.status = "approved"
         service.confirmed_at = None
         service.confirmed_by_id = None
     db.session.commit()

@@ -316,13 +316,17 @@ class CarService(db.Model):
       full total_cost into a single ConsumptionEntry immediately (status jumps
       straight from "open" to "confirmed").
     - Shop ticket (shop_id set): the shop submits it ("open" -> "submitted"),
-      locking items; staff then records one or more payments (ShopServicePayment)
-      against it, each mirrored into its own ConsumptionEntry dated on the
-      payment date. Once paid_amount >= total_cost the ticket auto-advances to
-      "confirmed" ("Imelipwa Kikamilifu").
-    A confirmed ticket may be reopened to fix a mistake (only if a shop ticket
-    has no payments yet -- see routes.service.reopen) -- re-confirming a staff
-    ticket updates the same ConsumptionEntry in place rather than duplicating it.
+      locking items. While "submitted" the office can still send it back to the
+      shop for changes (routes.service.return_to_shop, "open" again) -- once
+      staff reviews and approves it (routes.service.approve, "submitted" ->
+      "approved") it can no longer be returned. Only once "approved" can staff
+      record one or more payments (ShopServicePayment) against it, each
+      mirrored into its own ConsumptionEntry dated on the payment date. Once
+      paid_amount >= total_cost the ticket auto-advances to "confirmed"
+      ("Imelipwa Kikamilifu").
+    A confirmed staff ticket may be reopened to fix a mistake (see
+    routes.service.reopen) -- re-confirming updates the same ConsumptionEntry in
+    place rather than duplicating it.
     Only staff (non-shop) tickets sync a ShortfallClearance -- a shop billing a
     part doesn't mean the car sat idle that day the way a staff-logged service
     day does, so shop tickets never touch collection shortfalls. Likewise only
@@ -335,7 +339,9 @@ class CarService(db.Model):
     car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
     service_date = db.Column(db.Date, nullable=False, default=date_cls.today)
     description = db.Column(db.String(255))
-    status = db.Column(db.String(10), default="open", nullable=False)  # 'open' | 'submitted' | 'confirmed'
+    status = db.Column(db.String(10), default="open", nullable=False)  # 'open' | 'submitted' | 'approved' | 'confirmed'
+    approved_at = db.Column(db.DateTime)
+    approved_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     confirmed_at = db.Column(db.DateTime)
     confirmed_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"))
@@ -349,7 +355,8 @@ class CarService(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")
-    confirmed_by = db.relationship("User")
+    approved_by = db.relationship("User", foreign_keys=[approved_by_id])
+    confirmed_by = db.relationship("User", foreign_keys=[confirmed_by_id])
     shop = db.relationship("Shop")
     payment_category = db.relationship("ExpenseCategory")
     consumption_entry = db.relationship("ConsumptionEntry")
@@ -398,6 +405,10 @@ class CarService(db.Model):
     @property
     def is_submitted(self):
         return self.status == "submitted"
+
+    @property
+    def is_approved(self):
+        return self.status == "approved"
 
 
 class ShopServicePayment(db.Model):

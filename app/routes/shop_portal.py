@@ -50,8 +50,8 @@ def index():
         .order_by(CarService.service_date.desc(), CarService.id.desc())
         .all()
     )
-    active_count = sum(1 for t in tickets if t.is_open or t.is_submitted)
-    unpaid_total = sum(t.balance_due for t in tickets if t.is_submitted)
+    active_count = sum(1 for t in tickets if t.is_open or t.is_submitted or t.is_approved)
+    unpaid_total = sum(t.balance_due for t in tickets if t.is_submitted or t.is_approved)
     return render_template(
         "shop/index.html",
         tickets=tickets,
