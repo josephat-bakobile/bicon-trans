@@ -283,6 +283,19 @@ table.table-money td.amount, table.table-money th.amount {
   transition: border-color .15s ease, box-shadow .15s ease;
 }
 
+/* ---------- Small-screen form & table fixes ---------- */
+
+@media (max-width: 767.98px) {
+  .table-responsive table {
+    min-width: 640px;
+  }
+
+  .table-responsive .form-control,
+  .table-responsive .form-select {
+    min-width: 110px;
+  }
+}
+
 ::-webkit-scrollbar {
   height: 10px;
   width: 10px;

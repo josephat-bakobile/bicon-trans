@@ -29,32 +29,34 @@
 </form>
 
 <div class="card-panel">
-  <table class="table table-sm table-money align-middle mb-0">
-    <thead>
-      <tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Aina') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th><th></th></tr>
-    </thead>
-    <tbody>
-      {% for e in entries %}
-      <tr>
-        <td>{{ e.date.strftime('%d-%m-%Y') }}</td>
-        <td>{{ e.car.code }}</td>
-        <td>{{ e.category.name }}</td>
-        <td class="amount">{{ e.amount | money }}</td>
-        <td class="text-muted small">{{ e.description or '' }}</td>
-        <td class="text-end">
-          <a href="{{ url_for('consumption.edit', entry_id=e.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> {{ _('Hariri') }}</a>
-          <form method="post" action="{{ url_for('consumption.delete', entry_id=e.id) }}" class="d-inline confirm-form"
-                data-confirm="{{ _('Futa taarifa hii ya matumizi?') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{ _('Futa') }}</button>
-          </form>
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="6" class="text-muted text-center py-4">{{ _('Hakuna taarifa za matumizi.') }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-sm table-money align-middle mb-0">
+      <thead>
+        <tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Aina') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for e in entries %}
+        <tr>
+          <td>{{ e.date.strftime('%d-%m-%Y') }}</td>
+          <td>{{ e.car.code }}</td>
+          <td>{{ e.category.name }}</td>
+          <td class="amount">{{ e.amount | money }}</td>
+          <td class="text-muted small">{{ e.description or '' }}</td>
+          <td class="text-end">
+            <a href="{{ url_for('consumption.edit', entry_id=e.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> {{ _('Hariri') }}</a>
+            <form method="post" action="{{ url_for('consumption.delete', entry_id=e.id) }}" class="d-inline confirm-form"
+                  data-confirm="{{ _('Futa taarifa hii ya matumizi?') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{ _('Futa') }}</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted text-center py-4">{{ _('Hakuna taarifa za matumizi.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {% endblock %}

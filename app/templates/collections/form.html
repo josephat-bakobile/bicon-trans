@@ -8,17 +8,17 @@
   <form method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row g-3 mb-3">
-      <div class="col-md-4">
+      <div class="col-12 col-md-4">
         <label class="form-label">Trans No</label>
         <input type="text" class="form-control" name="trans_no" required value="{{ values.trans_no }}">
       </div>
-      <div class="col-md-4">
+      <div class="col-12 col-md-4">
         <label class="form-label">{{ _('Tarehe ya Muamala (Benki)') }}</label>
         <input type="date" class="form-control" id="txn-date" name="date" required value="{{ values.date }}"
                min="{{ min_entry_date_iso }}" max="{{ today_iso }}">
         <div class="form-text">{{ _('Tarehe ya kupeleka fedha kwa wakala wa benki (kwa ajili ya upatanisho).') }}</div>
       </div>
-      <div class="col-md-4">
+      <div class="col-12 col-md-4">
         <label class="form-label">{{ _('Maelezo ya Muamala (si lazima)') }}</label>
         <input type="text" class="form-control" name="note" value="{{ values.note }}">
       </div>
@@ -28,35 +28,37 @@
     <p class="text-muted small">
       {{ _('Gari moja linaweza kuonekana zaidi ya mara moja likiwa na tarehe tofauti za makusanyo, mfano dereva akilipa deni la siku iliyopita pamoja na la leo katika muamala huo huo.') }}
     </p>
-    <table class="table table-sm" id="lines-table">
-      <thead>
-        <tr>
-          <th style="width:20%">{{ _('Gari') }}</th>
-          <th style="width:20%">{{ _('Tarehe ya Makusanyo') }}</th>
-          <th style="width:15%">{{ _('Kiasi') }}</th>
-          <th>{{ _('Maelezo') }}</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="lines-body">
-        {% for l in values.lines %}
-        <tr>
-          <td>
-            <select class="form-select" name="car_id[]" required>
-              {% for c in cars %}
-              <option value="{{ c.id }}" {{ 'selected' if c.id == l.car_id else '' }}>{{ c.code }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td><input type="date" class="form-control" name="collection_date[]" value="{{ l.collection_date }}" required
-                     min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></td>
-          <td><input type="number" step="0.01" min="0" class="form-control" name="amount[]" value="{{ l.amount }}" required></td>
-          <td><input type="text" class="form-control" name="note[]" value="{{ l.note or '' }}"></td>
-          <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="table table-sm" id="lines-table">
+        <thead>
+          <tr>
+            <th style="width:20%">{{ _('Gari') }}</th>
+            <th style="width:20%">{{ _('Tarehe ya Makusanyo') }}</th>
+            <th style="width:15%">{{ _('Kiasi') }}</th>
+            <th>{{ _('Maelezo') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="lines-body">
+          {% for l in values.lines %}
+          <tr>
+            <td>
+              <select class="form-select" name="car_id[]" required>
+                {% for c in cars %}
+                <option value="{{ c.id }}" {{ 'selected' if c.id == l.car_id else '' }}>{{ c.code }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td><input type="date" class="form-control" name="collection_date[]" value="{{ l.collection_date }}" required
+                       min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></td>
+            <td><input type="number" step="0.01" min="0" class="form-control" name="amount[]" value="{{ l.amount }}" required></td>
+            <td><input type="text" class="form-control" name="note[]" value="{{ l.note or '' }}"></td>
+            <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
     <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="add-row"><i class="bi bi-plus-lg"></i> {{ _('Ongeza Gari') }}</button>
 
     <div class="d-flex gap-2">

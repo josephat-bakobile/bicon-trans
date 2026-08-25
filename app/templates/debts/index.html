@@ -6,29 +6,31 @@
 
 <div class="card-panel mb-4">
   <strong><i class="bi bi-list-ul text-primary"></i> {{ _('Salio la Madeni kwa Gari') }}</strong>
-  <table class="table table-sm table-money mt-2 mb-0">
-    <thead><tr><th>{{ _('Gari') }}</th><th class="amount">{{ _('Anadaiwa (Jumla)') }}</th><th class="amount">{{ _('Amelipa (Jumla)') }}</th><th class="amount">{{ _('Baki') }}</th></tr></thead>
-    <tbody>
-      {% for r in balances.rows %}
-      <tr>
-        <td>{{ r.car.code }}</td>
-        <td class="amount">{{ r.owed | money }}</td>
-        <td class="amount">{{ r.paid | money }}</td>
-        <td class="amount fw-bold">{{ r.balance | money }}</td>
-      </tr>
-      {% endfor %}
-      <tr class="table-light fw-bold">
-        <td>{{ _('JUMLA KUU') }}</td>
-        <td class="amount">{{ balances.grand_owed | money }}</td>
-        <td class="amount">{{ balances.grand_paid | money }}</td>
-        <td class="amount">{{ balances.grand_balance | money }}</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-sm table-money mt-2 mb-0">
+      <thead><tr><th>{{ _('Gari') }}</th><th class="amount">{{ _('Anadaiwa (Jumla)') }}</th><th class="amount">{{ _('Amelipa (Jumla)') }}</th><th class="amount">{{ _('Baki') }}</th></tr></thead>
+      <tbody>
+        {% for r in balances.rows %}
+        <tr>
+          <td>{{ r.car.code }}</td>
+          <td class="amount">{{ r.owed | money }}</td>
+          <td class="amount">{{ r.paid | money }}</td>
+          <td class="amount fw-bold">{{ r.balance | money }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="table-light fw-bold">
+          <td>{{ _('JUMLA KUU') }}</td>
+          <td class="amount">{{ balances.grand_owed | money }}</td>
+          <td class="amount">{{ balances.grand_paid | money }}</td>
+          <td class="amount">{{ balances.grand_balance | money }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <div class="row g-4">
-  <div class="col-lg-6">
+  <div class="col-12 col-lg-6">
     <div class="card-panel mb-3">
       <strong><i class="bi bi-plus-circle text-danger"></i> {{ _('Ongeza Deni (Anadaiwa)') }}</strong>
       <form method="post" action="{{ url_for('debts.new_debt') }}" class="row g-2 mt-1">
@@ -47,30 +49,32 @@
 
     <div class="card-panel">
       <strong><i class="bi bi-clock-history text-primary"></i> {{ _('Madeni ya Hivi Karibuni') }}</strong>
-      <table class="table table-sm table-money mt-2 mb-0">
-        <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th></th></tr></thead>
-        <tbody>
-          {% for d in debts %}
-          <tr>
-            <td>{{ d.date.strftime('%d-%m-%Y') }}</td>
-            <td>{{ d.car.code }}</td>
-            <td class="amount">{{ d.amount | money }}</td>
-            <td class="text-end">
-              <form method="post" action="{{ url_for('debts.delete_debt', debt_id=d.id) }}" class="confirm-form" data-confirm="{{ _('Futa deni hili?') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-              </form>
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna madeni.') }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-sm table-money mt-2 mb-0">
+          <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th></th></tr></thead>
+          <tbody>
+            {% for d in debts %}
+            <tr>
+              <td>{{ d.date.strftime('%d-%m-%Y') }}</td>
+              <td>{{ d.car.code }}</td>
+              <td class="amount">{{ d.amount | money }}</td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('debts.delete_debt', debt_id=d.id) }}" class="confirm-form" data-confirm="{{ _('Futa deni hili?') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna madeni.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <div class="col-lg-6">
+  <div class="col-12 col-lg-6">
     <div class="card-panel mb-3">
       <strong><i class="bi bi-plus-circle text-success"></i> {{ _('Ongeza Malipo ya Deni') }}</strong>
       <form method="post" action="{{ url_for('debts.new_payment') }}" class="row g-2 mt-1" id="payment-form">
@@ -94,26 +98,28 @@
 
     <div class="card-panel">
       <strong><i class="bi bi-clock-history text-primary"></i> {{ _('Malipo ya Hivi Karibuni') }}</strong>
-      <table class="table table-sm table-money mt-2 mb-0">
-        <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th></th></tr></thead>
-        <tbody>
-          {% for p in payments %}
-          <tr>
-            <td>{{ p.date.strftime('%d-%m-%Y') }}</td>
-            <td>{{ p.car.code }}</td>
-            <td class="amount">{{ p.amount | money }}</td>
-            <td class="text-end">
-              <form method="post" action="{{ url_for('debts.delete_payment', payment_id=p.id) }}" class="confirm-form" data-confirm="{{ _('Futa malipo haya?') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-              </form>
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna malipo.') }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-sm table-money mt-2 mb-0">
+          <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th></th></tr></thead>
+          <tbody>
+            {% for p in payments %}
+            <tr>
+              <td>{{ p.date.strftime('%d-%m-%Y') }}</td>
+              <td>{{ p.car.code }}</td>
+              <td class="amount">{{ p.amount | money }}</td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('debts.delete_payment', payment_id=p.id) }}" class="confirm-form" data-confirm="{{ _('Futa malipo haya?') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna malipo.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

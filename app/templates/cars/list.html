@@ -8,7 +8,7 @@
 </div>
 
 <div class="row g-4">
-  <div class="col-lg-4">
+  <div class="col-12 col-lg-4">
     <div class="card-panel">
       <strong><i class="bi bi-plus-circle text-primary"></i> {{ _('Ongeza Gari') }}</strong>
       <form method="post" action="{{ url_for('cars.new') }}" class="mt-2">
@@ -38,51 +38,53 @@
       </form>
     </div>
   </div>
-  <div class="col-lg-8">
+  <div class="col-12 col-lg-8">
     <div class="card-panel">
-      <table class="table table-sm table-money align-middle mb-0">
-        <thead><tr><th>Code</th><th>{{ _('Jina') }}</th><th>{{ _('Dereva') }}</th><th class="amount">{{ _('Lengo la Siku') }}</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
-        <tbody>
-          {% for c, driver_options in car_rows %}
-          <tr>
-            <td>{{ c.code }}</td>
-            <td>{{ c.name or '-' }}</td>
-            <td>
-              <form method="post" action="{{ url_for('cars.update_driver', car_id=c.id) }}" class="d-flex gap-1">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <select name="driver_id" class="form-select form-select-sm" style="max-width:150px;">
-                  <option value="">-- {{ _('hakuna') }} --</option>
-                  {% for d in driver_options %}
-                  <option value="{{ d.id }}" {{ 'selected' if c.driver_id == d.id }}>{{ d.name }}</option>
-                  {% endfor %}
-                </select>
-                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
-              </form>
-            </td>
-            <td class="amount">
-              <form method="post" action="{{ url_for('cars.update_target', car_id=c.id) }}" class="d-flex gap-1 justify-content-end">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="number" step="0.01" min="0" name="daily_target" value="{{ c.daily_target }}"
-                       class="form-control form-control-sm" style="max-width:110px;">
-                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
-              </form>
-            </td>
-            <td>
-              {% if c.active %}<span class="badge text-bg-success">Active</span>
-              {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
-            </td>
-            <td class="text-end">
-              <form method="post" action="{{ url_for('cars.toggle', car_id=c.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-secondary">
-                  <i class="bi {{ 'bi-toggle-off' if c.active else 'bi-toggle-on' }}"></i> {{ _('Zima') if c.active else _('Washa') }}
-                </button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-sm table-money align-middle mb-0">
+          <thead><tr><th>Code</th><th>{{ _('Jina') }}</th><th>{{ _('Dereva') }}</th><th class="amount">{{ _('Lengo la Siku') }}</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
+          <tbody>
+            {% for c, driver_options in car_rows %}
+            <tr>
+              <td>{{ c.code }}</td>
+              <td>{{ c.name or '-' }}</td>
+              <td>
+                <form method="post" action="{{ url_for('cars.update_driver', car_id=c.id) }}" class="d-flex gap-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <select name="driver_id" class="form-select form-select-sm" style="max-width:150px;">
+                    <option value="">-- {{ _('hakuna') }} --</option>
+                    {% for d in driver_options %}
+                    <option value="{{ d.id }}" {{ 'selected' if c.driver_id == d.id }}>{{ d.name }}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
+                </form>
+              </td>
+              <td class="amount">
+                <form method="post" action="{{ url_for('cars.update_target', car_id=c.id) }}" class="d-flex gap-1 justify-content-end">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="number" step="0.01" min="0" name="daily_target" value="{{ c.daily_target }}"
+                         class="form-control form-control-sm" style="max-width:110px;">
+                  <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
+                </form>
+              </td>
+              <td>
+                {% if c.active %}<span class="badge text-bg-success">Active</span>
+                {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
+              </td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('cars.toggle', car_id=c.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-secondary">
+                    <i class="bi {{ 'bi-toggle-off' if c.active else 'bi-toggle-on' }}"></i> {{ _('Zima') if c.active else _('Washa') }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

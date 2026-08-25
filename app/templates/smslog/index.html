@@ -6,44 +6,46 @@
 <h4 class="mb-3"><i class="bi bi-chat-dots text-primary"></i> {{ _('Kumbukumbu za SMS') }}</h4>
 
 <div class="card-panel">
-  <table class="table table-sm align-middle mb-0">
-    <thead>
-      <tr>
-        <th>{{ _('Tarehe') }}</th>
-        <th>{{ _('Gari') }}</th>
-        <th>{{ _('Dereva') }}</th>
-        <th>{{ _('Namba ya Simu') }}</th>
-        <th>{{ _('Aina') }}</th>
-        <th>{{ _('Hali') }}</th>
-        <th>{{ _('Aliyetuma') }}</th>
-        <th>{{ _('Ujumbe / Sababu') }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for log in logs %}
-      <tr>
-        <td class="text-nowrap">{{ log.created_at.strftime('%d-%m-%Y %H:%M') }}</td>
-        <td>{{ log.car.code if log.car else '-' }}</td>
-        <td>{{ log.driver.name if log.driver else '-' }}</td>
-        <td>{{ log.phone or '-' }}</td>
-        <td>
-          {% if log.scenario == 'collection' %}{{ _('Makusanyo') }}
-          {% elif log.scenario == 'streak' %}{{ _('Tatizo') }}
-          {% elif log.scenario == 'service' %}{{ _('Huduma') }}
-          {% else %}{{ log.scenario }}{% endif %}
-        </td>
-        <td>
-          {% if log.status == 'sent' %}<span class="badge text-bg-success">{{ _('Imetumwa') }}</span>
-          {% else %}<span class="badge text-bg-danger">{{ _('Imeshindikana') }}</span>{% endif %}
-        </td>
-        <td>{{ log.sent_by.username if log.sent_by else '-' }}</td>
-        <td class="small text-muted" style="max-width:320px;">{{ log.error or log.message }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="8" class="text-muted text-center py-4">{{ _('Hakuna SMS zilizotumwa bado.') }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead>
+        <tr>
+          <th>{{ _('Tarehe') }}</th>
+          <th>{{ _('Gari') }}</th>
+          <th>{{ _('Dereva') }}</th>
+          <th>{{ _('Namba ya Simu') }}</th>
+          <th>{{ _('Aina') }}</th>
+          <th>{{ _('Hali') }}</th>
+          <th>{{ _('Aliyetuma') }}</th>
+          <th>{{ _('Ujumbe / Sababu') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="text-nowrap">{{ log.created_at.strftime('%d-%m-%Y %H:%M') }}</td>
+          <td>{{ log.car.code if log.car else '-' }}</td>
+          <td>{{ log.driver.name if log.driver else '-' }}</td>
+          <td>{{ log.phone or '-' }}</td>
+          <td>
+            {% if log.scenario == 'collection' %}{{ _('Makusanyo') }}
+            {% elif log.scenario == 'streak' %}{{ _('Tatizo') }}
+            {% elif log.scenario == 'service' %}{{ _('Huduma') }}
+            {% else %}{{ log.scenario }}{% endif %}
+          </td>
+          <td>
+            {% if log.status == 'sent' %}<span class="badge text-bg-success">{{ _('Imetumwa') }}</span>
+            {% else %}<span class="badge text-bg-danger">{{ _('Imeshindikana') }}</span>{% endif %}
+          </td>
+          <td>{{ log.sent_by.username if log.sent_by else '-' }}</td>
+          <td class="small text-muted" style="max-width:320px;">{{ log.error or log.message }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-muted text-center py-4">{{ _('Hakuna SMS zilizotumwa bado.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {{ render_pagination('smslog.index', page, pages, 'page', {}) }}
 </div>
 

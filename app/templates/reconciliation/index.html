@@ -24,35 +24,37 @@
 </form>
 
 <div class="card-panel">
-  <table class="table table-sm table-money align-middle mb-0">
-    <thead>
-      <tr>
-        <th>{{ _('Tarehe ya Muamala (Benki)') }}</th>
-        <th>Trans No</th>
-        <th class="amount">{{ _('Jumla') }}</th>
-        <th>{{ _('Maelezo') }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in rows %}
-      <tr>
-        <td>{{ r.transaction_date.strftime('%d-%m-%Y') }}</td>
-        <td>{{ r.trans_no }}</td>
-        <td class="amount">{{ r.total | money }}</td>
-        <td class="text-muted small">{{ r.note }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="4" class="text-muted text-center py-4">{{ _('Hakuna miamala katika kipindi hiki.') }}</td></tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr class="table-light fw-bold">
-        <td colspan="2">{{ _('JUMLA KUU') }}</td>
-        <td class="amount">{{ total | money }}</td>
-        <td></td>
-      </tr>
-    </tfoot>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-sm table-money align-middle mb-0">
+      <thead>
+        <tr>
+          <th>{{ _('Tarehe ya Muamala (Benki)') }}</th>
+          <th>Trans No</th>
+          <th class="amount">{{ _('Jumla') }}</th>
+          <th>{{ _('Maelezo') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.transaction_date.strftime('%d-%m-%Y') }}</td>
+          <td>{{ r.trans_no }}</td>
+          <td class="amount">{{ r.total | money }}</td>
+          <td class="text-muted small">{{ r.note }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-muted text-center py-4">{{ _('Hakuna miamala katika kipindi hiki.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="table-light fw-bold">
+          <td colspan="2">{{ _('JUMLA KUU') }}</td>
+          <td class="amount">{{ total | money }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 </div>
 
 {% endblock %}

@@ -21,56 +21,58 @@
 </form>
 
 <div class="card-panel">
-  <table class="table table-sm table-money align-middle mb-0">
-    <thead>
-      <tr>
-        <th>Trans No</th>
-        <th>{{ _('Tarehe ya Muamala') }}</th>
-        <th>{{ _('Mgawanyo kwa Gari (Tarehe ya Makusanyo)') }}</th>
-        <th class="amount">{{ _('Jumla') }}</th>
-        <th>{{ _('Maelezo') }}</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in transactions %}
-      <tr>
-        <td>{{ t.trans_no }}</td>
-        <td>{{ t.transaction_date.strftime('%d-%m-%Y') }}</td>
-        <td>
-          {% for l in t.lines | sort(attribute='car.code') %}
-            <span class="badge text-bg-light border">
-              {{ l.car.code }} ({{ l.collection_date.strftime('%d/%m') }}): {{ l.amount | money }}
-            </span>
-            {% if current_user.has_permission('sms') and sms_ready(l.car) %}
-            <form method="post" action="{{ url_for('collections.send_collection_sms', txn_id=t.id, car_id=l.car_id) }}"
-                  class="d-inline confirm-form" data-confirm="{{ _('Tuma SMS ya makusanyo kwa dereva wa %(code)s?', code=l.car.code) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button class="btn btn-sm btn-outline-primary py-0 px-1" title="{{ _('Tuma SMS') }}"><i class="bi bi-send"></i></button>
-            </form>
+  <div class="table-responsive">
+    <table class="table table-sm table-money align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Trans No</th>
+          <th>{{ _('Tarehe ya Muamala') }}</th>
+          <th>{{ _('Mgawanyo kwa Gari (Tarehe ya Makusanyo)') }}</th>
+          <th class="amount">{{ _('Jumla') }}</th>
+          <th>{{ _('Maelezo') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td>{{ t.trans_no }}</td>
+          <td>{{ t.transaction_date.strftime('%d-%m-%Y') }}</td>
+          <td>
+            {% for l in t.lines | sort(attribute='car.code') %}
+              <span class="badge text-bg-light border">
+                {{ l.car.code }} ({{ l.collection_date.strftime('%d/%m') }}): {{ l.amount | money }}
+              </span>
+              {% if current_user.has_permission('sms') and sms_ready(l.car) %}
+              <form method="post" action="{{ url_for('collections.send_collection_sms', txn_id=t.id, car_id=l.car_id) }}"
+                    class="d-inline confirm-form" data-confirm="{{ _('Tuma SMS ya makusanyo kwa dereva wa %(code)s?', code=l.car.code) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-primary py-0 px-1" title="{{ _('Tuma SMS') }}"><i class="bi bi-send"></i></button>
+              </form>
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td class="amount">{{ t.total | money }}</td>
+          <td class="text-muted small">{{ t.note or '' }}</td>
+          <td class="text-end">
+            {% if transaction_locked(t.transaction_date) %}
+              <span class="badge text-bg-secondary" title="{{ _('Zaidi ya wiki 1 tangu tarehe ya muamala') }}">{{ _('Imefungwa') }}</span>
+            {% else %}
+              <a href="{{ url_for('collections.edit', txn_id=t.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> {{ _('Hariri') }}</a>
+              <form method="post" action="{{ url_for('collections.delete', txn_id=t.id) }}" class="d-inline confirm-form"
+                    data-confirm="{{ _('Una uhakika unataka kufuta muamala %(trans_no)s?', trans_no=t.trans_no) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{ _('Futa') }}</button>
+              </form>
             {% endif %}
-          {% endfor %}
-        </td>
-        <td class="amount">{{ t.total | money }}</td>
-        <td class="text-muted small">{{ t.note or '' }}</td>
-        <td class="text-end">
-          {% if transaction_locked(t.transaction_date) %}
-            <span class="badge text-bg-secondary" title="{{ _('Zaidi ya wiki 1 tangu tarehe ya muamala') }}">{{ _('Imefungwa') }}</span>
-          {% else %}
-            <a href="{{ url_for('collections.edit', txn_id=t.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> {{ _('Hariri') }}</a>
-            <form method="post" action="{{ url_for('collections.delete', txn_id=t.id) }}" class="d-inline confirm-form"
-                  data-confirm="{{ _('Una uhakika unataka kufuta muamala %(trans_no)s?', trans_no=t.trans_no) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{ _('Futa') }}</button>
-            </form>
-          {% endif %}
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="6" class="text-muted text-center py-4">{{ _('Hakuna miamala.') }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted text-center py-4">{{ _('Hakuna miamala.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {% endblock %}

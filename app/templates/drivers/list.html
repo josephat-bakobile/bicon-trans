@@ -8,7 +8,7 @@
 </div>
 
 <div class="row g-4">
-  <div class="col-lg-4">
+  <div class="col-12 col-lg-4">
     <div class="card-panel">
       <strong><i class="bi bi-person-plus text-primary"></i> {{ _('Ongeza Dereva') }}</strong>
       <form method="post" action="{{ url_for('drivers.new') }}" class="mt-2">
@@ -34,56 +34,58 @@
       </form>
     </div>
   </div>
-  <div class="col-lg-8">
+  <div class="col-12 col-lg-8">
     <div class="card-panel">
-      <table class="table table-sm align-middle mb-0">
-        <thead><tr><th>{{ _('Jina') }}</th><th>{{ _('Namba ya Simu') }}</th><th>{{ _('Gari') }}</th><th>SMS</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
-        <tbody>
-          {% for d in drivers %}
-          <tr>
-            <td>
-              <form method="post" action="{{ url_for('drivers.edit', driver_id=d.id) }}" class="d-flex gap-1">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="text" name="name" value="{{ d.name }}" class="form-control form-control-sm" style="max-width:120px;" required>
-                <input type="text" name="phone" value="{{ d.phone or '' }}" class="form-control form-control-sm" style="max-width:110px;" placeholder="{{ _('Namba ya Simu') }}">
-                <select name="car_id" class="form-select form-select-sm" style="max-width:100px;">
-                  <option value="">-- {{ _('hakuna') }} --</option>
-                  {% for c in unassigned_cars %}<option value="{{ c.id }}" {{ 'selected' if d.car and d.car.id == c.id }}>{{ c.code }}</option>{% endfor %}
-                  {% if d.car and d.car not in unassigned_cars %}<option value="{{ d.car.id }}" selected>{{ d.car.code }}</option>{% endif %}
-                </select>
-                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
-              </form>
-            </td>
-            <td>{{ d.phone or '-' }}</td>
-            <td>{{ d.car.code if d.car else '-' }}</td>
-            <td>
-              <form method="post" action="{{ url_for('drivers.toggle_sms', driver_id=d.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm {{ 'btn-outline-success' if d.sms_enabled else 'btn-outline-secondary' }}"
-                        title="{{ _('SMS zinaruhusiwa') if d.sms_enabled else _('SMS zimezimwa') }}">
-                  <i class="bi {{ 'bi-bell' if d.sms_enabled else 'bi-bell-slash' }}"></i>
-                </button>
-              </form>
-            </td>
-            <td>
-              {% if d.active %}<span class="badge text-bg-success">Active</span>
-              {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
-            </td>
-            <td class="text-end">
-              <form method="post" action="{{ url_for('drivers.toggle', driver_id=d.id) }}" class="confirm-form"
-                    data-confirm="{{ (_('Kuzima dereva %(name)s kutamwondoa kwenye gari lake pia. Endelea?', name=d.name)) if d.active and d.car else '' }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-secondary">
-                  <i class="bi {{ 'bi-toggle-off' if d.active else 'bi-toggle-on' }}"></i> {{ _('Zima') if d.active else _('Washa') }}
-                </button>
-              </form>
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="6" class="text-muted text-center py-3">{{ _('Hakuna madereva bado.') }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>{{ _('Jina') }}</th><th>{{ _('Namba ya Simu') }}</th><th>{{ _('Gari') }}</th><th>SMS</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
+          <tbody>
+            {% for d in drivers %}
+            <tr>
+              <td>
+                <form method="post" action="{{ url_for('drivers.edit', driver_id=d.id) }}" class="d-flex gap-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="text" name="name" value="{{ d.name }}" class="form-control form-control-sm" style="max-width:120px;" required>
+                  <input type="text" name="phone" value="{{ d.phone or '' }}" class="form-control form-control-sm" style="max-width:110px;" placeholder="{{ _('Namba ya Simu') }}">
+                  <select name="car_id" class="form-select form-select-sm" style="max-width:100px;">
+                    <option value="">-- {{ _('hakuna') }} --</option>
+                    {% for c in unassigned_cars %}<option value="{{ c.id }}" {{ 'selected' if d.car and d.car.id == c.id }}>{{ c.code }}</option>{% endfor %}
+                    {% if d.car and d.car not in unassigned_cars %}<option value="{{ d.car.id }}" selected>{{ d.car.code }}</option>{% endif %}
+                  </select>
+                  <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
+                </form>
+              </td>
+              <td>{{ d.phone or '-' }}</td>
+              <td>{{ d.car.code if d.car else '-' }}</td>
+              <td>
+                <form method="post" action="{{ url_for('drivers.toggle_sms', driver_id=d.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm {{ 'btn-outline-success' if d.sms_enabled else 'btn-outline-secondary' }}"
+                          title="{{ _('SMS zinaruhusiwa') if d.sms_enabled else _('SMS zimezimwa') }}">
+                    <i class="bi {{ 'bi-bell' if d.sms_enabled else 'bi-bell-slash' }}"></i>
+                  </button>
+                </form>
+              </td>
+              <td>
+                {% if d.active %}<span class="badge text-bg-success">Active</span>
+                {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
+              </td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('drivers.toggle', driver_id=d.id) }}" class="confirm-form"
+                      data-confirm="{{ (_('Kuzima dereva %(name)s kutamwondoa kwenye gari lake pia. Endelea?', name=d.name)) if d.active and d.car else '' }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-secondary">
+                    <i class="bi {{ 'bi-toggle-off' if d.active else 'bi-toggle-on' }}"></i> {{ _('Zima') if d.active else _('Washa') }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-muted text-center py-3">{{ _('Hakuna madereva bado.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

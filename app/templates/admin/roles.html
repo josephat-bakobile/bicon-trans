@@ -5,7 +5,7 @@
 <h4 class="mb-3"><i class="bi bi-shield-lock text-primary"></i> {{ _('Majukumu na Ruhusa') }}</h4>
 
 <div class="row g-4">
-  <div class="col-lg-4">
+  <div class="col-12 col-lg-4">
     <div class="card-panel">
       <strong><i class="bi bi-plus-circle text-primary"></i> {{ _('Ongeza Jukumu') }}</strong>
       <form method="post" action="{{ url_for('admin.roles_new') }}" class="mt-2">
@@ -27,7 +27,7 @@
       </form>
     </div>
   </div>
-  <div class="col-lg-8">
+  <div class="col-12 col-lg-8">
     <div class="d-flex flex-column gap-3">
       {% for role in roles %}
       <div class="card-panel">

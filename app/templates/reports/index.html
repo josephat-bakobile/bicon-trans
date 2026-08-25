@@ -44,25 +44,27 @@
       <a class="btn btn-sm btn-outline-danger" href="{{ url_for('reports.summary_pdf', **{'start': start.isoformat(), 'end': end.isoformat()}) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
     </span>
   </div>
-  <table class="table table-sm table-money mb-0">
-    <thead><tr><th>{{ _('Gari') }}</th><th class="amount">{{ _('Makusanyo') }}</th><th class="amount">{{ _('Matumizi') }}</th><th class="amount">{{ _('Baki') }}</th></tr></thead>
-    <tbody>
-      {% for r in summary_rows %}
-      <tr>
-        <td>{{ r.car }}</td>
-        <td class="amount">{{ r.collected | money }}</td>
-        <td class="amount">{{ r.consumed | money }}</td>
-        <td class="amount">{{ r.net | money }}</td>
-      </tr>
-      {% endfor %}
-      <tr class="table-light fw-bold">
-        <td>{{ _('JUMLA KUU') }}</td>
-        <td class="amount">{{ summary_totals.grand_collected | money }}</td>
-        <td class="amount">{{ summary_totals.grand_consumed | money }}</td>
-        <td class="amount">{{ summary_totals.grand_net | money }}</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-sm table-money mb-0">
+      <thead><tr><th>{{ _('Gari') }}</th><th class="amount">{{ _('Makusanyo') }}</th><th class="amount">{{ _('Matumizi') }}</th><th class="amount">{{ _('Baki') }}</th></tr></thead>
+      <tbody>
+        {% for r in summary_rows %}
+        <tr>
+          <td>{{ r.car }}</td>
+          <td class="amount">{{ r.collected | money }}</td>
+          <td class="amount">{{ r.consumed | money }}</td>
+          <td class="amount">{{ r.net | money }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="table-light fw-bold">
+          <td>{{ _('JUMLA KUU') }}</td>
+          <td class="amount">{{ summary_totals.grand_collected | money }}</td>
+          <td class="amount">{{ summary_totals.grand_consumed | money }}</td>
+          <td class="amount">{{ summary_totals.grand_net | money }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <div class="card-panel mb-4">
@@ -74,24 +76,26 @@
     </span>
   </div>
   <div style="max-height: 320px; overflow-y: auto;">
-  <table class="table table-sm table-money mb-0">
-    <thead><tr><th>{{ _('Tarehe ya Makusanyo') }}</th><th>{{ _('Tarehe ya Muamala') }}</th><th>Trans No</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th></tr></thead>
-    <tbody>
-      {% for r in collection_rows %}
-      <tr>
-        <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
-        <td>{{ r.trans_date.strftime('%d-%m-%Y') }}</td>
-        <td>{{ r.trans_no }}</td>
-        <td>{{ r.car }}</td>
-        <td class="amount">{{ r.amount | money }}</td>
-        <td class="text-muted small">{{ r.note }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="6" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
-      {% endfor %}
-    </tbody>
-    <tfoot><tr class="table-light fw-bold"><td colspan="4">{{ _('JUMLA') }}</td><td class="amount">{{ collection_total | money }}</td><td></td></tr></tfoot>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-sm table-money mb-0">
+      <thead><tr><th>{{ _('Tarehe ya Makusanyo') }}</th><th>{{ _('Tarehe ya Muamala') }}</th><th>Trans No</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th></tr></thead>
+      <tbody>
+        {% for r in collection_rows %}
+        <tr>
+          <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
+          <td>{{ r.trans_date.strftime('%d-%m-%Y') }}</td>
+          <td>{{ r.trans_no }}</td>
+          <td>{{ r.car }}</td>
+          <td class="amount">{{ r.amount | money }}</td>
+          <td class="text-muted small">{{ r.note }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="table-light fw-bold"><td colspan="4">{{ _('JUMLA') }}</td><td class="amount">{{ collection_total | money }}</td><td></td></tr></tfoot>
+    </table>
+  </div>
   </div>
 </div>
 
@@ -104,23 +108,25 @@
     </span>
   </div>
   <div style="max-height: 320px; overflow-y: auto;">
-  <table class="table table-sm table-money mb-0">
-    <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Aina') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th></tr></thead>
-    <tbody>
-      {% for r in consumption_rows %}
-      <tr>
-        <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
-        <td>{{ r.car }}</td>
-        <td>{{ r.category }}</td>
-        <td class="amount">{{ r.amount | money }}</td>
-        <td class="text-muted small">{{ r.description }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="5" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
-      {% endfor %}
-    </tbody>
-    <tfoot><tr class="table-light fw-bold"><td colspan="3">{{ _('JUMLA') }}</td><td class="amount">{{ consumption_total | money }}</td><td></td></tr></tfoot>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-sm table-money mb-0">
+      <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Aina') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th></tr></thead>
+      <tbody>
+        {% for r in consumption_rows %}
+        <tr>
+          <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
+          <td>{{ r.car }}</td>
+          <td>{{ r.category }}</td>
+          <td class="amount">{{ r.amount | money }}</td>
+          <td class="text-muted small">{{ r.description }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="table-light fw-bold"><td colspan="3">{{ _('JUMLA') }}</td><td class="amount">{{ consumption_total | money }}</td><td></td></tr></tfoot>
+    </table>
+  </div>
   </div>
 </div>
 
