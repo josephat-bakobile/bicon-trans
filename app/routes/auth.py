@@ -15,6 +15,17 @@ from ..security import (
 bp = Blueprint("auth", __name__)
 
 
+def _safe_next_url(next_url):
+    """Only follow same-site GET-safe redirect targets. Rejects blanks,
+    off-site URLs (open-redirect guard), and paths that map to POST-only
+    routes like /logout or /lang/<code> -- landing a GET there 405s."""
+    if not next_url or not next_url.startswith("/") or next_url.startswith("//"):
+        return None
+    if next_url == url_for("auth.logout") or next_url.startswith("/lang/"):
+        return None
+    return next_url
+
+
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     """Single login page for both staff and shops -- tries a staff User first,
@@ -23,7 +34,7 @@ def login():
     if request.method == "POST":
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
-        next_url = request.args.get("next")
+        next_url = _safe_next_url(request.args.get("next"))
 
         user = User.query.filter_by(username=username).first()
         if user and user.active:

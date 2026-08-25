@@ -177,7 +177,7 @@ def create_app():
 
     @app.before_request
     def _require_login():
-        if request.endpoint in (None, "auth.login", "auth.set_language", "static") or request.blueprint == "shop_portal":
+        if request.endpoint in (None, "auth.login", "auth.set_language", "auth.logout", "static") or request.blueprint == "shop_portal":
             # shop_portal is a separate auth domain (session["shop_id"], see
             # security.get_current_shop/require_shop_login) -- it guards its own
             # routes rather than going through the staff Role/Permission system.
