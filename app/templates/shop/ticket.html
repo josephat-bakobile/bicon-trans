@@ -111,18 +111,14 @@
       <strong><i class="bi bi-plus-circle text-primary"></i> {{ _('Ongeza Kipengele') }}</strong>
       <form method="post" action="{{ url_for('shop_portal.add_item', service_id=service.id) }}" class="row g-2 mt-1">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
           <label class="form-label">{{ _('Aina (chagua kwenye orodha)') }}</label>
-          <select class="form-select" name="category_id">
+          <select class="form-select" name="category_id" required>
             <option value="">-- {{ _('chagua') }} --</option>
             {% for cat in item_categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
           </select>
         </div>
-        <div class="col-12 col-md-3">
-          <label class="form-label">{{ _('Au Aina Mpya (kama haipo hapo juu)') }}</label>
-          <input type="text" class="form-control text-uppercase" name="new_category_name" placeholder="{{ _('mfano: FILTA YA HEWA') }}">
-        </div>
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-4">
           <label class="form-label">{{ _('Jina la Kipengele') }}</label>
           <input type="text" class="form-control" name="name" placeholder="{{ _('mfano: Filter ya Mafuta') }}" required>
         </div>

@@ -80,27 +80,17 @@ def add_item(service_id):
         return redirect(url_for("shop_portal.ticket_detail", service_id=ticket.id))
 
     category_id = request.form.get("category_id", type=int)
-    new_category_name = (request.form.get("new_category_name") or "").strip().upper()
     name = (request.form.get("name") or "").strip()
     quantity = float(request.form.get("quantity") or 1)
     unit_cost = float(request.form.get("unit_cost") or 0)
     note = (request.form.get("note") or "").strip() or None
 
-    if new_category_name:
-        # Not every part/charge category will have been registered by the
-        # office ahead of time -- a shop can add one on the fly here (reused,
-        # not duplicated, if another shop already typed the same name).
-        category = ServiceItemCategory.query.filter_by(name=new_category_name).first()
-        if category is None:
-            category = ServiceItemCategory(name=new_category_name)
-            db.session.add(category)
-            db.session.flush()
-        category_id = category.id
+    category = ServiceItemCategory.query.filter_by(id=category_id, active=True).first() if category_id else None
 
     if not name:
         flash(_("Weka jina la kipengele (kipuri/gharama)."), "danger")
-    elif not category_id:
-        flash(_("Chagua aina ya kipengele, au andika aina mpya."), "danger")
+    elif not category:
+        flash(_("Chagua aina ya kipengele kwenye orodha."), "danger")
     elif quantity <= 0:
         flash(_("Idadi lazima iwe zaidi ya sifuri."), "danger")
     elif unit_cost < 0:
