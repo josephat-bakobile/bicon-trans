@@ -254,7 +254,10 @@ def reopen(service_id):
         service.confirmed_at = None
         service.confirmed_by_id = None
         db.session.commit()
-        flash(_("Tiketi imefunguliwa tena. Unaweza kuongeza/kufuta vipengele kisha kufunga tena."), "success")
+        if service.shop_id:
+            flash(_("Tiketi imerudishwa kwa muuza %(shop_name)s kwa marekebisho. Wataweza kuongeza/kufuta vipengele kisha kuwasilisha tena.", shop_name=service.shop.name), "success")
+        else:
+            flash(_("Tiketi imefunguliwa tena. Unaweza kuongeza/kufuta vipengele kisha kufunga tena."), "success")
     return redirect(url_for("service.ticket_detail", service_id=service.id))
 
 

@@ -53,6 +53,13 @@
         <div class="form-text">{{ _('Tiketi hii bado ni rasimu ya muuza %(shop_name)s -- inasubiri awasilishe kabla ya kulipwa.', shop_name=service.shop.name) }}</div>
         {% elif service.is_submitted %}
         <hr>
+        {% if not service.payments %}
+        <form method="post" action="{{ url_for('service.reopen', service_id=service.id) }}" class="confirm-form mb-3"
+              data-confirm="{{ _('Rudisha tiketi hii kwa muuza %(shop_name)s kwa marekebisho? Wataweza kuongeza/kufuta vipengele kisha kuwasilisha tena.', shop_name=service.shop.name) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-outline-warning btn-sm w-100"><i class="bi bi-arrow-return-left"></i> {{ _('Rudisha kwa Muuza kwa Marekebisho') }}</button>
+        </form>
+        {% endif %}
         <strong><i class="bi bi-cash-coin text-primary"></i> {{ _('Rekodi Malipo') }}</strong>
         <form method="post" action="{{ url_for('service.add_payment', service_id=service.id) }}" class="mt-2 confirm-form"
               data-confirm="{{ _('Rekodi malipo kwa %(shop_name)s? Kiasi hiki kitapelekwa kwenye matumizi ya gari %(car_code)s mara moja.', shop_name=service.shop.name, car_code=service.car.code) }}">
