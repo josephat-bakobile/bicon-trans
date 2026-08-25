@@ -1,6 +1,7 @@
 from datetime import date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, CarDocument, DocumentType
@@ -12,9 +13,12 @@ bp = Blueprint("renewals", __name__)
 
 def _validate_start_date(d):
     if d is None:
-        return "Tarehe ya kuanza si sahihi."
+        return _("Tarehe ya kuanza si sahihi.")
     if d > date.today():
-        return f"Tarehe ya kuanza haiwezi kuwa baadaye ya leo ({date.today().strftime('%d-%m-%Y')})."
+        return _(
+            "Tarehe ya kuanza haiwezi kuwa baadaye ya leo (%(today)s).",
+            today=date.today().strftime("%d-%m-%Y"),
+        )
     return None
 
 
@@ -50,7 +54,7 @@ def new():
     if error:
         flash(error, "danger")
     elif not car_id or not document_type_id:
-        flash("Chagua gari na aina ya nyaraka.", "danger")
+        flash(_("Chagua gari na aina ya nyaraka."), "danger")
     else:
         db.session.add(
             CarDocument(
@@ -62,7 +66,7 @@ def new():
             )
         )
         db.session.commit()
-        flash("Upya wa nyaraka umehifadhiwa.", "success")
+        flash(_("Upya wa nyaraka umehifadhiwa."), "success")
 
     return redirect(url_for("renewals.index"))
 
@@ -72,7 +76,7 @@ def delete(document_id):
     document = CarDocument.query.get_or_404(document_id)
     db.session.delete(document)
     db.session.commit()
-    flash("Rekodi ya nyaraka imefutwa.", "info")
+    flash(_("Rekodi ya nyaraka imefutwa."), "info")
     return redirect(url_for("renewals.index"))
 
 
@@ -80,13 +84,13 @@ def delete(document_id):
 def new_type():
     name = (request.form.get("name") or "").strip().upper()
     if not name:
-        flash("Jina la aina ya nyaraka linahitajika.", "danger")
+        flash(_("Jina la aina ya nyaraka linahitajika."), "danger")
     elif DocumentType.query.filter_by(name=name).first():
-        flash(f"Aina {name} tayari ipo.", "danger")
+        flash(_("Aina %(name)s tayari ipo.", name=name), "danger")
     else:
         db.session.add(DocumentType(name=name))
         db.session.commit()
-        flash(f"Aina {name} imeongezwa.", "success")
+        flash(_("Aina %(name)s imeongezwa.", name=name), "success")
     return redirect(url_for("renewals.index"))
 
 

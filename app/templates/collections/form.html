@@ -1,40 +1,40 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Hariri' if is_edit else 'Muamala Mpya' }} - BICON TRANS{% endblock %}
+{% block title %}{{ _('Hariri') if is_edit else _('Muamala Mpya') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi {{ 'bi-pencil' if is_edit else 'bi-cash-coin' }} text-primary"></i> {{ 'Hariri Muamala ' + values.trans_no if is_edit else 'Muamala Mpya wa Makusanyo' }}</h4>
+<h4 class="mb-3"><i class="bi {{ 'bi-pencil' if is_edit else 'bi-cash-coin' }} text-primary"></i> {{ _('Hariri Muamala %(trans_no)s', trans_no=values.trans_no) if is_edit else _('Muamala Mpya wa Makusanyo') }}</h4>
 
 <div class="card-panel" style="max-width: 920px;">
   <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row g-3 mb-3">
       <div class="col-md-4">
         <label class="form-label">Trans No</label>
         <input type="text" class="form-control" name="trans_no" required value="{{ values.trans_no }}">
       </div>
       <div class="col-md-4">
-        <label class="form-label">Tarehe ya Muamala (Benki)</label>
+        <label class="form-label">{{ _('Tarehe ya Muamala (Benki)') }}</label>
         <input type="date" class="form-control" id="txn-date" name="date" required value="{{ values.date }}"
                min="{{ min_entry_date_iso }}" max="{{ today_iso }}">
-        <div class="form-text">Tarehe ya kupeleka fedha kwa wakala wa benki (kwa ajili ya upatanisho).</div>
+        <div class="form-text">{{ _('Tarehe ya kupeleka fedha kwa wakala wa benki (kwa ajili ya upatanisho).') }}</div>
       </div>
       <div class="col-md-4">
-        <label class="form-label">Maelezo ya Muamala (si lazima)</label>
+        <label class="form-label">{{ _('Maelezo ya Muamala (si lazima)') }}</label>
         <input type="text" class="form-control" name="note" value="{{ values.note }}">
       </div>
     </div>
 
-    <label class="form-label">Mgawanyo kwa Magari</label>
+    <label class="form-label">{{ _('Mgawanyo kwa Magari') }}</label>
     <p class="text-muted small">
-      Gari moja linaweza kuonekana zaidi ya mara moja likiwa na tarehe tofauti za makusanyo, mfano dereva
-      akilipa deni la siku iliyopita pamoja na la leo katika muamala huo huo.
+      {{ _('Gari moja linaweza kuonekana zaidi ya mara moja likiwa na tarehe tofauti za makusanyo, mfano dereva akilipa deni la siku iliyopita pamoja na la leo katika muamala huo huo.') }}
     </p>
     <table class="table table-sm" id="lines-table">
       <thead>
         <tr>
-          <th style="width:20%">Gari</th>
-          <th style="width:20%">Tarehe ya Makusanyo</th>
-          <th style="width:15%">Kiasi</th>
-          <th>Maelezo</th>
+          <th style="width:20%">{{ _('Gari') }}</th>
+          <th style="width:20%">{{ _('Tarehe ya Makusanyo') }}</th>
+          <th style="width:15%">{{ _('Kiasi') }}</th>
+          <th>{{ _('Maelezo') }}</th>
           <th></th>
         </tr>
       </thead>
@@ -57,11 +57,11 @@
         {% endfor %}
       </tbody>
     </table>
-    <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="add-row"><i class="bi bi-plus-lg"></i> Ongeza Gari</button>
+    <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="add-row"><i class="bi bi-plus-lg"></i> {{ _('Ongeza Gari') }}</button>
 
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Hifadhi</button>
-      <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> Ghairi</a>
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> {{ _('Hifadhi') }}</button>
+      <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> {{ _('Ghairi') }}</a>
     </div>
   </form>
 </div>

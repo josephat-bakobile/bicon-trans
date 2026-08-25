@@ -3,10 +3,10 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, request, url_for
+from flask import Flask, flash, redirect, request, session, url_for
 
-from .extensions import db
-from .security import get_current_user
+from .extensions import babel, csrf, db
+from .security import get_current_shop, get_current_user
 
 # One permission code per admin-gated blueprint; dashboard and auth need no entry
 # since every logged-in user may reach them. Kept next to create_app() (rather than
@@ -39,12 +39,38 @@ def create_app():
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "bicon-trans-dev-key")
     app.permanent_session_lifetime = timedelta(hours=8)
 
+    # Session cookie hardening: not readable by JS, not sent cross-site, and
+    # HTTPS-only whenever the deployment is actually served over HTTPS (the
+    # FORCE_HTTPS env var opts a production host in -- left off by default so
+    # local http:// development still gets a cookie back).
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FORCE_HTTPS", "").lower() in ("1", "true", "yes")
+
+    app.config["BABEL_DEFAULT_LOCALE"] = "sw"
+    app.config["BABEL_SUPPORTED_LOCALES"] = ["sw", "en"]
+
     db_path = os.environ.get("DATABASE_PATH", os.path.join(os.getcwd(), "data", "bicon_trans.db"))
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
+    csrf.init_app(app)
+
+    def _select_locale():
+        lang = session.get("lang")
+        if lang in ("sw", "en"):
+            return lang
+        user = get_current_user()
+        if user:
+            return user.language
+        shop = get_current_shop()
+        if shop:
+            return shop.language
+        return "sw"
+
+    babel.init_app(app, locale_selector=_select_locale)
 
     with app.app_context():
         from . import models  # noqa: F401
@@ -52,6 +78,7 @@ def create_app():
         db.create_all()
         _migrate_schema()
         _seed_defaults()
+        _seed_service_item_categories()
         _seed_driver_allowances()
         _seed_auth()
         _run_legacy_import()
@@ -71,6 +98,7 @@ def create_app():
     from .routes.renewals import bp as renewals_bp
     from .routes.admin import bp as admin_bp
     from .routes.smslog import bp as smslog_bp
+    from .routes.shop_portal import bp as shop_portal_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -87,6 +115,7 @@ def create_app():
     app.register_blueprint(renewals_bp, url_prefix="/renewals")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(smslog_bp, url_prefix="/sms-log")
+    app.register_blueprint(shop_portal_bp, url_prefix="/shop")
 
     app.jinja_env.filters["money"] = lambda v: f"{(v or 0):,.0f}"
 
@@ -121,9 +150,37 @@ def create_app():
     def _inject_current_user():
         return {"current_user": get_current_user()}
 
+    @app.context_processor
+    def _inject_current_shop():
+        return {"current_shop": get_current_shop()}
+
+    from flask_babel import get_locale
+
+    @app.context_processor
+    def _inject_locale():
+        return {"current_locale": str(get_locale())}
+
+    @app.after_request
+    def _set_security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "same-origin"
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; "
+            "script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com 'unsafe-inline'; "
+            "style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; "
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "img-src 'self' data:;",
+        )
+        return response
+
     @app.before_request
     def _require_login():
-        if request.endpoint in (None, "auth.login", "static"):
+        if request.endpoint in (None, "auth.login", "static") or request.blueprint == "shop_portal":
+            # shop_portal is a separate auth domain (session["shop_id"], see
+            # security.get_current_shop/require_shop_login) -- it guards its own
+            # routes rather than going through the staff Role/Permission system.
             return None
         user = get_current_user()
         if not user:
@@ -247,6 +304,66 @@ def _migrate_schema():
         print(f"[migrate] removed {orphaned.rowcount} orphaned collection_lines row(s)", flush=True)
     db.session.commit()
 
+    # Service tickets: add status/confirmation columns, then backfill every
+    # pre-existing car_services row as a closed/confirmed ticket (they were all
+    # single-cost entries recorded and done in one step under the old flow), with
+    # a single catch-all item so its cost still shows up in the itemized report.
+    service_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(car_services)")).fetchall()]
+    if "status" not in service_cols:
+        db.session.execute(text("ALTER TABLE car_services ADD COLUMN status VARCHAR(10) NOT NULL DEFAULT 'open'"))
+        db.session.execute(text("ALTER TABLE car_services ADD COLUMN confirmed_at DATETIME"))
+        db.session.execute(text("ALTER TABLE car_services ADD COLUMN confirmed_by_id INTEGER REFERENCES users(id)"))
+        db.session.commit()
+
+        from .models import CarService, CarServiceItem, ServiceItemCategory
+
+        catchall = ServiceItemCategory.query.filter_by(name="MENGINEYO").first()
+        if catchall is None:
+            catchall = ServiceItemCategory(name="MENGINEYO")
+            db.session.add(catchall)
+            db.session.flush()
+
+        for service in CarService.query.all():
+            service.status = "confirmed"
+            service.confirmed_at = service.created_at
+            if service.consumption_entry_id and service.consumption_entry.amount:
+                amount = service.consumption_entry.amount
+                db.session.add(
+                    CarServiceItem(
+                        service_id=service.id,
+                        category_id=catchall.id,
+                        name=service.description or "Huduma",
+                        quantity=1.0,
+                        unit_cost=amount,
+                        cost=amount,
+                    )
+                )
+        db.session.commit()
+
+    # Shop/vendor portal: tickets a shop submits and staff pay off (partially or
+    # in full), each payment mirrored into its own ConsumptionEntry. Both new
+    # columns are nullable so existing (staff-only) tickets need no backfill.
+    if "shop_id" not in service_cols:
+        db.session.execute(text("ALTER TABLE car_services ADD COLUMN shop_id INTEGER REFERENCES shops(id)"))
+        db.session.execute(
+            text("ALTER TABLE car_services ADD COLUMN payment_category_id INTEGER REFERENCES expense_categories(id)")
+        )
+        db.session.commit()
+
+    # Self-service password change + login lockout + per-account language
+    # preference: same three columns added to both users and shops.
+    for table in ("users", "shops"):
+        table_cols = [row[1] for row in db.session.execute(text(f"PRAGMA table_info({table})")).fetchall()]
+        if "language" not in table_cols:
+            db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN language VARCHAR(5) NOT NULL DEFAULT 'sw'"))
+            db.session.commit()
+        if "failed_attempts" not in table_cols:
+            db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0"))
+            db.session.commit()
+        if "locked_until" not in table_cols:
+            db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN locked_until DATETIME"))
+            db.session.commit()
+
 
 def _seed_defaults():
     from .models import Car, DocumentType, ExpenseCategory
@@ -261,6 +378,28 @@ def _seed_defaults():
     if DocumentType.query.count() == 0:
         for name in ["LATRA", "BIMA (INSURANCE)", "LESENI YA BARABARA"]:
             db.session.add(DocumentType(name=name))
+    db.session.commit()
+
+
+def _seed_service_item_categories():
+    """Ensures the default catalog exists. Checked name-by-name (not gated on an
+    overall count-of-zero) because _migrate_schema may have already created the
+    MENGINEYO catch-all category on its own before this runs."""
+    from .models import ServiceItemCategory
+
+    for name in [
+        "MAFUTA YA INJINI",
+        "KICHUJIO CHA MAFUTA",
+        "BREKI/PEDI ZA BREKI",
+        "VIPURI VYA MITAMBO",
+        "MALIPO YA HUDUMA/KIBARUA",
+        "MATAIRI",
+        "BETRI",
+        "KICHUJIO CHA HEWA",
+        "MENGINEYO",
+    ]:
+        if not ServiceItemCategory.query.filter_by(name=name).first():
+            db.session.add(ServiceItemCategory(name=name))
     db.session.commit()
 
 
@@ -292,7 +431,7 @@ PERMISSIONS = [
     ("cars", "Magari"),
     ("service", "Huduma"),
     ("renewals", "Nyaraka"),
-    ("categories", "Aina za Matumizi"),
+    ("categories", "Aina za Matumizi/Vipuri"),
     ("reports", "Ripoti"),
     ("users", "Watumiaji na Majukumu"),
     ("sms", "Kutuma SMS kwa Madereva"),

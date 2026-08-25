@@ -18,12 +18,14 @@ def _excused_dates(car_id, after_date):
 
 def predict_for_car(car, today=None):
     """Next service due date for a car, counted forward from its most recent
-    CarService entry. Only days the car worked normally count toward the
-    interval -- each excused (uncollected/partial + cleared) day in between
+    staff-logged CarService entry (shop-submitted parts tickets are excluded --
+    a shop billing one part isn't necessarily a full physical service day, so it
+    shouldn't reset this clock). Only days the car worked normally count toward
+    the interval -- each excused (uncollected/partial + cleared) day in between
     pushes the due date one calendar day later."""
     today = today or date.today()
     last = (
-        CarService.query.filter_by(car_id=car.id)
+        CarService.query.filter_by(car_id=car.id, shop_id=None)
         .order_by(CarService.service_date.desc(), CarService.id.desc())
         .first()
     )
@@ -76,3 +78,26 @@ def service_predictions(cars=None):
     rows = [predict_for_car(c, today=None) for c in cars]
     rows.sort(key=lambda r: (r["days_remaining"] is None, r["days_remaining"]))
     return rows
+
+
+def shop_dashboard():
+    """Simple at-a-glance vendor summary: how many shop tickets are still active
+    (open or awaiting payment) and how much is currently owed across all of them,
+    broken down per shop so the office can see who to pay next. Shared by the
+    main Dashboard and the Huduma/service ticket list."""
+    shop_tickets = CarService.query.filter(CarService.shop_id.isnot(None)).all()
+    active = [t for t in shop_tickets if t.is_open or t.is_submitted]
+    unpaid_total = sum(t.balance_due for t in shop_tickets if t.is_submitted)
+
+    by_shop = {}
+    for t in active:
+        row = by_shop.setdefault(t.shop_id, {"shop": t.shop, "active": 0, "unpaid": 0.0})
+        row["active"] += 1
+        if t.is_submitted:
+            row["unpaid"] += t.balance_due
+
+    return {
+        "active_count": len(active),
+        "unpaid_total": unpaid_total,
+        "by_shop": sorted(by_shop.values(), key=lambda r: r["unpaid"], reverse=True),
+    }

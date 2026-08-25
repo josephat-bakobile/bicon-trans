@@ -1,6 +1,7 @@
 from datetime import date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, Debt, DebtPayment
@@ -35,7 +36,7 @@ def new_debt():
         )
     )
     db.session.commit()
-    flash("Deni limehifadhiwa.", "success")
+    flash(_("Deni limehifadhiwa."), "success")
     return redirect(url_for("debts.index"))
 
 
@@ -44,7 +45,7 @@ def delete_debt(debt_id):
     d = Debt.query.get_or_404(debt_id)
     db.session.delete(d)
     db.session.commit()
-    flash("Deni limefutwa.", "info")
+    flash(_("Deni limefutwa."), "info")
     return redirect(url_for("debts.index"))
 
 
@@ -57,8 +58,13 @@ def new_payment():
 
     if amount > balance:
         flash(
-            f"Kiasi {amount:,.0f} ni kikubwa kuliko deni la {car.code} lililobaki ({balance:,.0f}). "
-            "Hakuna kilichohifadhiwa.",
+            _(
+                "Kiasi %(amount)s ni kikubwa kuliko deni la %(code)s lililobaki (%(balance)s). "
+                "Hakuna kilichohifadhiwa.",
+                amount=f"{amount:,.0f}",
+                code=car.code,
+                balance=f"{balance:,.0f}",
+            ),
             "danger",
         )
         return redirect(url_for("debts.index"))
@@ -78,7 +84,7 @@ def new_payment():
         )
     )
     db.session.commit()
-    flash("Malipo ya deni yamehifadhiwa.", "success")
+    flash(_("Malipo ya deni yamehifadhiwa."), "success")
     return redirect(url_for("debts.index"))
 
 
@@ -87,5 +93,5 @@ def delete_payment(payment_id):
     p = DebtPayment.query.get_or_404(payment_id)
     db.session.delete(p)
     db.session.commit()
-    flash("Malipo yamefutwa.", "info")
+    flash(_("Malipo yamefutwa."), "info")
     return redirect(url_for("debts.index"))

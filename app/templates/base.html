@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sw">
+<html lang="{{ current_locale }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,41 +56,72 @@
     </button>
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav me-auto">
-        {{ nav_item('dashboard.index', 'bi-speedometer2', 'Dashboard') }}
-        {{ nav_dropdown('bi-cash-coin', 'Fedha', [
-          ('collections.list_view', 'bi-cash-coin', 'Makusanyo', 'collections'),
-          ('reconciliation.index', 'bi-arrow-left-right', 'Upatanisho', 'reconciliation'),
-          ('consumption.list_view', 'bi-fuel-pump', 'Matumizi', 'consumption'),
-          ('debts.index', 'bi-wallet2', 'Madeni', 'debts'),
-          ('allowances.index', 'bi-cash-stack', 'Posho za Madereva', 'allowances'),
+        {{ nav_item('dashboard.index', 'bi-speedometer2', _('Dashibodi')) }}
+        {{ nav_dropdown('bi-cash-coin', _('Fedha'), [
+          ('collections.list_view', 'bi-cash-coin', _('Makusanyo'), 'collections'),
+          ('reconciliation.index', 'bi-arrow-left-right', _('Upatanisho'), 'reconciliation'),
+          ('consumption.list_view', 'bi-fuel-pump', _('Matumizi'), 'consumption'),
+          ('debts.index', 'bi-wallet2', _('Madeni'), 'debts'),
+          ('allowances.index', 'bi-cash-stack', _('Posho za Madereva'), 'allowances'),
         ]) }}
-        {{ nav_dropdown('bi-truck', 'Magari', [
-          ('cars.list_view', 'bi-truck', 'Magari', 'cars'),
-          ('drivers.list_view', 'bi-person-badge', 'Madereva', 'cars'),
-          ('service.index', 'bi-tools', 'Huduma', 'service'),
-          ('renewals.index', 'bi-file-earmark-text', 'Nyaraka', 'renewals'),
-          ('categories.list_view', 'bi-tags', 'Aina za Matumizi', 'categories'),
+        {{ nav_dropdown('bi-truck', _('Magari'), [
+          ('cars.list_view', 'bi-truck', _('Magari'), 'cars'),
+          ('drivers.list_view', 'bi-person-badge', _('Madereva'), 'cars'),
+          ('service.index', 'bi-tools', _('Huduma'), 'service'),
+          ('renewals.index', 'bi-file-earmark-text', _('Nyaraka'), 'renewals'),
+          ('categories.list_view', 'bi-tags', _('Aina za Matumizi'), 'categories'),
         ]) }}
-        {{ nav_dropdown('bi-bar-chart-line', 'Ripoti', [
-          ('reports.index', 'bi-bar-chart-line', 'Ripoti', 'reports'),
-          ('reports.shortfalls', 'bi-exclamation-triangle', 'Upungufu', 'reports'),
-          ('smslog.index', 'bi-chat-dots', 'Kumbukumbu za SMS', 'sms'),
+        {{ nav_dropdown('bi-bar-chart-line', _('Ripoti'), [
+          ('reports.index', 'bi-bar-chart-line', _('Ripoti'), 'reports'),
+          ('reports.service_index', 'bi-wrench', _('Vipuri/Huduma'), 'reports'),
+          ('reports.shortfalls', 'bi-exclamation-triangle', _('Upungufu'), 'reports'),
+          ('smslog.index', 'bi-chat-dots', _('Kumbukumbu za SMS'), 'sms'),
         ]) }}
-        {{ nav_dropdown('bi-shield-lock', 'Utawala', [
-          ('admin.users_list', 'bi-people', 'Watumiaji', 'users'),
-          ('admin.roles_list', 'bi-shield-lock', 'Majukumu', 'users'),
+        {{ nav_dropdown('bi-shield-lock', _('Utawala'), [
+          ('admin.users_list', 'bi-people', _('Watumiaji'), 'users'),
+          ('admin.roles_list', 'bi-shield-lock', _('Majukumu'), 'users'),
+          ('admin.shops_list', 'bi-shop', _('Wauzaji wa Vipuri'), 'users'),
         ]) }}
       </ul>
       <div class="d-flex align-items-center gap-3">
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-translate"></i> {{ 'Kiswahili' if current_locale == 'sw' else 'English' }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <form method="post" action="{{ url_for('auth.set_language', code='sw') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="dropdown-item {{ 'active' if current_locale == 'sw' }}">Kiswahili</button>
+              </form>
+            </li>
+            <li>
+              <form method="post" action="{{ url_for('auth.set_language', code='en') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="dropdown-item {{ 'active' if current_locale == 'en' }}">English</button>
+              </form>
+            </li>
+          </ul>
+        </div>
         {% if current_user %}
-        <span class="text-light small">
-          <i class="bi bi-person-circle"></i> {{ current_user.full_name or current_user.username }}
-          <span class="text-white-50">({{ current_user.role.name }})</span>
-        </span>
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle"></i> {{ current_user.full_name or current_user.username }}
+            <span class="text-white-50">({{ current_user.role.name }})</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                <i class="bi bi-key"></i> {{ _('Badilisha Nenosiri') }}
+              </a>
+            </li>
+          </ul>
+        </div>
         {% endif %}
         <form method="post" action="{{ url_for('auth.logout') }}" class="d-flex">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-sm btn-outline-light">
-            <i class="bi bi-box-arrow-right"></i> Toka
+            <i class="bi bi-box-arrow-right"></i> {{ _('Toka') }}
           </button>
         </form>
       </div>

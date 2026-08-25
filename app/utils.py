@@ -2,6 +2,7 @@ import calendar
 import re
 from datetime import date, timedelta
 
+from flask_babel import gettext as _
 from sqlalchemy import func
 
 from .extensions import db
@@ -40,14 +41,28 @@ def min_entry_date():
     return date.today() - timedelta(days=MAX_BACKDATE_DAYS)
 
 
-def validate_entry_date(d, label="Tarehe"):
+def validate_entry_date(d, label=None):
     """None if d is a valid date for new/edited data entry (today or within the last
     MAX_BACKDATE_DAYS days), otherwise a Swahili error message explaining why not."""
+    if label is None:
+        label = _("Tarehe")
     today = date.today()
     if d > today:
-        return f"{label} haiwezi kuwa baadaye ya leo ({today.strftime('%d-%m-%Y')})."
+        return _("%(label)s haiwezi kuwa baadaye ya leo (%(date)s).", label=label, date=today.strftime("%d-%m-%Y"))
     if d < min_entry_date():
-        return f"{label} haiwezi kuwa zaidi ya siku {MAX_BACKDATE_DAYS} zilizopita."
+        return _("%(label)s haiwezi kuwa zaidi ya siku %(days)s zilizopita.", label=label, days=MAX_BACKDATE_DAYS)
+    return None
+
+
+def validate_service_date(d):
+    """None if d is a valid service-ticket date, otherwise a Swahili error message.
+    Unlike validate_entry_date, service dates may legitimately be far in the past
+    -- backfilling a car's baseline/last-known service date -- so this only
+    rejects missing values and future dates, not old ones."""
+    if d is None:
+        return _("Tarehe ya huduma si sahihi.")
+    if d > date.today():
+        return _("Tarehe ya huduma haiwezi kuwa baadaye ya leo (%(date)s).", date=date.today().strftime("%d-%m-%Y"))
     return None
 
 

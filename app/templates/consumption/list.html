@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Matumizi - BICON TRANS{% endblock %}
+{% block title %}{{ _('Matumizi') }} - BICON TRANS{% endblock %}
 {% block content %}
 
 <div class="page-header">
-  <h4><i class="bi bi-fuel-pump"></i> Matumizi (Consumption)</h4>
-  <a href="{{ url_for('consumption.new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Taarifa Mpya</a>
+  <h4><i class="bi bi-fuel-pump"></i> {{ _('Matumizi (Consumption)') }}</h4>
+  <a href="{{ url_for('consumption.new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> {{ _('Taarifa Mpya') }}</a>
 </div>
 
 <form class="row g-2 mb-3" method="get">
@@ -12,26 +12,26 @@
   <div class="col-auto"><input type="date" class="form-control" name="end" value="{{ end }}"></div>
   <div class="col-auto">
     <select class="form-select" name="car_id">
-      <option value="">Gari zote</option>
+      <option value="">{{ _('Gari zote') }}</option>
       {% for c in cars %}<option value="{{ c.id }}" {{ 'selected' if car_id==c.id else '' }}>{{ c.code }}</option>{% endfor %}
     </select>
   </div>
   <div class="col-auto">
     <select class="form-select" name="category_id">
-      <option value="">Aina zote</option>
+      <option value="">{{ _('Aina zote') }}</option>
       {% for cat in categories %}<option value="{{ cat.id }}" {{ 'selected' if category_id==cat.id else '' }}>{{ cat.name }}</option>{% endfor %}
     </select>
   </div>
   <div class="col-auto">
-    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Chuja</button>
-    <a href="{{ url_for('consumption.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> Futa</a>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Chuja') }}</button>
+    <a href="{{ url_for('consumption.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> {{ _('Futa') }}</a>
   </div>
 </form>
 
 <div class="card-panel">
   <table class="table table-sm table-money align-middle mb-0">
     <thead>
-      <tr><th>Tarehe</th><th>Gari</th><th>Aina</th><th class="amount">Kiasi</th><th>Maelezo</th><th></th></tr>
+      <tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Aina') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th><th></th></tr>
     </thead>
     <tbody>
       {% for e in entries %}
@@ -42,15 +42,16 @@
         <td class="amount">{{ e.amount | money }}</td>
         <td class="text-muted small">{{ e.description or '' }}</td>
         <td class="text-end">
-          <a href="{{ url_for('consumption.edit', entry_id=e.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Hariri</a>
+          <a href="{{ url_for('consumption.edit', entry_id=e.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> {{ _('Hariri') }}</a>
           <form method="post" action="{{ url_for('consumption.delete', entry_id=e.id) }}" class="d-inline confirm-form"
-                data-confirm="Futa taarifa hii ya matumizi?">
-            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
+                data-confirm="{{ _('Futa taarifa hii ya matumizi?') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{ _('Futa') }}</button>
           </form>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="6" class="text-muted text-center py-4">Hakuna taarifa za matumizi.</td></tr>
+      <tr><td colspan="6" class="text-muted text-center py-4">{{ _('Hakuna taarifa za matumizi.') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

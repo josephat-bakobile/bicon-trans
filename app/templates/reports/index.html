@@ -1,51 +1,51 @@
 {% extends "base.html" %}
-{% block title %}Ripoti - BICON TRANS{% endblock %}
+{% block title %}{{ _('Ripoti') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi bi-bar-chart-line text-primary"></i> Ripoti</h4>
+<h4 class="mb-3"><i class="bi bi-bar-chart-line text-primary"></i> {{ _('Ripoti') }}</h4>
 
 <form class="row g-2 mb-4 card-panel" method="get">
   <div class="col-auto">
-    <label class="form-label small mb-0">Kuanzia</label>
+    <label class="form-label small mb-0">{{ _('Kuanzia') }}</label>
     <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
   </div>
   <div class="col-auto">
-    <label class="form-label small mb-0">Hadi</label>
+    <label class="form-label small mb-0">{{ _('Hadi') }}</label>
     <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
   </div>
   <div class="col-auto">
-    <label class="form-label small mb-0">Gari</label>
+    <label class="form-label small mb-0">{{ _('Gari') }}</label>
     <select class="form-select" name="car_id">
-      <option value="">Gari zote</option>
+      <option value="">{{ _('Gari zote') }}</option>
       {% for c in cars %}<option value="{{ c.id }}" {{ 'selected' if car_id==c.id else '' }}>{{ c.code }}</option>{% endfor %}
     </select>
   </div>
   <div class="col-auto">
-    <label class="form-label small mb-0">Aina ya Matumizi</label>
+    <label class="form-label small mb-0">{{ _('Aina ya Matumizi') }}</label>
     <select class="form-select" name="category_id">
-      <option value="">Aina zote</option>
+      <option value="">{{ _('Aina zote') }}</option>
       {% for cat in categories %}<option value="{{ cat.id }}" {{ 'selected' if category_id==cat.id else '' }}>{{ cat.name }}</option>{% endfor %}
     </select>
   </div>
   <div class="col-auto d-flex align-items-end">
-    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Onyesha</button>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Onyesha') }}</button>
   </div>
 </form>
 
 {% set qs = { 'start': start.isoformat(), 'end': end.isoformat() } %}
-{% if car_id %}{% set _ = qs.update({'car_id': car_id}) %}{% endif %}
-{% if category_id %}{% set _ = qs.update({'category_id': category_id}) %}{% endif %}
+{% if car_id %}{% set _x = qs.update({'car_id': car_id}) %}{% endif %}
+{% if category_id %}{% set _x = qs.update({'category_id': category_id}) %}{% endif %}
 
 <div class="card-panel mb-4">
   <div class="d-flex justify-content-between align-items-center mb-2">
-    <strong><i class="bi bi-truck text-primary"></i> Muhtasari wa Makusanyo na Matumizi kwa Gari</strong>
+    <strong><i class="bi bi-truck text-primary"></i> {{ _('Muhtasari wa Makusanyo na Matumizi kwa Gari') }}</strong>
     <span>
       <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reports.summary_xlsx', **{'start': start.isoformat(), 'end': end.isoformat()}) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
       <a class="btn btn-sm btn-outline-danger" href="{{ url_for('reports.summary_pdf', **{'start': start.isoformat(), 'end': end.isoformat()}) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
     </span>
   </div>
   <table class="table table-sm table-money mb-0">
-    <thead><tr><th>Gari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th></tr></thead>
+    <thead><tr><th>{{ _('Gari') }}</th><th class="amount">{{ _('Makusanyo') }}</th><th class="amount">{{ _('Matumizi') }}</th><th class="amount">{{ _('Baki') }}</th></tr></thead>
     <tbody>
       {% for r in summary_rows %}
       <tr>
@@ -56,7 +56,7 @@
       </tr>
       {% endfor %}
       <tr class="table-light fw-bold">
-        <td>JUMLA KUU</td>
+        <td>{{ _('JUMLA KUU') }}</td>
         <td class="amount">{{ summary_totals.grand_collected | money }}</td>
         <td class="amount">{{ summary_totals.grand_consumed | money }}</td>
         <td class="amount">{{ summary_totals.grand_net | money }}</td>
@@ -67,7 +67,7 @@
 
 <div class="card-panel mb-4">
   <div class="d-flex justify-content-between align-items-center mb-2">
-    <strong><i class="bi bi-cash-coin text-primary"></i> Ripoti ya Makusanyo ({{ collection_rows | length }} miamala)</strong>
+    <strong><i class="bi bi-cash-coin text-primary"></i> {{ _('Ripoti ya Makusanyo (%(count)s miamala)', count=collection_rows | length) }}</strong>
     <span>
       <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reports.collections_xlsx', **qs) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
       <a class="btn btn-sm btn-outline-danger" href="{{ url_for('reports.collections_pdf', **qs) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
@@ -75,7 +75,7 @@
   </div>
   <div style="max-height: 320px; overflow-y: auto;">
   <table class="table table-sm table-money mb-0">
-    <thead><tr><th>Tarehe ya Makusanyo</th><th>Tarehe ya Muamala</th><th>Trans No</th><th>Gari</th><th class="amount">Kiasi</th><th>Maelezo</th></tr></thead>
+    <thead><tr><th>{{ _('Tarehe ya Makusanyo') }}</th><th>{{ _('Tarehe ya Muamala') }}</th><th>Trans No</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th></tr></thead>
     <tbody>
       {% for r in collection_rows %}
       <tr>
@@ -87,17 +87,17 @@
         <td class="text-muted small">{{ r.note }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="6" class="text-muted text-center py-3">Hakuna data.</td></tr>
+      <tr><td colspan="6" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
       {% endfor %}
     </tbody>
-    <tfoot><tr class="table-light fw-bold"><td colspan="4">JUMLA</td><td class="amount">{{ collection_total | money }}</td><td></td></tr></tfoot>
+    <tfoot><tr class="table-light fw-bold"><td colspan="4">{{ _('JUMLA') }}</td><td class="amount">{{ collection_total | money }}</td><td></td></tr></tfoot>
   </table>
   </div>
 </div>
 
 <div class="card-panel">
   <div class="d-flex justify-content-between align-items-center mb-2">
-    <strong><i class="bi bi-fuel-pump text-primary"></i> Ripoti ya Matumizi ({{ consumption_rows | length }} taarifa)</strong>
+    <strong><i class="bi bi-fuel-pump text-primary"></i> {{ _('Ripoti ya Matumizi (%(count)s taarifa)', count=consumption_rows | length) }}</strong>
     <span>
       <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reports.consumption_xlsx', **qs) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
       <a class="btn btn-sm btn-outline-danger" href="{{ url_for('reports.consumption_pdf', **qs) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
@@ -105,7 +105,7 @@
   </div>
   <div style="max-height: 320px; overflow-y: auto;">
   <table class="table table-sm table-money mb-0">
-    <thead><tr><th>Tarehe</th><th>Gari</th><th>Aina</th><th class="amount">Kiasi</th><th>Maelezo</th></tr></thead>
+    <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Aina') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th></tr></thead>
     <tbody>
       {% for r in consumption_rows %}
       <tr>
@@ -116,10 +116,10 @@
         <td class="text-muted small">{{ r.description }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="5" class="text-muted text-center py-3">Hakuna data.</td></tr>
+      <tr><td colspan="5" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
       {% endfor %}
     </tbody>
-    <tfoot><tr class="table-light fw-bold"><td colspan="3">JUMLA</td><td class="amount">{{ consumption_total | money }}</td><td></td></tr></tfoot>
+    <tfoot><tr class="table-light fw-bold"><td colspan="3">{{ _('JUMLA') }}</td><td class="amount">{{ consumption_total | money }}</td><td></td></tr></tfoot>
   </table>
   </div>
 </div>

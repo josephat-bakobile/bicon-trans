@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Makusanyo - BICON TRANS{% endblock %}
+{% block title %}{{ _('Makusanyo') }} - BICON TRANS{% endblock %}
 {% block content %}
 
 <div class="page-header">
-  <h4><i class="bi bi-cash-coin"></i> Makusanyo (Miamala)</h4>
-  <a href="{{ url_for('collections.new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Muamala Mpya</a>
+  <h4><i class="bi bi-cash-coin"></i> {{ _('Makusanyo (Miamala)') }}</h4>
+  <a href="{{ url_for('collections.new') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> {{ _('Muamala Mpya') }}</a>
 </div>
 
 <form class="row g-2 mb-3" method="get">
@@ -15,8 +15,8 @@
     <input type="date" class="form-control" name="end" value="{{ end }}">
   </div>
   <div class="col-auto">
-    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Chuja</button>
-    <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> Futa</a>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Chuja') }}</button>
+    <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> {{ _('Futa') }}</a>
   </div>
 </form>
 
@@ -25,10 +25,10 @@
     <thead>
       <tr>
         <th>Trans No</th>
-        <th>Tarehe ya Muamala</th>
-        <th>Mgawanyo kwa Gari (Tarehe ya Makusanyo)</th>
-        <th class="amount">Jumla</th>
-        <th>Maelezo</th>
+        <th>{{ _('Tarehe ya Muamala') }}</th>
+        <th>{{ _('Mgawanyo kwa Gari (Tarehe ya Makusanyo)') }}</th>
+        <th class="amount">{{ _('Jumla') }}</th>
+        <th>{{ _('Maelezo') }}</th>
         <th></th>
       </tr>
     </thead>
@@ -44,8 +44,9 @@
             </span>
             {% if current_user.has_permission('sms') and sms_ready(l.car) %}
             <form method="post" action="{{ url_for('collections.send_collection_sms', txn_id=t.id, car_id=l.car_id) }}"
-                  class="d-inline confirm-form" data-confirm="Tuma SMS ya makusanyo kwa dereva wa {{ l.car.code }}?">
-              <button class="btn btn-sm btn-outline-primary py-0 px-1" title="Tuma SMS"><i class="bi bi-send"></i></button>
+                  class="d-inline confirm-form" data-confirm="{{ _('Tuma SMS ya makusanyo kwa dereva wa %(code)s?', code=l.car.code) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-primary py-0 px-1" title="{{ _('Tuma SMS') }}"><i class="bi bi-send"></i></button>
             </form>
             {% endif %}
           {% endfor %}
@@ -54,18 +55,19 @@
         <td class="text-muted small">{{ t.note or '' }}</td>
         <td class="text-end">
           {% if transaction_locked(t.transaction_date) %}
-            <span class="badge text-bg-secondary" title="Zaidi ya wiki 1 tangu tarehe ya muamala">Imefungwa</span>
+            <span class="badge text-bg-secondary" title="{{ _('Zaidi ya wiki 1 tangu tarehe ya muamala') }}">{{ _('Imefungwa') }}</span>
           {% else %}
-            <a href="{{ url_for('collections.edit', txn_id=t.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Hariri</a>
+            <a href="{{ url_for('collections.edit', txn_id=t.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> {{ _('Hariri') }}</a>
             <form method="post" action="{{ url_for('collections.delete', txn_id=t.id) }}" class="d-inline confirm-form"
-                  data-confirm="Una uhakika unataka kufuta muamala {{ t.trans_no }}?">
-              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
+                  data-confirm="{{ _('Una uhakika unataka kufuta muamala %(trans_no)s?', trans_no=t.trans_no) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{ _('Futa') }}</button>
             </form>
           {% endif %}
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="6" class="text-muted text-center py-4">Hakuna miamala.</td></tr>
+      <tr><td colspan="6" class="text-muted text-center py-4">{{ _('Hakuna miamala.') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

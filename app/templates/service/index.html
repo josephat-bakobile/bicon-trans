@@ -1,22 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Huduma za Gari - BICON TRANS{% endblock %}
+{% block title %}{{ _('Huduma za Gari') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi bi-tools text-primary"></i> Huduma za Gari (Service Prediction)</h4>
+<h4 class="mb-3"><i class="bi bi-tools text-primary"></i> {{ _('Huduma za Gari (Service Prediction)') }}</h4>
 
 <div class="card-panel mb-4">
-  <strong><i class="bi bi-calendar-check text-primary"></i> Utabiri wa Huduma Inayofuata</strong>
+  <strong><i class="bi bi-calendar-check text-primary"></i> {{ _('Utabiri wa Huduma Inayofuata') }}</strong>
   <div class="table-responsive">
   <table class="table table-sm align-middle mt-2 mb-0">
     <thead>
       <tr>
-        <th>Gari</th>
-        <th>Huduma ya Mwisho</th>
-        <th>Muda wa Huduma (siku)</th>
-        <th>Siku Zilizosamehewa</th>
-        <th>Huduma Inayofuata</th>
-        <th>Siku Zilizobaki</th>
-        <th>Hali</th>
+        <th>{{ _('Gari') }}</th>
+        <th>{{ _('Huduma ya Mwisho') }}</th>
+        <th>{{ _('Muda wa Huduma (siku)') }}</th>
+        <th>{{ _('Siku Zilizosamehewa') }}</th>
+        <th>{{ _('Huduma Inayofuata') }}</th>
+        <th>{{ _('Siku Zilizobaki') }}</th>
+        <th>{{ _('Hali') }}</th>
         <th></th>
       </tr>
     </thead>
@@ -27,6 +27,7 @@
         <td>{{ p.last_service.service_date.strftime('%d-%m-%Y') if p.last_service else '-' }}</td>
         <td>
           <form method="post" action="{{ url_for('service.update_interval', car_id=p.car.id) }}" class="d-flex gap-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="number" min="1" step="1" name="service_interval_days" value="{{ p.car.service_interval_days }}"
                    class="form-control form-control-sm" style="max-width:80px;">
             <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
@@ -36,75 +37,115 @@
         <td>{{ p.due_date.strftime('%d-%m-%Y') if p.due_date else '-' }}</td>
         <td>{{ p.days_remaining if p.days_remaining is not none else '-' }}</td>
         <td>
-          {% if p.status == 'overdue' %}<span class="badge text-bg-danger">Imechelewa</span>
-          {% elif p.status == 'due_soon' %}<span class="badge text-bg-warning">Inakaribia</span>
-          {% elif p.status == 'ok' %}<span class="badge text-bg-success">Sawa</span>
-          {% else %}<span class="badge text-bg-secondary">Haijaanzishwa</span>{% endif %}
+          {% if p.status == 'overdue' %}<span class="badge text-bg-danger">{{ _('Imechelewa') }}</span>
+          {% elif p.status == 'due_soon' %}<span class="badge text-bg-warning">{{ _('Inakaribia') }}</span>
+          {% elif p.status == 'ok' %}<span class="badge text-bg-success">{{ _('Sawa') }}</span>
+          {% else %}<span class="badge text-bg-secondary">{{ _('Haijaanzishwa') }}</span>{% endif %}
         </td>
         <td class="text-end">
           {% if p.status in ('overdue', 'due_soon') and current_user.has_permission('sms') and sms_ready(p.car) %}
           <form method="post" action="{{ url_for('service.send_service_sms', car_id=p.car.id) }}" class="confirm-form"
-                data-confirm="Tuma SMS ya huduma kwa dereva wa {{ p.car.code }}?">
+                data-confirm="{{ _('Tuma SMS ya huduma kwa dereva wa %(car_code)s?', car_code=p.car.code) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
           </form>
           {% endif %}
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="8" class="text-muted text-center py-3">Hakuna magari.</td></tr>
+      <tr><td colspan="8" class="text-muted text-center py-3">{{ _('Hakuna magari.') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>
   </div>
   <div class="form-text mt-2">
-    Siku ambazo gari halikukusanya kabisa au lilikusanya kiasi kidogo (upungufu uliofafanuliwa) hazihesabiwi
-    kwenye muda wa huduma &mdash; huongeza tarehe ya huduma inayofuata kwa siku moja kwa kila siku iliyosamehewa.
+    {{ _('Siku ambazo gari halikukusanya kabisa au lilikusanya kiasi kidogo (upungufu uliofafanuliwa) hazihesabiwi kwenye muda wa huduma — huongeza tarehe ya huduma inayofuata kwa siku moja kwa kila siku iliyosamehewa.') }}
   </div>
 </div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile collected">
+      <div class="icon-badge"><i class="bi bi-receipt-cutoff"></i></div>
+      <div class="body">
+        <div class="label">{{ _('Tiketi za Wauzaji Zinazoendelea') }}</div>
+        <div class="value">{{ shop_dashboard.active_count }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile debt">
+      <div class="icon-badge"><i class="bi bi-cash-stack"></i></div>
+      <div class="body">
+        <div class="label">{{ _('Deni kwa Wauzaji (Halijalipwa)') }}</div>
+        <div class="value">{{ shop_dashboard.unpaid_total | money }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if shop_dashboard.by_shop %}
+<div class="card-panel mb-4">
+  <strong><i class="bi bi-shop text-primary"></i> {{ _('Muhtasari kwa Muuza') }}</strong>
+  <table class="table table-sm mt-2 mb-0">
+    <thead><tr><th>{{ _('Muuza') }}</th><th>{{ _('Tiketi Zinazoendelea') }}</th><th>{{ _('Deni Halijalipwa') }}</th></tr></thead>
+    <tbody>
+      {% for r in shop_dashboard.by_shop %}
+      <tr>
+        <td>{{ r.shop.name }}</td>
+        <td>{{ r.active }}</td>
+        <td>{{ r.unpaid | money }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 
 <div class="row g-4">
   <div class="col-lg-4">
     <div class="card-panel">
-      <strong><i class="bi bi-plus-circle text-primary"></i> Andika Huduma Mpya</strong>
+      <strong><i class="bi bi-plus-circle text-primary"></i> {{ _('Fungua Tiketi Mpya') }}</strong>
       <form method="post" action="{{ url_for('service.new') }}" class="mt-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-2">
-          <label class="form-label">Tarehe ya Huduma</label>
+          <label class="form-label">{{ _('Tarehe ya Huduma') }}</label>
           <input type="date" class="form-control" name="service_date" required value="{{ today_iso }}" max="{{ today_iso }}">
-          <div class="form-text">Kwa huduma ya awali (baseline), weka tarehe halisi ya huduma ya mwisho hata kama ni ya zamani.</div>
+          <div class="form-text">{{ _('Kwa huduma ya awali (baseline), weka tarehe halisi ya huduma ya mwisho hata kama ni ya zamani.') }}</div>
         </div>
         <div class="mb-2">
-          <label class="form-label">Gari</label>
+          <label class="form-label">{{ _('Gari') }}</label>
           <select class="form-select" name="car_id" required>
             {% for c in cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
           </select>
         </div>
         <div class="mb-2">
-          <label class="form-label">Gharama (si lazima)</label>
-          <input type="number" step="0.01" min="0" class="form-control" name="cost" placeholder="0">
-        </div>
-        <div class="mb-2">
-          <label class="form-label">Aina ya Matumizi (kama kuna gharama)</label>
-          <select class="form-select" name="category_id">
-            <option value="">-- chagua --</option>
-            {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+          <label class="form-label">{{ _('Muuza (si lazima)') }}</label>
+          <select class="form-select" name="shop_id">
+            <option value="">{{ _('-- ndani (bila muuza) --') }}</option>
+            {% for sh in shops %}<option value="{{ sh.id }}">{{ sh.name }}</option>{% endfor %}
           </select>
+          <div class="form-text">{{ _('Ukichagua muuza, tiketi itafunguliwa kwa ajili yake -- ataongeza vipuri/gharama na kuwasilisha kwa malipo.') }}</div>
         </div>
         <div class="mb-2">
-          <label class="form-label">Maelezo (si lazima)</label>
+          <label class="form-label">{{ _('Maelezo (si lazima)') }}</label>
           <textarea class="form-control" name="description" rows="2"></textarea>
         </div>
-        <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Hifadhi Huduma</button>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> {{ _('Fungua Tiketi') }}</button>
       </form>
+      <div class="form-text mt-2">
+        {{ _('Bila muuza: utaongeza vipengele mwenyewe kisha ufunge (confirm) tiketi ili gharama jumla ipelekwe kwenye matumizi ya gari. Kwa muuza: muuza ndiye ataongeza vipengele na kuwasilisha; wewe utarekodi malipo.') }}
+      </div>
     </div>
   </div>
 
   <div class="col-lg-8">
     <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong><i class="bi bi-clock-history text-primary"></i> Historia ya Huduma</strong>
+        <strong><i class="bi bi-clock-history text-primary"></i> {{ _('Tiketi za Huduma') }}</strong>
         <form method="get" class="d-flex gap-2">
           <select class="form-select form-select-sm" name="car_id" onchange="this.form.submit()">
-            <option value="">Magari Yote</option>
+            <option value="">{{ _('Magari Yote') }}</option>
             {% for c in cars %}
             <option value="{{ c.id }}" {{ 'selected' if car_id == c.id else '' }}>{{ c.code }}</option>
             {% endfor %}
@@ -112,23 +153,37 @@
         </form>
       </div>
       <table class="table table-sm table-money mb-0">
-        <thead><tr><th>Tarehe</th><th>Gari</th><th>Maelezo</th><th class="amount">Gharama</th><th></th></tr></thead>
+        <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Muuza') }}</th><th>{{ _('Maelezo') }}</th><th>{{ _('Vipengele') }}</th><th class="amount">{{ _('Gharama') }}</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
         <tbody>
           {% for s in history %}
           <tr>
             <td>{{ s.service_date.strftime('%d-%m-%Y') }}</td>
             <td>{{ s.car.code }}</td>
+            <td>{{ s.shop.name if s.shop_id else _('Ndani') }}</td>
             <td>{{ s.description or '-' }}</td>
+            <td>{{ s.items | length }}</td>
             <td class="amount">{{ s.cost | money }}</td>
+            <td>
+              {% if s.shop_id %}
+                {% if s.is_open %}<span class="badge text-bg-secondary">{{ _('Inasubiri Vipengele') }}</span>
+                {% elif s.payment_status == 'paid' %}<span class="badge text-bg-success">{{ _('Imelipwa Kikamilifu') }}</span>
+                {% elif s.payment_status == 'partial' %}<span class="badge text-bg-warning">{{ _('Malipo Sehemu') }}</span>
+                {% else %}<span class="badge text-bg-info">{{ _('Imewasilishwa') }}</span>{% endif %}
+              {% else %}
+                {% if s.is_open %}<span class="badge text-bg-warning">{{ _('Wazi') }}</span>
+                {% else %}<span class="badge text-bg-success">{{ _('Imefungwa') }}</span>{% endif %}
+              {% endif %}
+            </td>
             <td class="text-end text-nowrap">
-              <a href="{{ url_for('service.edit', service_id=s.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Hariri</a>
-              <form method="post" action="{{ url_for('service.delete', service_id=s.id) }}" class="confirm-form d-inline" data-confirm="Futa huduma hii?">
-                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Futa</button>
+              <a href="{{ url_for('service.ticket_detail', service_id=s.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> {{ _('Fungua') }}</a>
+              <form method="post" action="{{ url_for('service.delete', service_id=s.id) }}" class="confirm-form d-inline" data-confirm="{{ _('Futa tiketi hii ya huduma?') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> {{ _('Futa') }}</button>
               </form>
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="5" class="text-muted text-center py-3">Hakuna huduma zilizohifadhiwa.</td></tr>
+          <tr><td colspan="8" class="text-muted text-center py-3">{{ _('Hakuna tiketi za huduma zilizohifadhiwa.') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>

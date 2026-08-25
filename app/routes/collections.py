@@ -1,6 +1,7 @@
 from datetime import date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, CollectionLine, CollectionTransaction
@@ -12,11 +13,11 @@ bp = Blueprint("collections", __name__)
 
 
 def _validate_dates(tdate, lines):
-    error = validate_entry_date(tdate, "Tarehe ya Muamala")
+    error = validate_entry_date(tdate, _("Tarehe ya Muamala"))
     if error:
         return error
     for line in lines:
-        error = validate_entry_date(line["collection_date"], "Tarehe ya Makusanyo")
+        error = validate_entry_date(line["collection_date"], _("Tarehe ya Makusanyo"))
         if error:
             return error
     return None
@@ -110,11 +111,11 @@ def new():
 
         error = None
         if not trans_no:
-            error = "Weka Trans No."
+            error = _("Weka Trans No.")
         elif not lines:
-            error = "Ongeza angalau gari moja na kiasi."
+            error = _("Ongeza angalau gari moja na kiasi.")
         elif CollectionTransaction.query.filter_by(trans_no=trans_no).first():
-            error = f"Trans No {trans_no} tayari ipo. Tumia namba nyingine."
+            error = _("Trans No %(trans_no)s tayari ipo. Tumia namba nyingine.", trans_no=trans_no)
         else:
             error = _validate_dates(tdate, lines)
 
@@ -137,7 +138,7 @@ def new():
                 )
             )
         db.session.commit()
-        flash(f"Muamala {txn.trans_no} umehifadhiwa.", "success")
+        flash(_("Muamala %(trans_no)s umehifadhiwa.", trans_no=txn.trans_no), "success")
         return redirect(url_for("collections.list_view"))
 
     values = _values_from_txn(None)
@@ -151,8 +152,11 @@ def edit(txn_id):
 
     if transaction_locked(txn.transaction_date):
         flash(
-            f"Muamala {txn.trans_no} umefungwa kwa kuhaririwa "
-            f"(zaidi ya wiki 1 tangu {txn.transaction_date.strftime('%d-%m-%Y')}).",
+            _(
+                "Muamala %(trans_no)s umefungwa kwa kuhaririwa (zaidi ya wiki 1 tangu %(date)s).",
+                trans_no=txn.trans_no,
+                date=txn.transaction_date.strftime("%d-%m-%Y"),
+            ),
             "danger",
         )
         return redirect(url_for("collections.list_view"))
@@ -165,15 +169,15 @@ def edit(txn_id):
 
         error = None
         if not trans_no:
-            error = "Weka Trans No."
+            error = _("Weka Trans No.")
         elif not lines:
-            error = "Ongeza angalau gari moja na kiasi."
+            error = _("Ongeza angalau gari moja na kiasi.")
         else:
             clash = CollectionTransaction.query.filter(
                 CollectionTransaction.trans_no == trans_no, CollectionTransaction.id != txn.id
             ).first()
             if clash:
-                error = f"Trans No {trans_no} tayari inatumika kwenye muamala mwingine."
+                error = _("Trans No %(trans_no)s tayari inatumika kwenye muamala mwingine.", trans_no=trans_no)
             else:
                 error = _validate_dates(tdate, lines)
 
@@ -197,7 +201,7 @@ def edit(txn_id):
                 )
             )
         db.session.commit()
-        flash(f"Muamala {txn.trans_no} umesasishwa.", "success")
+        flash(_("Muamala %(trans_no)s umesasishwa.", trans_no=txn.trans_no), "success")
         return redirect(url_for("collections.list_view"))
 
     values = _values_from_txn(txn)
@@ -210,8 +214,11 @@ def delete(txn_id):
 
     if transaction_locked(txn.transaction_date):
         flash(
-            f"Muamala {txn.trans_no} umefungwa kwa kufutwa "
-            f"(zaidi ya wiki 1 tangu {txn.transaction_date.strftime('%d-%m-%Y')}).",
+            _(
+                "Muamala %(trans_no)s umefungwa kwa kufutwa (zaidi ya wiki 1 tangu %(date)s).",
+                trans_no=txn.trans_no,
+                date=txn.transaction_date.strftime("%d-%m-%Y"),
+            ),
             "danger",
         )
         return redirect(url_for("collections.list_view"))
@@ -219,7 +226,7 @@ def delete(txn_id):
     trans_no = txn.trans_no
     db.session.delete(txn)
     db.session.commit()
-    flash(f"Muamala {trans_no} umefutwa.", "info")
+    flash(_("Muamala %(trans_no)s umefutwa.", trans_no=trans_no), "info")
     return redirect(url_for("collections.list_view"))
 
 
@@ -231,7 +238,7 @@ def send_collection_sms(txn_id, car_id):
     line = next((l for l in txn.lines if l.car_id == car_id), None)
 
     if line is None:
-        flash(f"Gari {car.code} halipo kwenye muamala {txn.trans_no}.", "danger")
+        flash(_("Gari %(code)s halipo kwenye muamala %(trans_no)s.", code=car.code, trans_no=txn.trans_no), "danger")
         return redirect(url_for("collections.list_view"))
 
     ok, reason = can_send(car)
@@ -246,7 +253,7 @@ def send_collection_sms(txn_id, car_id):
     )
     sent, error = send_and_log(car, "collection", message, get_current_user())
     if sent:
-        flash(f"SMS ya makusanyo imetumwa kwa dereva wa {car.code}.", "success")
+        flash(_("SMS ya makusanyo imetumwa kwa dereva wa %(code)s.", code=car.code), "success")
     else:
         flash(error, "danger")
     return redirect(url_for("collections.list_view"))

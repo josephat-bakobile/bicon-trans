@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 {% from "_pagination.html" import render_pagination %}
-{% block title %}Upungufu wa Makusanyo - BICON TRANS{% endblock %}
+{% block title %}{{ _('Upungufu wa Makusanyo') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi bi-exclamation-triangle text-primary"></i> Ripoti ya Upungufu wa Makusanyo</h4>
+<h4 class="mb-3"><i class="bi bi-exclamation-triangle text-primary"></i> {{ _('Ripoti ya Upungufu wa Makusanyo') }}</h4>
 <p class="text-muted small mb-3">
-  Siku ambazo gari halikuleta makusanyo kabisa, au lililoleta ni pungufu ya Kiasi cha Lengo la Siku
-  kilichowekwa kwenye ukurasa wa <a href="{{ url_for('cars.list_view') }}">Magari</a>.
+  {{ _('Siku ambazo gari halikuleta makusanyo kabisa, au lililoleta ni pungufu ya Kiasi cha Lengo la Siku
+  kilichowekwa kwenye ukurasa wa') }} <a href="{{ url_for('cars.list_view') }}">{{ _('Magari') }}</a>.
 </p>
 
 <form class="row g-2 mb-3 card-panel" method="get">
   <div class="col-auto">
-    <label class="form-label small mb-0">Kuanzia</label>
+    <label class="form-label small mb-0">{{ _('Kuanzia') }}</label>
     <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
   </div>
   <div class="col-auto">
-    <label class="form-label small mb-0">Hadi</label>
+    <label class="form-label small mb-0">{{ _('Hadi') }}</label>
     <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
   </div>
   <div class="col-auto d-flex align-items-end gap-2">
-    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Onyesha</button>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Onyesha') }}</button>
     <a class="btn btn-outline-primary" href="{{ url_for('reports.shortfalls_xlsx', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
     <a class="btn btn-outline-danger" href="{{ url_for('reports.shortfalls_pdf', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
   </div>
@@ -29,13 +29,13 @@
   <table class="table table-sm table-money align-middle mb-0">
     <thead>
       <tr>
-        <th>Tarehe</th>
-        <th>Gari</th>
-        <th class="amount">Lengo</th>
-        <th class="amount">Kilichokusanywa</th>
-        <th class="amount">Upungufu</th>
-        <th>Hali</th>
-        <th>Fafanua</th>
+        <th>{{ _('Tarehe') }}</th>
+        <th>{{ _('Gari') }}</th>
+        <th class="amount">{{ _('Lengo') }}</th>
+        <th class="amount">{{ _('Kilichokusanywa') }}</th>
+        <th class="amount">{{ _('Upungufu') }}</th>
+        <th>{{ _('Hali') }}</th>
+        <th>{{ _('Fafanua') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -47,21 +47,22 @@
         <td class="amount">{{ r.collected | money }}</td>
         <td class="amount text-danger fw-bold">{{ r.shortfall | money }}</td>
         <td>
-          <span class="badge text-bg-danger">Wazi</span>
+          <span class="badge text-bg-danger">{{ _('Wazi') }}</span>
         </td>
         <td style="min-width:280px;">
           <form method="post" action="{{ url_for('reports.clear_shortfall') }}" class="d-flex gap-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="car_id" value="{{ r.car.id }}">
             <input type="hidden" name="date" value="{{ r.date.isoformat() }}">
             <input type="hidden" name="start" value="{{ start.isoformat() }}">
             <input type="hidden" name="end" value="{{ end.isoformat() }}">
-            <input type="text" name="description" class="form-control form-control-sm" placeholder="Maelezo ya upungufu" required>
-            <button class="btn btn-sm btn-outline-primary text-nowrap"><i class="bi bi-check2"></i> Fafanua</button>
+            <input type="text" name="description" class="form-control form-control-sm" placeholder="{{ _('Maelezo ya upungufu') }}" required>
+            <button class="btn btn-sm btn-outline-primary text-nowrap"><i class="bi bi-check2"></i> {{ _('Fafanua') }}</button>
           </form>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="7" class="text-muted text-center py-4">Hakuna upungufu wazi katika kipindi hiki.</td></tr>
+      <tr><td colspan="7" class="text-muted text-center py-4">{{ _('Hakuna upungufu wazi katika kipindi hiki.') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -69,18 +70,18 @@
       {'start': start.isoformat(), 'end': end.isoformat(), 'cleared_page': cleared_page}) }}
 </div>
 
-<h5 class="mb-3"><i class="bi bi-check-circle text-success"></i> Upungufu Uliofafanuliwa</h5>
+<h5 class="mb-3"><i class="bi bi-check-circle text-success"></i> {{ _('Upungufu Uliofafanuliwa') }}</h5>
 <div class="card-panel">
   <table class="table table-sm table-money align-middle mb-0">
     <thead>
       <tr>
-        <th>Tarehe</th>
-        <th>Gari</th>
-        <th class="amount">Lengo</th>
-        <th class="amount">Kilichokusanywa</th>
-        <th class="amount">Upungufu</th>
-        <th>Hali</th>
-        <th>Maelezo</th>
+        <th>{{ _('Tarehe') }}</th>
+        <th>{{ _('Gari') }}</th>
+        <th class="amount">{{ _('Lengo') }}</th>
+        <th class="amount">{{ _('Kilichokusanywa') }}</th>
+        <th class="amount">{{ _('Upungufu') }}</th>
+        <th>{{ _('Hali') }}</th>
+        <th>{{ _('Maelezo') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -92,14 +93,14 @@
         <td class="amount">{{ r.collected | money }}</td>
         <td class="amount text-success fw-bold">{{ r.shortfall | money }}</td>
         <td>
-          <span class="badge text-bg-success">Imefafanuliwa</span>
+          <span class="badge text-bg-success">{{ _('Imefafanuliwa') }}</span>
         </td>
         <td style="min-width:280px;">
           <span class="small text-muted">{{ r.clearance.description }}</span>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="7" class="text-muted text-center py-4">Hakuna upungufu uliofafanuliwa katika kipindi hiki.</td></tr>
+      <tr><td colspan="7" class="text-muted text-center py-4">{{ _('Hakuna upungufu uliofafanuliwa katika kipindi hiki.') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

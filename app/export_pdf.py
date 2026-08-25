@@ -144,6 +144,50 @@ def build_shortfalls_pdf(rows, start, end):
     return buf
 
 
+_STATUS_LABELS = {"open": "Wazi", "submitted": "Imewasilishwa", "confirmed": "Imefungwa"}
+
+
+def build_service_items_pdf(rows, total, category_totals, start, end):
+    buf = BytesIO()
+    doc = _doc(buf)
+    data = [["TAREHE", "GARI", "CHANZO", "HALI", "AINA", "KIPENGELE", "IDADI", "BEI/KITENGO", "JUMLA", "MAELEZO"]]
+    for r in rows:
+        data.append(
+            [
+                r["date"].isoformat(),
+                r["car"],
+                r["source"],
+                _STATUS_LABELS.get(r["status"], r["status"]),
+                r["category"],
+                r["name"],
+                str(r["quantity"]),
+                _money(r["unit_cost"]),
+                _money(r["cost"]),
+                r["note"],
+            ]
+        )
+    data.append(["", "", "", "", "", "", "", "", _money(total), "JUMLA"])
+    elements = _header("Ripoti ya Vipuri na Gharama za Huduma", f"{start.isoformat()} hadi {end.isoformat()}")
+    elements.append(
+        _table(
+            data,
+            col_widths=[2 * cm, 1.6 * cm, 2 * cm, 2 * cm, 2.6 * cm, 3 * cm, 1.5 * cm, 2.2 * cm, 2.2 * cm, None],
+        )
+    )
+
+    if category_totals:
+        elements.append(Spacer(1, 0.8 * cm))
+        elements.append(Paragraph("Muhtasari wa Gharama kwa Aina", STYLES["Heading3"]))
+        cat_data = [["AINA", "IDADI", "JUMLA"]]
+        for r in category_totals:
+            cat_data.append([r["category"], str(r["count"]), _money(r["total"])])
+        elements.append(_table(cat_data, col_widths=[6 * cm, 3 * cm, 4 * cm]))
+
+    doc.build(elements)
+    buf.seek(0)
+    return buf
+
+
 def build_consumption_pdf(rows, total, start, end):
     buf = BytesIO()
     doc = _doc(buf)

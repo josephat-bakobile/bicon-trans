@@ -1,33 +1,33 @@
 {% extends "base.html" %}
-{% block title %}Uchambuzi - BICON TRANS{% endblock %}
+{% block title %}{{ _('Uchambuzi') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi bi-graph-up text-primary"></i> Uchambuzi wa Magari na Madereva</h4>
+<h4 class="mb-3"><i class="bi bi-graph-up text-primary"></i> {{ _('Uchambuzi wa Magari na Madereva') }}</h4>
 <p class="text-muted small mb-3">
-  Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na madeni &mdash;
-  yote kwa kipindi ulichochagua hapa chini.
+  {{ _('Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na madeni &mdash;
+  yote kwa kipindi ulichochagua hapa chini.') }}
 </p>
 
 <form class="row g-2 mb-4 card-panel" method="get">
   <div class="col-auto">
-    <label class="form-label small mb-0">Kuanzia</label>
+    <label class="form-label small mb-0">{{ _('Kuanzia') }}</label>
     <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
   </div>
   <div class="col-auto">
-    <label class="form-label small mb-0">Hadi</label>
+    <label class="form-label small mb-0">{{ _('Hadi') }}</label>
     <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
   </div>
   <div class="col-auto d-flex align-items-end">
-    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Onyesha</button>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Onyesha') }}</button>
   </div>
 </form>
 
 <div class="row g-3 mb-4">
   <div class="col-lg-7">
     <div class="card-panel h-100">
-      <strong><i class="bi bi-truck text-primary"></i> Muhtasari kwa Gari (kwa kipindi)</strong>
+      <strong><i class="bi bi-truck text-primary"></i> {{ _('Muhtasari kwa Gari (kwa kipindi)') }}</strong>
       <table class="table table-sm table-money mt-2 mb-0">
-        <thead><tr><th>Gari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th><th class="amount">Kiwango cha Lengo</th></tr></thead>
+        <thead><tr><th>{{ _('Gari') }}</th><th class="amount">{{ _('Makusanyo') }}</th><th class="amount">{{ _('Matumizi') }}</th><th class="amount">{{ _('Baki') }}</th><th class="amount">{{ _('Kiwango cha Lengo') }}</th></tr></thead>
         <tbody>
           {% for r in car_totals.rows %}
           {% set ach = achievement_by_car.get(r.car.id) %}
@@ -50,7 +50,7 @@
         </tbody>
         <tfoot>
           <tr class="table-light fw-bold">
-            <td>JUMLA</td>
+            <td>{{ _('JUMLA') }}</td>
             <td class="amount">{{ car_totals.grand_collected | money }}</td>
             <td class="amount">{{ car_totals.grand_consumed | money }}</td>
             <td class="amount">{{ car_totals.grand_net | money }}</td>
@@ -58,14 +58,14 @@
           </tr>
         </tfoot>
       </table>
-      <div class="form-text mt-1">Kiwango cha Lengo = asilimia ya siku katika kipindi hiki ambazo gari lilifikia lengo lake la siku.</div>
+      <div class="form-text mt-1">{{ _('Kiwango cha Lengo = asilimia ya siku katika kipindi hiki ambazo gari lilifikia lengo lake la siku.') }}</div>
     </div>
   </div>
   <div class="col-lg-5">
     <div class="card-panel h-100">
-      <strong><i class="bi bi-exclamation-triangle text-danger"></i> Magari Yenye Tatizo (Siku Mfululizo Bila Kufikia Lengo)</strong>
+      <strong><i class="bi bi-exclamation-triangle text-danger"></i> {{ _('Magari Yenye Tatizo (Siku Mfululizo Bila Kufikia Lengo)') }}</strong>
       <table class="table table-sm mt-2 mb-0">
-        <thead><tr><th>Gari</th><th>Dereva</th><th class="amount">Siku Mfululizo</th><th></th></tr></thead>
+        <thead><tr><th>{{ _('Gari') }}</th><th>{{ _('Dereva') }}</th><th class="amount">{{ _('Siku Mfululizo') }}</th><th></th></tr></thead>
         <tbody>
           {% for s in streaks %}
           <tr>
@@ -79,7 +79,8 @@
             <td class="text-end">
               {% if current_user.has_permission('sms') and sms_ready(s.car) %}
               <form method="post" action="{{ url_for('reports.send_streak_sms', car_id=s.car.id) }}" class="confirm-form"
-                    data-confirm="Tuma SMS ya tatizo kwa dereva wa {{ s.car.code }}?">
+                    data-confirm="{{ _('Tuma SMS ya tatizo kwa dereva wa %(code)s?', code=s.car.code) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="start" value="{{ start.isoformat() }}">
                 <input type="hidden" name="end" value="{{ end.isoformat() }}">
                 <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
@@ -88,7 +89,7 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="4" class="text-muted text-center py-3">Hakuna gari lenye tatizo kwa kipindi hiki.</td></tr>
+          <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna gari lenye tatizo kwa kipindi hiki.') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -97,9 +98,9 @@
 </div>
 
 <div class="card-panel mb-4">
-  <strong><i class="bi bi-people text-primary"></i> Muhtasari kwa Dereva (kwa kipindi)</strong>
+  <strong><i class="bi bi-people text-primary"></i> {{ _('Muhtasari kwa Dereva (kwa kipindi)') }}</strong>
   <table class="table table-sm table-money mt-2 mb-0">
-    <thead><tr><th>Dereva</th><th>Magari</th><th class="amount">Makusanyo</th><th class="amount">Matumizi</th><th class="amount">Baki</th><th class="amount">Upungufu Wazi</th></tr></thead>
+    <thead><tr><th>{{ _('Dereva') }}</th><th>{{ _('Magari') }}</th><th class="amount">{{ _('Makusanyo') }}</th><th class="amount">{{ _('Matumizi') }}</th><th class="amount">{{ _('Baki') }}</th><th class="amount">{{ _('Upungufu Wazi') }}</th></tr></thead>
     <tbody>
       {% for r in driver_summary.rows %}
       <tr>
@@ -111,13 +112,13 @@
         <td class="amount {% if r.shortfall_open %}text-danger{% endif %}">{{ r.shortfall_open | money }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="6" class="text-muted text-center py-3">Hakuna gari lenye dereva bado. Ongeza dereva kwenye ukurasa wa Magari.</td></tr>
+      <tr><td colspan="6" class="text-muted text-center py-3">{{ _('Hakuna gari lenye dereva bado. Ongeza dereva kwenye ukurasa wa Magari.') }}</td></tr>
       {% endfor %}
     </tbody>
     {% if driver_summary.rows %}
     <tfoot>
       <tr class="table-light fw-bold">
-        <td colspan="2">JUMLA</td>
+        <td colspan="2">{{ _('JUMLA') }}</td>
         <td class="amount">{{ driver_summary.grand_collected | money }}</td>
         <td class="amount">{{ driver_summary.grand_consumed | money }}</td>
         <td class="amount">{{ driver_summary.grand_net | money }}</td>
@@ -131,10 +132,10 @@
 <div class="row g-3">
   <div class="col-lg-5">
     <div class="card-panel h-100">
-      <strong><i class="bi bi-pie-chart text-primary"></i> Matumizi kwa Aina (kwa kipindi)</strong>
+      <strong><i class="bi bi-pie-chart text-primary"></i> {{ _('Matumizi kwa Aina (kwa kipindi)') }}</strong>
       <canvas id="categoryChart" height="160" class="mt-2"></canvas>
       <table class="table table-sm table-money mt-3 mb-0">
-        <thead><tr><th>Aina</th><th class="amount">Kiasi</th></tr></thead>
+        <thead><tr><th>{{ _('Aina') }}</th><th class="amount">{{ _('Kiasi') }}</th></tr></thead>
         <tbody>
           {% for r in category_summary.rows %}
           <tr>
@@ -142,7 +143,7 @@
             <td class="amount">{{ r.total | money }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="2" class="text-muted text-center py-3">Hakuna matumizi kwa kipindi hiki.</td></tr>
+          <tr><td colspan="2" class="text-muted text-center py-3">{{ _('Hakuna matumizi kwa kipindi hiki.') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -151,10 +152,10 @@
   <div class="col-lg-7">
     <div class="card-panel h-100">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong><i class="bi bi-wallet2 text-primary"></i> Madeni kwa Mwezi (kwa kipindi)</strong>
+        <strong><i class="bi bi-wallet2 text-primary"></i> {{ _('Madeni kwa Mwezi (kwa kipindi)') }}</strong>
         <span>
-          <span class="legend-dot" style="background:#d03b3b"></span>Deni Jipya
-          <span class="legend-dot ms-3" style="background:#0ca30c"></span>Malipo
+          <span class="legend-dot" style="background:#d03b3b"></span>{{ _('Deni Jipya') }}
+          <span class="legend-dot ms-3" style="background:#0ca30c"></span>{{ _('Malipo') }}
         </span>
       </div>
       <canvas id="debtTrendChart" height="110"></canvas>
@@ -188,8 +189,8 @@ new Chart(document.getElementById('debtTrendChart'), {
   data: {
     labels: debtTrend.map(p => p.label),
     datasets: [
-      { label: 'Deni Jipya', data: debtTrend.map(p => p.owed), backgroundColor: '#d03b3b', borderRadius: 4 },
-      { label: 'Malipo', data: debtTrend.map(p => p.paid), backgroundColor: '#0ca30c', borderRadius: 4 },
+      { label: '{{ _("Deni Jipya") }}', data: debtTrend.map(p => p.owed), backgroundColor: '#d03b3b', borderRadius: 4 },
+      { label: '{{ _("Malipo") }}', data: debtTrend.map(p => p.paid), backgroundColor: '#0ca30c', borderRadius: 4 },
     ]
   },
   options: {

@@ -112,6 +112,46 @@ def build_shortfalls_excel(rows, start, end):
     return _to_bytes(wb)
 
 
+_STATUS_LABELS = {"open": "Wazi", "submitted": "Imewasilishwa", "confirmed": "Imefungwa"}
+
+
+def build_service_items_excel(rows, total, category_totals, start, end):
+    wb = Workbook()
+    ws = _sheet(
+        wb, "VIPURI NA GHARAMA",
+        ["TAREHE", "GARI", "CHANZO", "HALI", "AINA", "KIPENGELE", "IDADI", "BEI YA KITENGO", "JUMLA", "MAELEZO"],
+    )
+    for i, r in enumerate(rows, start=2):
+        ws.cell(row=i, column=1, value=r["date"].isoformat()).font = BODY_FONT
+        ws.cell(row=i, column=2, value=r["car"]).font = BODY_FONT
+        ws.cell(row=i, column=3, value=r["source"]).font = BODY_FONT
+        ws.cell(row=i, column=4, value=_STATUS_LABELS.get(r["status"], r["status"])).font = BODY_FONT
+        ws.cell(row=i, column=5, value=r["category"]).font = BODY_FONT
+        ws.cell(row=i, column=6, value=r["name"]).font = BODY_FONT
+        ws.cell(row=i, column=7, value=r["quantity"]).font = BODY_FONT
+        ws.cell(row=i, column=8, value=r["unit_cost"]).font = BODY_FONT
+        ws.cell(row=i, column=9, value=r["cost"]).font = BODY_FONT
+        ws.cell(row=i, column=10, value=r["note"]).font = BODY_FONT
+    total_row = len(rows) + 2
+    ws.cell(row=total_row, column=8, value="JUMLA").font = BOLD_FONT
+    ws.cell(row=total_row, column=9, value=total).font = BOLD_FONT
+    _autosize(ws, 10)
+
+    ws2 = wb.create_sheet("MUHTASARI WA AINA")
+    for col, text in enumerate(["AINA", "IDADI", "JUMLA"], start=1):
+        cell = ws2.cell(row=1, column=col, value=text)
+        cell.font = HEADER_FONT
+        cell.fill = HEADER_FILL
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    for i, r in enumerate(category_totals, start=2):
+        ws2.cell(row=i, column=1, value=r["category"]).font = BODY_FONT
+        ws2.cell(row=i, column=2, value=r["count"]).font = BODY_FONT
+        ws2.cell(row=i, column=3, value=r["total"]).font = BODY_FONT
+    _autosize(ws2, 3)
+
+    return _to_bytes(wb)
+
+
 def _to_bytes(wb):
     buf = BytesIO()
     wb.save(buf)

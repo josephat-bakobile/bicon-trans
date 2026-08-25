@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - BICON TRANS{% endblock %}
+{% block title %}{{ _('Dashibodi') }} - BICON TRANS{% endblock %}
 {% block content %}
 
 <div class="page-header">
-  <h4><i class="bi bi-speedometer2"></i> Dashboard</h4>
-  <span class="text-muted small"><i class="bi bi-calendar3"></i> Mwezi huu: {{ today.strftime('%B %Y') }}</span>
+  <h4><i class="bi bi-speedometer2"></i> {{ _('Dashibodi') }}</h4>
+  <span class="text-muted small"><i class="bi bi-calendar3"></i> {{ _('Mwezi huu') }}: {{ today | dateformat('MMMM y') }}</span>
 </div>
 
 <div class="row g-3 mb-4">
@@ -12,7 +12,7 @@
     <div class="stat-tile collected">
       <div class="icon-badge"><i class="bi bi-cash-coin"></i></div>
       <div class="body">
-        <div class="label">Makusanyo (mwezi huu)</div>
+        <div class="label">{{ _('Makusanyo (mwezi huu)') }}</div>
         <div class="value counter-value" data-target="{{ month_totals.grand_collected }}">0</div>
       </div>
     </div>
@@ -21,7 +21,7 @@
     <div class="stat-tile consumed">
       <div class="icon-badge"><i class="bi bi-fuel-pump"></i></div>
       <div class="body">
-        <div class="label">Matumizi (mwezi huu)</div>
+        <div class="label">{{ _('Matumizi (mwezi huu)') }}</div>
         <div class="value counter-value" data-target="{{ month_totals.grand_consumed }}">0</div>
       </div>
     </div>
@@ -30,7 +30,7 @@
     <div class="stat-tile net">
       <div class="icon-badge"><i class="bi bi-graph-up-arrow"></i></div>
       <div class="body">
-        <div class="label">Baki (mwezi huu)</div>
+        <div class="label">{{ _('Baki (mwezi huu)') }}</div>
         <div class="value counter-value" data-target="{{ month_totals.grand_net }}">0</div>
       </div>
     </div>
@@ -39,7 +39,7 @@
     <div class="stat-tile net">
       <div class="icon-badge"><i class="bi bi-bank"></i></div>
       <div class="body">
-        <div class="label">Baki Kuu (Muda Wote)</div>
+        <div class="label">{{ _('Baki Kuu (Muda Wote)') }}</div>
         <div class="value counter-value" data-target="{{ all_time_totals.grand_net }}">0</div>
       </div>
     </div>
@@ -48,7 +48,7 @@
     <div class="stat-tile debt">
       <div class="icon-badge"><i class="bi bi-wallet2"></i></div>
       <div class="body">
-        <div class="label">Madeni yaliyobaki</div>
+        <div class="label">{{ _('Madeni yaliyobaki') }}</div>
         <div class="value counter-value" data-target="{{ balances.grand_balance }}">0</div>
       </div>
     </div>
@@ -60,7 +60,7 @@
     <div class="stat-tile shortfall-open">
       <div class="icon-badge"><i class="bi bi-exclamation-triangle"></i></div>
       <div class="body">
-        <div class="label">Upungufu Ambao Haujafafanuliwa (Wazi)</div>
+        <div class="label">{{ _('Upungufu Ambao Haujafafanuliwa (Wazi)') }}</div>
         <div class="value counter-value" data-target="{{ shortfalls.open_total }}">0</div>
       </div>
     </div>
@@ -69,23 +69,68 @@
     <div class="stat-tile shortfall-cleared">
       <div class="icon-badge"><i class="bi bi-check-circle"></i></div>
       <div class="body">
-        <div class="label">Upungufu Uliofafanuliwa</div>
+        <div class="label">{{ _('Upungufu Uliofafanuliwa') }}</div>
         <div class="value counter-value" data-target="{{ shortfalls.cleared_total }}">0</div>
       </div>
     </div>
   </div>
 </div>
 
+{% if shop_summary.by_shop or shop_summary.active_count %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile collected">
+      <div class="icon-badge"><i class="bi bi-receipt-cutoff"></i></div>
+      <div class="body">
+        <div class="label">{{ _('Tiketi za Wauzaji Zinazoendelea') }}</div>
+        <div class="value counter-value" data-target="{{ shop_summary.active_count }}">0</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-tile debt">
+      <div class="icon-badge"><i class="bi bi-cash-stack"></i></div>
+      <div class="body">
+        <div class="label">{{ _('Deni kwa Wauzaji (Halijalipwa)') }}</div>
+        <div class="value counter-value" data-target="{{ shop_summary.unpaid_total }}">0</div>
+      </div>
+    </div>
+  </div>
+  {% if shop_summary.by_shop %}
+  <div class="col-lg-6">
+    <div class="card-panel h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong><i class="bi bi-shop text-primary"></i> {{ _('Muhtasari kwa Muuza') }}</strong>
+        <a href="{{ url_for('service.index') }}" class="small">{{ _('Ona zote') }} <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <table class="table table-sm mb-0">
+        <thead><tr><th>{{ _('Muuza') }}</th><th>{{ _('Tiketi Zinazoendelea') }}</th><th>{{ _('Deni Halijalipwa') }}</th></tr></thead>
+        <tbody>
+          {% for r in shop_summary.by_shop %}
+          <tr>
+            <td>{{ r.shop.name }}</td>
+            <td>{{ r.active }}</td>
+            <td>{{ r.unpaid | money }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
 {% if renewal_alerts %}
 <div class="row g-3 mb-4">
   <div class="col-12">
     <div class="card-panel border-danger">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong class="text-danger"><i class="bi bi-exclamation-octagon-fill"></i> Dharura: Nyaraka Zinazoisha Muda / Zilizokwisha</strong>
-        <a href="{{ url_for('renewals.index') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
+        <strong class="text-danger"><i class="bi bi-exclamation-octagon-fill"></i> {{ _('Dharura: Nyaraka Zinazoisha Muda / Zilizokwisha') }}</strong>
+        <a href="{{ url_for('renewals.index') }}" class="small">{{ _('Ona zote') }} <i class="bi bi-arrow-right"></i></a>
       </div>
       <table class="table table-sm mb-0">
-        <thead><tr><th>Gari</th><th>Aina</th><th>Inaisha</th><th>Muda Uliobaki</th><th>Hali</th></tr></thead>
+        <thead><tr><th>{{ _('Gari') }}</th><th>{{ _('Aina') }}</th><th>{{ _('Inaisha') }}</th><th>{{ _('Muda Uliobaki') }}</th><th>{{ _('Hali') }}</th></tr></thead>
         <tbody>
           {% for p in renewal_alerts %}
           <tr>
@@ -94,8 +139,8 @@
             <td>{{ p.document.expire_date.strftime('%d-%m-%Y') }}</td>
             <td>{{ p.label }}</td>
             <td>
-              {% if p.status == 'expired' %}<span class="badge text-bg-danger">Imekwisha Muda</span>
-              {% else %}<span class="badge text-bg-danger">Dharura</span>{% endif %}
+              {% if p.status == 'expired' %}<span class="badge text-bg-danger">{{ _('Imekwisha Muda') }}</span>
+              {% else %}<span class="badge text-bg-danger">{{ _('Dharura') }}</span>{% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -111,11 +156,11 @@
   <div class="col-12">
     <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong><i class="bi bi-tools text-primary"></i> Magari Yanayohitaji Huduma</strong>
-        <a href="{{ url_for('service.index') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
+        <strong><i class="bi bi-tools text-primary"></i> {{ _('Magari Yanayohitaji Huduma') }}</strong>
+        <a href="{{ url_for('service.index') }}" class="small">{{ _('Ona zote') }} <i class="bi bi-arrow-right"></i></a>
       </div>
       <table class="table table-sm mb-0">
-        <thead><tr><th>Gari</th><th>Huduma Inayofuata</th><th>Siku Zilizobaki</th><th>Hali</th><th></th></tr></thead>
+        <thead><tr><th>{{ _('Gari') }}</th><th>{{ _('Huduma Inayofuata') }}</th><th>{{ _('Siku Zilizobaki') }}</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
         <tbody>
           {% for p in service_alerts %}
           <tr>
@@ -123,13 +168,14 @@
             <td>{{ p.due_date.strftime('%d-%m-%Y') }}</td>
             <td>{{ p.days_remaining }}</td>
             <td>
-              {% if p.status == 'overdue' %}<span class="badge text-bg-danger">Imechelewa</span>
-              {% else %}<span class="badge text-bg-warning">Inakaribia</span>{% endif %}
+              {% if p.status == 'overdue' %}<span class="badge text-bg-danger">{{ _('Imechelewa') }}</span>
+              {% else %}<span class="badge text-bg-warning">{{ _('Inakaribia') }}</span>{% endif %}
             </td>
             <td class="text-end">
               {% if current_user.has_permission('sms') and sms_ready(p.car) %}
               <form method="post" action="{{ url_for('service.send_service_sms', car_id=p.car.id) }}" class="confirm-form"
-                    data-confirm="Tuma SMS ya huduma kwa dereva wa {{ p.car.code }}?">
+                    data-confirm="{{ _('Tuma SMS ya huduma kwa dereva wa %(code)s?', code=p.car.code) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="next" value="{{ url_for('dashboard.index') }}">
                 <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
               </form>
@@ -148,10 +194,10 @@
   <div class="col-12">
     <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong><i class="bi bi-bar-chart-line text-primary"></i> Makusanyo dhidi ya Matumizi (miezi 6)</strong>
+        <strong><i class="bi bi-bar-chart-line text-primary"></i> {{ _('Makusanyo dhidi ya Matumizi (miezi 6)') }}</strong>
         <span>
-          <span class="legend-dot" style="background:#2a78d6"></span>Makusanyo
-          <span class="legend-dot ms-3" style="background:#eb6834"></span>Matumizi
+          <span class="legend-dot" style="background:#2a78d6"></span>{{ _('Makusanyo') }}
+          <span class="legend-dot ms-3" style="background:#eb6834"></span>{{ _('Matumizi') }}
         </span>
       </div>
       <canvas id="trendChart" height="90"></canvas>
@@ -163,9 +209,9 @@
   <div class="col-12">
     <div class="card-panel">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong><i class="bi bi-pie-chart text-primary"></i> Mchango wa Kila Gari kwa Mwezi (Car Contribution by Month) &mdash; MAKUSANYO</strong>
+        <strong><i class="bi bi-pie-chart text-primary"></i> {{ _('Mchango wa Kila Gari kwa Mwezi (Car Contribution by Month) — MAKUSANYO') }}</strong>
         <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#contribTable">
-          <i class="bi bi-table"></i> Onyesha kama Jedwali
+          <i class="bi bi-table"></i> {{ _('Onyesha kama Jedwali') }}
         </button>
       </div>
       <canvas id="contributionChart" height="90"></canvas>
@@ -175,9 +221,9 @@
         <table class="table table-sm table-money mb-0">
           <thead>
             <tr>
-              <th>Gari</th>
+              <th>{{ _('Gari') }}</th>
               {% for label in contribution_matrix.labels %}<th class="amount">{{ label }}</th>{% endfor %}
-              <th class="amount">Jumla</th>
+              <th class="amount">{{ _('Jumla') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -189,7 +235,7 @@
             </tr>
             {% endfor %}
             <tr class="table-light fw-bold">
-              <td>JUMLA KUU</td>
+              <td>{{ _('JUMLA KUU') }}</td>
               {% for v in contribution_matrix.col_totals %}<td class="amount">{{ v | money }}</td>{% endfor %}
               <td class="amount">{{ contribution_matrix.grand_total | money }}</td>
             </tr>
@@ -205,11 +251,11 @@
   <div class="col-lg-7">
     <div class="card-panel h-100">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong><i class="bi bi-clock-history text-primary"></i> Miamala ya Hivi Karibuni (Makusanyo)</strong>
-        <a href="{{ url_for('collections.list_view') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
+        <strong><i class="bi bi-clock-history text-primary"></i> {{ _('Miamala ya Hivi Karibuni (Makusanyo)') }}</strong>
+        <a href="{{ url_for('collections.list_view') }}" class="small">{{ _('Ona zote') }} <i class="bi bi-arrow-right"></i></a>
       </div>
       <table class="table table-sm table-money mb-0">
-        <thead><tr><th>Trans No</th><th>Tarehe</th><th>Magari</th><th class="amount">Jumla</th></tr></thead>
+        <thead><tr><th>Trans No</th><th>{{ _('Tarehe') }}</th><th>{{ _('Magari') }}</th><th class="amount">{{ _('Jumla') }}</th></tr></thead>
         <tbody>
           {% for t in recent_transactions %}
           <tr>
@@ -219,7 +265,7 @@
             <td class="amount">{{ t.total | money }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="4" class="text-muted text-center py-3">Hakuna miamala bado.</td></tr>
+          <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna miamala bado.') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -228,11 +274,11 @@
   <div class="col-lg-5">
     <div class="card-panel h-100">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong><i class="bi bi-fuel-pump text-primary"></i> Matumizi ya Hivi Karibuni</strong>
-        <a href="{{ url_for('consumption.list_view') }}" class="small">Ona zote <i class="bi bi-arrow-right"></i></a>
+        <strong><i class="bi bi-fuel-pump text-primary"></i> {{ _('Matumizi ya Hivi Karibuni') }}</strong>
+        <a href="{{ url_for('consumption.list_view') }}" class="small">{{ _('Ona zote') }} <i class="bi bi-arrow-right"></i></a>
       </div>
       <table class="table table-sm table-money mb-0">
-        <thead><tr><th>Tarehe</th><th>Gari</th><th class="amount">Kiasi</th></tr></thead>
+        <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th></tr></thead>
         <tbody>
           {% for e in recent_consumption %}
           <tr>
@@ -241,7 +287,7 @@
             <td class="amount">{{ e.amount | money }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="3" class="text-muted text-center py-3">Hakuna matumizi bado.</td></tr>
+          <tr><td colspan="3" class="text-muted text-center py-3">{{ _('Hakuna matumizi bado.') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -253,11 +299,11 @@
   <div class="col-12">
     <div class="card-panel d-flex justify-content-between align-items-center flex-wrap gap-2 tw-transition tw-duration-300 hover:tw-border-blue-300">
       <div>
-        <strong><i class="bi bi-graph-up text-primary"></i> Uchambuzi wa Kina</strong>
-        <div class="text-muted small">Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na madeni &mdash; kwa kipindi chochote unachochagua.</div>
+        <strong><i class="bi bi-graph-up text-primary"></i> {{ _('Uchambuzi wa Kina') }}</strong>
+        <div class="text-muted small">{{ _('Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na madeni — kwa kipindi chochote unachochagua.') }}</div>
       </div>
       <a class="btn btn-outline-primary" href="{{ url_for('reports.analytics') }}">
-        Ona Uchambuzi Kamili <i class="bi bi-arrow-right"></i>
+        {{ _('Ona Uchambuzi Kamili') }} <i class="bi bi-arrow-right"></i>
       </a>
     </div>
   </div>
@@ -298,8 +344,8 @@ new Chart(document.getElementById('trendChart'), {
   data: {
     labels: trend.map(p => p.label),
     datasets: [
-      { label: 'Makusanyo', data: trend.map(p => p.collected), backgroundColor: '#2a78d6', borderRadius: 4 },
-      { label: 'Matumizi', data: trend.map(p => p.consumed), backgroundColor: '#eb6834', borderRadius: 4 },
+      { label: {{ _('Makusanyo') | tojson }}, data: trend.map(p => p.collected), backgroundColor: '#2a78d6', borderRadius: 4 },
+      { label: {{ _('Matumizi') | tojson }}, data: trend.map(p => p.consumed), backgroundColor: '#eb6834', borderRadius: 4 },
     ]
   },
   options: {

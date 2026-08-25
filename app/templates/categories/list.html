@@ -1,38 +1,40 @@
 {% extends "base.html" %}
-{% block title %}Aina za Matumizi - BICON TRANS{% endblock %}
+{% block title %}{{ _('Aina za Matumizi') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi bi-tags text-primary"></i> Aina za Matumizi (Expense Categories)</h4>
+<h4 class="mb-3"><i class="bi bi-tags text-primary"></i> {{ _('Aina za Matumizi (Expense Categories)') }}</h4>
 
 <div class="row g-4">
   <div class="col-lg-4">
     <div class="card-panel">
-      <strong><i class="bi bi-plus-circle text-primary"></i> Ongeza Aina</strong>
+      <strong><i class="bi bi-plus-circle text-primary"></i> {{ _('Ongeza Aina') }}</strong>
       <form method="post" action="{{ url_for('categories.new') }}" class="mt-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-2">
-          <label class="form-label">Jina la Aina</label>
-          <input type="text" class="form-control text-uppercase" name="name" placeholder="mfano: MAFUTA" required>
+          <label class="form-label">{{ _('Jina la Aina') }}</label>
+          <input type="text" class="form-control text-uppercase" name="name" placeholder="{{ _('mfano: MAFUTA') }}" required>
         </div>
-        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ongeza</button>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> {{ _('Ongeza') }}</button>
       </form>
     </div>
   </div>
   <div class="col-lg-8">
     <div class="card-panel">
       <table class="table table-sm align-middle mb-0">
-        <thead><tr><th>Jina</th><th>Hali</th><th></th></tr></thead>
+        <thead><tr><th>{{ _('Jina') }}</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
         <tbody>
           {% for cat in categories %}
           <tr>
             <td>{{ cat.name }}</td>
             <td>
               {% if cat.active %}<span class="badge text-bg-success">Active</span>
-              {% else %}<span class="badge text-bg-secondary">Imezimwa</span>{% endif %}
+              {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
             </td>
             <td class="text-end">
               <form method="post" action="{{ url_for('categories.toggle', category_id=cat.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="btn btn-sm btn-outline-secondary">
-                  <i class="bi {{ 'bi-toggle-off' if cat.active else 'bi-toggle-on' }}"></i> {{ 'Zima' if cat.active else 'Washa' }}
+                  <i class="bi {{ 'bi-toggle-off' if cat.active else 'bi-toggle-on' }}"></i> {{ _('Zima') if cat.active else _('Washa') }}
                 </button>
               </form>
             </td>
@@ -40,6 +42,60 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<h4 class="mb-3 mt-4"><i class="bi bi-tools text-primary"></i> {{ _('Aina za Vipuri/Vipengele vya Huduma (Service Item Categories)') }}</h4>
+<div class="form-text mb-2">{{ _('Hizi ndizo aina zinazotumika kuainisha kila kipengele (kipuri au gharama) kwenye tiketi za huduma za gari -- mfano Mafuta, Kichujio, Breki, Vipuri vya Mitambo, Malipo ya Huduma.') }}</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-panel">
+      <strong><i class="bi bi-plus-circle text-primary"></i> {{ _('Ongeza Aina ya Kipuri') }}</strong>
+      <form method="post" action="{{ url_for('categories.new_item_category') }}" class="mt-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-2">
+          <label class="form-label">{{ _('Jina la Aina') }}</label>
+          <input type="text" class="form-control text-uppercase" name="name" placeholder="{{ _('mfano: FILTA YA HEWA') }}" required>
+        </div>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> {{ _('Ongeza') }}</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card-panel">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>{{ _('Jina') }}</th><th>{{ _('Hali') }}</th><th class="text-end">{{ _('Vitendo') }}</th></tr></thead>
+        <tbody>
+          {% for cat in item_categories %}
+          <tr>
+            <td>
+              <form method="post" action="{{ url_for('categories.edit_item_category', category_id=cat.id) }}" class="d-flex gap-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="name" value="{{ cat.name }}" class="form-control form-control-sm text-uppercase" required>
+                <button class="btn btn-sm btn-outline-primary" title="{{ _('Hifadhi jina jipya') }}"><i class="bi bi-check2"></i></button>
+              </form>
+            </td>
+            <td>
+              {% if cat.active %}<span class="badge text-bg-success">Active</span>
+              {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
+            </td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('categories.toggle_item_category', category_id=cat.id) }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-secondary">
+                  <i class="bi {{ 'bi-toggle-off' if cat.active else 'bi-toggle-on' }}"></i> {{ _('Zima') if cat.active else _('Washa') }}
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="text-muted text-center py-3">{{ _('Hakuna aina za vipuri.') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="form-text mt-2">{{ _('Vidokezo vinavyoongezwa na wauzaji wa vipuri (dukani) huonekana hapa pia -- unaweza kubadilisha jina lake kama halijaandikwa vizuri, au kuzima aina zisizohitajika.') }}</div>
     </div>
   </div>
 </div>

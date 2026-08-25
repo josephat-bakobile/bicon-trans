@@ -1,8 +1,12 @@
+from flask_babel import Babel
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import CSRFProtect
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 db = SQLAlchemy()
+babel = Babel()
+csrf = CSRFProtect()
 
 
 @event.listens_for(Engine, "connect")

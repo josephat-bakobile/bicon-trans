@@ -1,24 +1,23 @@
 {% extends "base.html" %}
-{% block title %}Upatanisho na Benki - BICON TRANS{% endblock %}
+{% block title %}{{ _('Upatanisho na Benki') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi bi-arrow-left-right text-primary"></i> Upatanisho na Wakala wa Benki (Bank Reconciliation)</h4>
+<h4 class="mb-3"><i class="bi bi-arrow-left-right text-primary"></i> {{ _('Upatanisho na Wakala wa Benki (Bank Reconciliation)') }}</h4>
 <p class="text-muted small mb-3">
-  Historia kamili ya miamala kwa Trans No na Tarehe ya Muamala (tarehe ya benki), bila mgawanyo wa magari &mdash;
-  kwa ajili ya kulinganisha na taarifa za wakala wa benki.
+  {{ _('Historia kamili ya miamala kwa Trans No na Tarehe ya Muamala (tarehe ya benki), bila mgawanyo wa magari -- kwa ajili ya kulinganisha na taarifa za wakala wa benki.') }}
 </p>
 
 <form class="row g-2 mb-3 card-panel" method="get">
   <div class="col-auto">
-    <label class="form-label small mb-0">Kuanzia</label>
+    <label class="form-label small mb-0">{{ _('Kuanzia') }}</label>
     <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
   </div>
   <div class="col-auto">
-    <label class="form-label small mb-0">Hadi</label>
+    <label class="form-label small mb-0">{{ _('Hadi') }}</label>
     <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
   </div>
   <div class="col-auto d-flex align-items-end gap-2">
-    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Onyesha</button>
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Onyesha') }}</button>
     <a class="btn btn-outline-primary" href="{{ url_for('reconciliation.export_xlsx', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
     <a class="btn btn-outline-danger" href="{{ url_for('reconciliation.export_pdf', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
   </div>
@@ -28,10 +27,10 @@
   <table class="table table-sm table-money align-middle mb-0">
     <thead>
       <tr>
-        <th>Tarehe ya Muamala (Benki)</th>
+        <th>{{ _('Tarehe ya Muamala (Benki)') }}</th>
         <th>Trans No</th>
-        <th class="amount">Jumla</th>
-        <th>Maelezo</th>
+        <th class="amount">{{ _('Jumla') }}</th>
+        <th>{{ _('Maelezo') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -43,12 +42,12 @@
         <td class="text-muted small">{{ r.note }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="4" class="text-muted text-center py-4">Hakuna miamala katika kipindi hiki.</td></tr>
+      <tr><td colspan="4" class="text-muted text-center py-4">{{ _('Hakuna miamala katika kipindi hiki.') }}</td></tr>
       {% endfor %}
     </tbody>
     <tfoot>
       <tr class="table-light fw-bold">
-        <td colspan="2">JUMLA KUU</td>
+        <td colspan="2">{{ _('JUMLA KUU') }}</td>
         <td class="amount">{{ total | money }}</td>
         <td></td>
       </tr>

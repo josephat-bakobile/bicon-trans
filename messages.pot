@@ -1,0 +1,2407 @@
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-08-25 11:45+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app/security.py:33
+msgid "Nenosiri linahitaji angalau herufi 8."
+msgstr ""
+
+#: app/security.py:35
+msgid "Nenosiri linahitaji angalau herufi moja ya alfabeti."
+msgstr ""
+
+#: app/security.py:37
+msgid "Nenosiri linahitaji angalau namba moja."
+msgstr ""
+
+#: app/sms.py:38
+#, python-format
+msgid "Gari %(code)s halina dereva aliyewekwa."
+msgstr ""
+
+#: app/sms.py:40
+#, python-format
+msgid "Dereva wa %(code)s amezimwa."
+msgstr ""
+
+#: app/sms.py:42
+#, python-format
+msgid "SMS zimezimwa kwa dereva wa %(code)s."
+msgstr ""
+
+#: app/sms.py:44
+#, python-format
+msgid "Namba ya simu ya dereva wa %(code)s haijawekwa."
+msgstr ""
+
+#: app/sms.py:47
+#, python-format
+msgid "Namba ya simu ya dereva wa %(code)s si sahihi (%(phone)s)."
+msgstr ""
+
+#: app/sms.py:58
+msgid ""
+"Mipangilio ya SMS (Beem) haijakamilika kwenye seva. Wasiliana na "
+"msimamizi."
+msgstr ""
+
+#: app/sms.py:62
+#, python-format
+msgid "Namba ya simu si sahihi: %(phone)s"
+msgstr ""
+
+#: app/sms.py:85
+#, python-format
+msgid "Beem SMS imekataa ombi (%(code)s): %(detail)s"
+msgstr ""
+
+#: app/sms.py:88
+#, python-format
+msgid "Imeshindwa kuwasiliana na Beem SMS: %(reason)s"
+msgstr ""
+
+#: app/sms.py:90
+#, python-format
+msgid "Jibu lisilotarajiwa kutoka Beem SMS: %(error)s"
+msgstr ""
+
+#: app/sms.py:94
+#, python-format
+msgid "Beem SMS imekataa ujumbe: %(detail)s"
+msgstr ""
+
+#: app/templates/allowances/index.html:69
+#: app/templates/consumption/form.html:11
+#: app/templates/consumption/list.html:34 app/templates/dashboard.html:258
+#: app/templates/dashboard.html:281 app/templates/debts/index.html:51
+#: app/templates/debts/index.html:98 app/templates/reports/index.html:108
+#: app/templates/reports/service.html:118
+#: app/templates/reports/shortfalls.html:32
+#: app/templates/reports/shortfalls.html:78
+#: app/templates/service/index.html:156 app/templates/service/ticket.html:126
+#: app/templates/shop/index.html:36 app/templates/shop/ticket.html:22
+#: app/templates/shop/ticket.html:44 app/templates/smslog/index.html:12
+#: app/utils.py:48
+msgid "Tarehe"
+msgstr ""
+
+#: app/utils.py:51
+#, python-format
+msgid "%(label)s haiwezi kuwa baadaye ya leo (%(date)s)."
+msgstr ""
+
+#: app/utils.py:53
+#, python-format
+msgid "%(label)s haiwezi kuwa zaidi ya siku %(days)s zilizopita."
+msgstr ""
+
+#: app/utils.py:63
+msgid "Tarehe ya huduma si sahihi."
+msgstr ""
+
+#: app/utils.py:65
+#, python-format
+msgid "Tarehe ya huduma haiwezi kuwa baadaye ya leo (%(date)s)."
+msgstr ""
+
+#: app/routes/admin.py:29
+msgid "Jina la mtumiaji, nenosiri na jukumu vinahitajika."
+msgstr ""
+
+#: app/routes/admin.py:36 app/routes/admin.py:130
+#, python-format
+msgid "Jina la mtumiaji '%(username)s' tayari linatumika."
+msgstr ""
+
+#: app/routes/admin.py:42
+#, python-format
+msgid "Mtumiaji '%(username)s' ameongezwa."
+msgstr ""
+
+#: app/routes/admin.py:54
+msgid "Jukumu linahitajika."
+msgstr ""
+
+#: app/routes/admin.py:62 app/routes/admin.py:102
+msgid "Haiwezekani: huyu ndiye Msimamizi Mkuu pekee aliyebaki."
+msgstr ""
+
+#: app/routes/admin.py:68
+#, python-format
+msgid "Mtumiaji '%(username)s' amesasishwa."
+msgstr ""
+
+#: app/routes/admin.py:76 app/routes/admin.py:160
+msgid "Nenosiri jipya linahitajika."
+msgstr ""
+
+#: app/routes/admin.py:84 app/routes/admin.py:168
+#, python-format
+msgid "Nenosiri la '%(username)s' limebadilishwa."
+msgstr ""
+
+#: app/routes/admin.py:94
+msgid "Huwezi kujizima mwenyewe."
+msgstr ""
+
+#: app/routes/admin.py:126
+msgid "Jina la muuza, jina la mtumiaji na nenosiri vinahitajika."
+msgstr ""
+
+#: app/routes/admin.py:136
+#, python-format
+msgid "Muuza '%(name)s' ameongezwa."
+msgstr ""
+
+#: app/routes/admin.py:147
+msgid "Jina la muuza linahitajika."
+msgstr ""
+
+#: app/routes/admin.py:152
+#, python-format
+msgid "Muuza '%(name)s' amesasishwa."
+msgstr ""
+
+#: app/routes/admin.py:193 app/routes/admin.py:216
+msgid "Jina la jukumu linahitajika."
+msgstr ""
+
+#: app/routes/admin.py:195 app/routes/admin.py:221
+#, python-format
+msgid "Jukumu '%(name)s' tayari lipo."
+msgstr ""
+
+#: app/routes/admin.py:201
+#, python-format
+msgid "Jukumu '%(name)s' limeongezwa."
+msgstr ""
+
+#: app/routes/admin.py:209
+msgid ""
+"Jukumu la Msimamizi Mkuu lina ruhusa zote kila wakati na haliwezi "
+"kubadilishwa."
+msgstr ""
+
+#: app/routes/admin.py:227
+#, python-format
+msgid "Jukumu '%(name)s' limesasishwa."
+msgstr ""
+
+#: app/routes/admin.py:235
+msgid "Jukumu la Msimamizi Mkuu haliwezi kufutwa."
+msgstr ""
+
+#: app/routes/admin.py:237
+#, python-format
+msgid "Jukumu '%(name)s' bado linatumiwa na watumiaji, haliwezi kufutwa."
+msgstr ""
+
+#: app/routes/admin.py:241
+#, python-format
+msgid "Jukumu '%(name)s' limefutwa."
+msgstr ""
+
+#: app/routes/allowances.py:36
+#, python-format
+msgid "Utabiri wa posho ya %(code)s umebadilika, tafadhali onyesha upya ukurasa."
+msgstr ""
+
+#: app/routes/allowances.py:39
+#, python-format
+msgid "Siku ya posho ya %(code)s bado haijafika."
+msgstr ""
+
+#: app/routes/allowances.py:43
+#, python-format
+msgid "Posho ya dereva wa %(code)s imehifadhiwa."
+msgstr ""
+
+#: app/routes/allowances.py:52
+#, python-format
+msgid "Posho ya %(code)s imefutwa."
+msgstr ""
+
+#: app/routes/auth.py:31 app/routes/auth.py:49
+msgid ""
+"Akaunti hii imefungwa kwa muda kutokana na majaribio mengi "
+"yasiyofanikiwa. Jaribu tena baadaye."
+msgstr ""
+
+#: app/routes/auth.py:43 app/routes/auth.py:61 app/routes/auth.py:64
+msgid "Jina la mtumiaji au nenosiri si sahihi."
+msgstr ""
+
+#: app/routes/auth.py:101
+msgid "Tafadhali ingia kwanza."
+msgstr ""
+
+#: app/routes/auth.py:110 app/routes/shop_portal.py:23
+msgid "Nenosiri la sasa si sahihi."
+msgstr ""
+
+#: app/routes/auth.py:112 app/routes/shop_portal.py:25
+msgid "Nenosiri jipya na uthibitisho wake havifanani."
+msgstr ""
+
+#: app/routes/auth.py:120 app/routes/shop_portal.py:33
+msgid "Nenosiri lako limebadilishwa."
+msgstr ""
+
+#: app/routes/cars.py:33
+msgid "Dereva huyo hayupo."
+msgstr ""
+
+#: app/routes/cars.py:35
+#, python-format
+msgid "Dereva %(name)s tayari anaendesha gari %(code)s."
+msgstr ""
+
+#: app/routes/cars.py:58
+msgid "Namba ya gari (code) inahitajika."
+msgstr ""
+
+#: app/routes/cars.py:60
+#, python-format
+msgid "Gari %(code)s tayari lipo."
+msgstr ""
+
+#: app/routes/cars.py:69
+#, python-format
+msgid "Gari %(code)s limeongezwa."
+msgstr ""
+
+#: app/routes/cars.py:86
+#, python-format
+msgid "Kiasi cha lengo la siku la %(code)s kimesasishwa."
+msgstr ""
+
+#: app/routes/cars.py:99
+#, python-format
+msgid "Dereva wa %(code)s amesasishwa."
+msgstr ""
+
+#: app/routes/categories.py:21
+msgid "Jina la aina ya matumizi linahitajika."
+msgstr ""
+
+#: app/routes/categories.py:23 app/routes/categories.py:45
+#: app/routes/categories.py:68 app/routes/renewals.py:89
+#, python-format
+msgid "Aina %(name)s tayari ipo."
+msgstr ""
+
+#: app/routes/categories.py:27 app/routes/categories.py:49
+#: app/routes/renewals.py:93
+#, python-format
+msgid "Aina %(name)s imeongezwa."
+msgstr ""
+
+#: app/routes/categories.py:43 app/routes/categories.py:66
+msgid "Jina la aina ya kipuri/kipengele linahitajika."
+msgstr ""
+
+#: app/routes/categories.py:72
+#, python-format
+msgid "Aina imesasishwa kuwa %(name)s."
+msgstr ""
+
+#: app/routes/collections.py:16 app/templates/collections/list.html:28
+#: app/templates/reports/index.html:78
+msgid "Tarehe ya Muamala"
+msgstr ""
+
+#: app/routes/collections.py:20 app/templates/collections/form.html:35
+#: app/templates/reports/index.html:78
+msgid "Tarehe ya Makusanyo"
+msgstr ""
+
+#: app/routes/collections.py:114 app/routes/collections.py:172
+msgid "Weka Trans No."
+msgstr ""
+
+#: app/routes/collections.py:116 app/routes/collections.py:174
+msgid "Ongeza angalau gari moja na kiasi."
+msgstr ""
+
+#: app/routes/collections.py:118
+#, python-format
+msgid "Trans No %(trans_no)s tayari ipo. Tumia namba nyingine."
+msgstr ""
+
+#: app/routes/collections.py:141
+#, python-format
+msgid "Muamala %(trans_no)s umehifadhiwa."
+msgstr ""
+
+#: app/routes/collections.py:156
+#, python-format
+msgid ""
+"Muamala %(trans_no)s umefungwa kwa kuhaririwa (zaidi ya wiki 1 tangu "
+"%(date)s)."
+msgstr ""
+
+#: app/routes/collections.py:180
+#, python-format
+msgid "Trans No %(trans_no)s tayari inatumika kwenye muamala mwingine."
+msgstr ""
+
+#: app/routes/collections.py:204
+#, python-format
+msgid "Muamala %(trans_no)s umesasishwa."
+msgstr ""
+
+#: app/routes/collections.py:218
+#, python-format
+msgid ""
+"Muamala %(trans_no)s umefungwa kwa kufutwa (zaidi ya wiki 1 tangu "
+"%(date)s)."
+msgstr ""
+
+#: app/routes/collections.py:229
+#, python-format
+msgid "Muamala %(trans_no)s umefutwa."
+msgstr ""
+
+#: app/routes/collections.py:241
+#, python-format
+msgid "Gari %(code)s halipo kwenye muamala %(trans_no)s."
+msgstr ""
+
+#: app/routes/collections.py:256
+#, python-format
+msgid "SMS ya makusanyo imetumwa kwa dereva wa %(code)s."
+msgstr ""
+
+#: app/routes/consumption.py:64
+msgid "Taarifa ya matumizi imehifadhiwa."
+msgstr ""
+
+#: app/routes/consumption.py:89
+msgid "Taarifa ya matumizi imesasishwa."
+msgstr ""
+
+#: app/routes/consumption.py:100
+msgid "Taarifa ya matumizi imefutwa."
+msgstr ""
+
+#: app/routes/debts.py:39
+msgid "Deni limehifadhiwa."
+msgstr ""
+
+#: app/routes/debts.py:48
+msgid "Deni limefutwa."
+msgstr ""
+
+#: app/routes/debts.py:62
+#, python-format
+msgid ""
+"Kiasi %(amount)s ni kikubwa kuliko deni la %(code)s lililobaki "
+"(%(balance)s). Hakuna kilichohifadhiwa."
+msgstr ""
+
+#: app/routes/debts.py:87
+msgid "Malipo ya deni yamehifadhiwa."
+msgstr ""
+
+#: app/routes/debts.py:96 app/routes/service.py:338
+msgid "Malipo yamefutwa."
+msgstr ""
+
+#: app/routes/drivers.py:21 app/routes/drivers.py:45
+msgid "Gari hilo halipo."
+msgstr ""
+
+#: app/routes/drivers.py:23 app/routes/drivers.py:48
+#, python-format
+msgid "Gari %(code)s tayari lina dereva mwingine."
+msgstr ""
+
+#: app/routes/drivers.py:39 app/routes/drivers.py:69
+msgid "Jina la dereva linahitajika."
+msgstr ""
+
+#: app/routes/drivers.py:57
+#, python-format
+msgid "Dereva %(name)s ameongezwa."
+msgstr ""
+
+#: app/routes/drivers.py:80
+#, python-format
+msgid "Dereva %(name)s amesasishwa."
+msgstr ""
+
+#: app/routes/renewals.py:16
+msgid "Tarehe ya kuanza si sahihi."
+msgstr ""
+
+#: app/routes/renewals.py:19
+#, python-format
+msgid "Tarehe ya kuanza haiwezi kuwa baadaye ya leo (%(today)s)."
+msgstr ""
+
+#: app/routes/renewals.py:57
+msgid "Chagua gari na aina ya nyaraka."
+msgstr ""
+
+#: app/routes/renewals.py:69
+msgid "Upya wa nyaraka umehifadhiwa."
+msgstr ""
+
+#: app/routes/renewals.py:79
+msgid "Rekodi ya nyaraka imefutwa."
+msgstr ""
+
+#: app/routes/renewals.py:87
+msgid "Jina la aina ya nyaraka linahitajika."
+msgstr ""
+
+#: app/routes/reports.py:222
+#, python-format
+msgid "Gari %(code)s halina tatizo la siku mfululizo kwa sasa."
+msgstr ""
+
+#: app/routes/reports.py:236
+#, python-format
+msgid "SMS ya tatizo imetumwa kwa dereva wa %(code)s."
+msgstr ""
+
+#: app/routes/reports.py:276
+msgid "Weka maelezo ya upungufu kabla ya kufafanua."
+msgstr ""
+
+#: app/routes/reports.py:278
+msgid "Tarehe si sahihi."
+msgstr ""
+
+#: app/routes/reports.py:286
+msgid "Upungufu umefafanuliwa."
+msgstr ""
+
+#: app/routes/service.py:143
+#, python-format
+msgid ""
+"Tiketi imefunguliwa kwa muuza %(shop_name)s. Wanaweza kuongeza vipengele "
+"na kuwasilisha."
+msgstr ""
+
+#: app/routes/service.py:145
+msgid ""
+"Tiketi ya huduma imefunguliwa. Ongeza vipengele (vipuri/gharama) kisha "
+"ufunge tiketi."
+msgstr ""
+
+#: app/routes/service.py:164 app/routes/service.py:207
+msgid "Tiketi hii ni ya muuza -- vipengele vyake vinasimamiwa na muuza mwenyewe."
+msgstr ""
+
+#: app/routes/service.py:167
+msgid "Tiketi imefungwa -- huwezi kuongeza kipengele. Ifungue tena kwanza."
+msgstr ""
+
+#: app/routes/service.py:177 app/routes/shop_portal.py:101
+msgid "Weka jina la kipengele (kipuri/gharama)."
+msgstr ""
+
+#: app/routes/service.py:179
+msgid "Chagua aina ya kipengele."
+msgstr ""
+
+#: app/routes/service.py:181 app/routes/shop_portal.py:105
+msgid "Idadi lazima iwe zaidi ya sifuri."
+msgstr ""
+
+#: app/routes/service.py:183 app/routes/shop_portal.py:107
+msgid "Bei ya kitengo si sahihi."
+msgstr ""
+
+#: app/routes/service.py:197 app/routes/shop_portal.py:121
+#, python-format
+msgid "Kipengele '%(name)s' kimeongezwa."
+msgstr ""
+
+#: app/routes/service.py:210
+msgid "Tiketi imefungwa -- huwezi kufuta kipengele. Ifungue tena kwanza."
+msgstr ""
+
+#: app/routes/service.py:214 app/routes/shop_portal.py:136
+msgid "Kipengele kimefutwa."
+msgstr ""
+
+#: app/routes/service.py:222
+msgid ""
+"Tiketi ya muuza inafungwa kwa kulipa (rekodi malipo), siyo kwa kitufe "
+"hiki."
+msgstr ""
+
+#: app/routes/service.py:225
+msgid "Tiketi hii tayari imefungwa."
+msgstr ""
+
+#: app/routes/service.py:232
+msgid "Chagua aina ya matumizi itakayopokea gharama ya tiketi hii."
+msgstr ""
+
+#: app/routes/service.py:241
+#, python-format
+msgid ""
+"Tiketi imefungwa. Gharama ya %(total)s imepelekwa kwenye matumizi ya gari"
+" %(car_code)s."
+msgstr ""
+
+#: app/routes/service.py:249
+msgid "Tiketi hii tayari iko wazi."
+msgstr ""
+
+#: app/routes/service.py:251
+msgid ""
+"Tiketi hii tayari ina malipo -- futa malipo kwanza kabla ya kuifungua "
+"tena."
+msgstr ""
+
+#: app/routes/service.py:257
+msgid ""
+"Tiketi imefunguliwa tena. Unaweza kuongeza/kufuta vipengele kisha kufunga"
+" tena."
+msgstr ""
+
+#: app/routes/service.py:265
+msgid "Tiketi hii siyo ya muuza."
+msgstr ""
+
+#: app/routes/service.py:268
+msgid "Tiketi hii haijawasilishwa au tayari imelipwa kikamilifu."
+msgstr ""
+
+#: app/routes/service.py:280
+msgid "Kiasi cha malipo lazima kiwe zaidi ya sifuri."
+msgstr ""
+
+#: app/routes/service.py:282
+#, python-format
+msgid "Kiasi kinazidi baki linalodaiwa (%(balance)s)."
+msgstr ""
+
+#: app/routes/service.py:284
+msgid ""
+"Chagua aina ya matumizi kwa malipo haya (itatumika kwa malipo yote ya "
+"tiketi hii)."
+msgstr ""
+
+#: app/routes/service.py:314
+#, python-format
+msgid "Malipo ya %(amount)s yamerekodiwa. Tiketi imelipwa kikamilifu."
+msgstr ""
+
+#: app/routes/service.py:316
+#, python-format
+msgid "Malipo ya %(amount)s yamerekodiwa. Baki: %(balance)s."
+msgstr ""
+
+#: app/routes/service.py:346
+msgid "Tiketi hii ni ya muuza -- taarifa zake zinasimamiwa na muuza mwenyewe."
+msgstr ""
+
+#: app/routes/service.py:349
+msgid "Tiketi iliyofungwa haiwezi kuhaririwa. Ifungue tena kwanza."
+msgstr ""
+
+#: app/routes/service.py:370
+msgid "Tiketi ya huduma imesasishwa."
+msgstr ""
+
+#: app/routes/service.py:390
+msgid "Tiketi ya huduma imefutwa."
+msgstr ""
+
+#: app/routes/service.py:399
+#, python-format
+msgid "Muda wa huduma wa %(car_code)s umesasishwa."
+msgstr ""
+
+#: app/routes/service.py:411
+#, python-format
+msgid "Gari %(car_code)s halihitaji huduma kwa sasa."
+msgstr ""
+
+#: app/routes/service.py:429
+#, python-format
+msgid "SMS ya huduma imetumwa kwa dereva wa %(car_code)s."
+msgstr ""
+
+#: app/routes/shop_portal.py:79
+msgid "Tiketi imewasilishwa -- huwezi kuongeza kipengele."
+msgstr ""
+
+#: app/routes/shop_portal.py:103
+msgid "Chagua aina ya kipengele, au andika aina mpya."
+msgstr ""
+
+#: app/routes/shop_portal.py:132
+msgid "Tiketi imewasilishwa -- huwezi kufuta kipengele."
+msgstr ""
+
+#: app/routes/shop_portal.py:145
+msgid "Tiketi hii tayari imewasilishwa."
+msgstr ""
+
+#: app/routes/shop_portal.py:147
+msgid "Ongeza angalau kipengele kimoja kabla ya kuwasilisha."
+msgstr ""
+
+#: app/routes/shop_portal.py:151
+msgid "Tiketi imewasilishwa. Ofisi itakulipa hivi karibuni."
+msgstr ""
+
+#: app/templates/_pagination.html:3
+msgid "Kurasa"
+msgstr ""
+
+#: app/templates/base.html:59 app/templates/dashboard.html:2
+#: app/templates/dashboard.html:6
+msgid "Dashibodi"
+msgstr ""
+
+#: app/templates/base.html:60
+msgid "Fedha"
+msgstr ""
+
+#: app/templates/base.html:61 app/templates/collections/list.html:2
+#: app/templates/dashboard.html:199 app/templates/dashboard.html:347
+#: app/templates/reports/analytics.html:30
+#: app/templates/reports/analytics.html:103 app/templates/reports/index.html:48
+#: app/templates/smslog/index.html:30
+msgid "Makusanyo"
+msgstr ""
+
+#: app/templates/base.html:62
+msgid "Upatanisho"
+msgstr ""
+
+#: app/templates/base.html:63 app/templates/consumption/list.html:2
+#: app/templates/dashboard.html:200 app/templates/dashboard.html:348
+#: app/templates/reports/analytics.html:30
+#: app/templates/reports/analytics.html:103 app/templates/reports/index.html:48
+msgid "Matumizi"
+msgstr ""
+
+#: app/templates/base.html:64 app/templates/debts/index.html:2
+msgid "Madeni"
+msgstr ""
+
+#: app/templates/allowances/index.html:2 app/templates/base.html:65
+msgid "Posho za Madereva"
+msgstr ""
+
+#: app/templates/base.html:67 app/templates/base.html:68
+#: app/templates/cars/list.html:2 app/templates/cars/list.html:6
+#: app/templates/dashboard.html:258 app/templates/drivers/list.html:7
+#: app/templates/reports/analytics.html:103
+#: app/templates/reports/shortfalls.html:9
+msgid "Magari"
+msgstr ""
+
+#: app/templates/base.html:69 app/templates/cars/list.html:7
+#: app/templates/cars/list.html:30 app/templates/drivers/list.html:2
+#: app/templates/drivers/list.html:6
+msgid "Madereva"
+msgstr ""
+
+#: app/templates/base.html:70 app/templates/smslog/index.html:32
+msgid "Huduma"
+msgstr ""
+
+#: app/templates/base.html:71
+msgid "Nyaraka"
+msgstr ""
+
+#: app/templates/base.html:72 app/templates/categories/list.html:2
+#: app/templates/consumption/form.html:30
+msgid "Aina za Matumizi"
+msgstr ""
+
+#: app/templates/base.html:74 app/templates/base.html:75
+#: app/templates/reports/index.html:2 app/templates/reports/index.html:5
+msgid "Ripoti"
+msgstr ""
+
+#: app/templates/base.html:76
+msgid "Vipuri/Huduma"
+msgstr ""
+
+#: app/templates/base.html:77 app/templates/reports/shortfalls.html:36
+#: app/templates/reports/shortfalls.html:82
+msgid "Upungufu"
+msgstr ""
+
+#: app/templates/base.html:78 app/templates/smslog/index.html:3
+#: app/templates/smslog/index.html:6
+msgid "Kumbukumbu za SMS"
+msgstr ""
+
+#: app/templates/base.html:80
+msgid "Utawala"
+msgstr ""
+
+#: app/templates/admin/users.html:2 app/templates/admin/users.html:5
+#: app/templates/base.html:81
+msgid "Watumiaji"
+msgstr ""
+
+#: app/templates/admin/roles.html:2 app/templates/base.html:82
+msgid "Majukumu"
+msgstr ""
+
+#: app/templates/admin/shops.html:2 app/templates/base.html:83
+msgid "Wauzaji wa Vipuri"
+msgstr ""
+
+#: app/templates/account/password.html:2 app/templates/account/password.html:5
+#: app/templates/base.html:115 app/templates/shop/_layout.html:46
+#: app/templates/shop/password.html:2 app/templates/shop/password.html:5
+msgid "Badilisha Nenosiri"
+msgstr ""
+
+#: app/templates/base.html:124 app/templates/shop/_layout.html:53
+msgid "Toka"
+msgstr ""
+
+#: app/templates/dashboard.html:7
+msgid "Mwezi huu"
+msgstr ""
+
+#: app/templates/dashboard.html:15
+msgid "Makusanyo (mwezi huu)"
+msgstr ""
+
+#: app/templates/dashboard.html:24
+msgid "Matumizi (mwezi huu)"
+msgstr ""
+
+#: app/templates/dashboard.html:33
+msgid "Baki (mwezi huu)"
+msgstr ""
+
+#: app/templates/dashboard.html:42
+msgid "Baki Kuu (Muda Wote)"
+msgstr ""
+
+#: app/templates/dashboard.html:51
+msgid "Madeni yaliyobaki"
+msgstr ""
+
+#: app/templates/dashboard.html:63
+msgid "Upungufu Ambao Haujafafanuliwa (Wazi)"
+msgstr ""
+
+#: app/templates/dashboard.html:72 app/templates/reports/shortfalls.html:73
+msgid "Upungufu Uliofafanuliwa"
+msgstr ""
+
+#: app/templates/dashboard.html:85 app/templates/service/index.html:71
+msgid "Tiketi za Wauzaji Zinazoendelea"
+msgstr ""
+
+#: app/templates/dashboard.html:94 app/templates/service/index.html:80
+msgid "Deni kwa Wauzaji (Halijalipwa)"
+msgstr ""
+
+#: app/templates/dashboard.html:103 app/templates/service/index.html:89
+msgid "Muhtasari kwa Muuza"
+msgstr ""
+
+#: app/templates/dashboard.html:104 app/templates/dashboard.html:130
+#: app/templates/dashboard.html:160 app/templates/dashboard.html:255
+#: app/templates/dashboard.html:278
+msgid "Ona zote"
+msgstr ""
+
+#: app/templates/dashboard.html:107 app/templates/service/index.html:91
+#: app/templates/service/index.html:156 app/templates/service/ticket.html:27
+msgid "Muuza"
+msgstr ""
+
+#: app/templates/dashboard.html:107 app/templates/service/index.html:91
+#: app/templates/shop/index.html:12
+msgid "Tiketi Zinazoendelea"
+msgstr ""
+
+#: app/templates/dashboard.html:107 app/templates/service/index.html:91
+msgid "Deni Halijalipwa"
+msgstr ""
+
+#: app/templates/dashboard.html:129
+msgid "Dharura: Nyaraka Zinazoisha Muda / Zilizokwisha"
+msgstr ""
+
+#: app/templates/allowances/index.html:13
+#: app/templates/allowances/index.html:70
+#: app/templates/collections/form.html:34
+#: app/templates/consumption/form.html:16
+#: app/templates/consumption/list.html:34 app/templates/dashboard.html:133
+#: app/templates/dashboard.html:163 app/templates/dashboard.html:224
+#: app/templates/dashboard.html:281 app/templates/debts/index.html:10
+#: app/templates/debts/index.html:51 app/templates/debts/index.html:98
+#: app/templates/drivers/list.html:40 app/templates/renewals/index.html:13
+#: app/templates/renewals/index.html:57 app/templates/renewals/index.html:120
+#: app/templates/reports/analytics.html:30
+#: app/templates/reports/analytics.html:68 app/templates/reports/index.html:17
+#: app/templates/reports/index.html:48 app/templates/reports/index.html:78
+#: app/templates/reports/index.html:108 app/templates/reports/service.html:17
+#: app/templates/reports/service.html:118
+#: app/templates/reports/shortfalls.html:33
+#: app/templates/reports/shortfalls.html:79 app/templates/service/edit.html:16
+#: app/templates/service/index.html:13 app/templates/service/index.html:117
+#: app/templates/service/index.html:156 app/templates/service/ticket.html:26
+#: app/templates/shop/index.html:36 app/templates/shop/ticket.html:21
+#: app/templates/smslog/index.html:13
+msgid "Gari"
+msgstr ""
+
+#: app/templates/consumption/list.html:34 app/templates/dashboard.html:133
+#: app/templates/renewals/index.html:14 app/templates/renewals/index.html:120
+#: app/templates/reports/analytics.html:138
+#: app/templates/reports/index.html:108 app/templates/reports/service.html:55
+#: app/templates/reports/service.html:81 app/templates/reports/service.html:118
+#: app/templates/service/ticket.html:156 app/templates/service/ticket.html:199
+#: app/templates/shop/ticket.html:66 app/templates/smslog/index.html:16
+msgid "Aina"
+msgstr ""
+
+#: app/templates/dashboard.html:133 app/templates/renewals/index.html:16
+#: app/templates/renewals/index.html:120
+msgid "Inaisha"
+msgstr ""
+
+#: app/templates/dashboard.html:133 app/templates/renewals/index.html:17
+msgid "Muda Uliobaki"
+msgstr ""
+
+#: app/templates/admin/shops.html:39 app/templates/admin/users.html:40
+#: app/templates/allowances/index.html:19 app/templates/cars/list.html:44
+#: app/templates/categories/list.html:24 app/templates/categories/list.html:69
+#: app/templates/dashboard.html:133 app/templates/dashboard.html:163
+#: app/templates/drivers/list.html:40 app/templates/renewals/index.html:18
+#: app/templates/reports/service.html:118
+#: app/templates/reports/shortfalls.html:37
+#: app/templates/reports/shortfalls.html:83 app/templates/service/index.html:19
+#: app/templates/service/index.html:156 app/templates/shop/index.html:36
+#: app/templates/smslog/index.html:17
+msgid "Hali"
+msgstr ""
+
+#: app/templates/dashboard.html:142 app/templates/renewals/index.html:30
+msgid "Imekwisha Muda"
+msgstr ""
+
+#: app/templates/dashboard.html:143 app/templates/renewals/index.html:31
+msgid "Dharura"
+msgstr ""
+
+#: app/templates/dashboard.html:159
+msgid "Magari Yanayohitaji Huduma"
+msgstr ""
+
+#: app/templates/dashboard.html:163 app/templates/service/index.html:17
+msgid "Huduma Inayofuata"
+msgstr ""
+
+#: app/templates/dashboard.html:163 app/templates/service/index.html:18
+msgid "Siku Zilizobaki"
+msgstr ""
+
+#: app/templates/allowances/index.html:33 app/templates/dashboard.html:171
+#: app/templates/service/index.html:40
+msgid "Imechelewa"
+msgstr ""
+
+#: app/templates/allowances/index.html:35 app/templates/dashboard.html:172
+#: app/templates/renewals/index.html:32 app/templates/service/index.html:41
+msgid "Inakaribia"
+msgstr ""
+
+#: app/templates/dashboard.html:177
+#, python-format
+msgid "Tuma SMS ya huduma kwa dereva wa %(code)s?"
+msgstr ""
+
+#: app/templates/dashboard.html:197
+msgid "Makusanyo dhidi ya Matumizi (miezi 6)"
+msgstr ""
+
+#: app/templates/dashboard.html:212
+msgid "Mchango wa Kila Gari kwa Mwezi (Car Contribution by Month) — MAKUSANYO"
+msgstr ""
+
+#: app/templates/dashboard.html:214
+msgid "Onyesha kama Jedwali"
+msgstr ""
+
+#: app/templates/collections/list.html:30 app/templates/dashboard.html:226
+#: app/templates/dashboard.html:258 app/templates/reconciliation/index.html:32
+#: app/templates/reports/service.html:55 app/templates/reports/service.html:119
+#: app/templates/service/ticket.html:156 app/templates/shop/index.html:36
+#: app/templates/shop/ticket.html:24 app/templates/shop/ticket.html:66
+msgid "Jumla"
+msgstr ""
+
+#: app/templates/dashboard.html:238 app/templates/debts/index.html:21
+#: app/templates/reconciliation/index.html:50
+#: app/templates/reports/index.html:59
+msgid "JUMLA KUU"
+msgstr ""
+
+#: app/templates/dashboard.html:254
+msgid "Miamala ya Hivi Karibuni (Makusanyo)"
+msgstr ""
+
+#: app/templates/dashboard.html:268
+msgid "Hakuna miamala bado."
+msgstr ""
+
+#: app/templates/dashboard.html:277
+msgid "Matumizi ya Hivi Karibuni"
+msgstr ""
+
+#: app/templates/allowances/index.html:17
+#: app/templates/allowances/index.html:73
+#: app/templates/collections/form.html:36
+#: app/templates/consumption/form.html:33
+#: app/templates/consumption/list.html:34 app/templates/dashboard.html:281
+#: app/templates/debts/index.html:42 app/templates/debts/index.html:51
+#: app/templates/debts/index.html:87 app/templates/debts/index.html:98
+#: app/templates/reports/analytics.html:138 app/templates/reports/index.html:78
+#: app/templates/reports/index.html:108 app/templates/service/ticket.html:126
+#: app/templates/shop/ticket.html:44
+msgid "Kiasi"
+msgstr ""
+
+#: app/templates/dashboard.html:290
+msgid "Hakuna matumizi bado."
+msgstr ""
+
+#: app/templates/dashboard.html:302
+msgid "Uchambuzi wa Kina"
+msgstr ""
+
+#: app/templates/dashboard.html:303
+msgid ""
+"Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na "
+"madeni — kwa kipindi chochote unachochagua."
+msgstr ""
+
+#: app/templates/dashboard.html:306
+msgid "Ona Uchambuzi Kamili"
+msgstr ""
+
+#: app/templates/login.html:6 app/templates/login.html:46
+msgid "Ingia"
+msgstr ""
+
+#: app/templates/login.html:38
+msgid "Jina la Mtumiaji"
+msgstr ""
+
+#: app/templates/admin/shops.html:25 app/templates/admin/users.html:22
+#: app/templates/login.html:42
+msgid "Nenosiri"
+msgstr ""
+
+#: app/templates/account/password.html:13 app/templates/shop/password.html:13
+msgid "Nenosiri la Sasa"
+msgstr ""
+
+#: app/templates/account/password.html:17 app/templates/shop/password.html:17
+msgid "Nenosiri Jipya"
+msgstr ""
+
+#: app/templates/account/password.html:19 app/templates/shop/password.html:19
+msgid "Angalau herufi 8, ikijumuisha herufi na namba."
+msgstr ""
+
+#: app/templates/account/password.html:22 app/templates/shop/password.html:22
+msgid "Thibitisha Nenosiri Jipya"
+msgstr ""
+
+#: app/templates/account/password.html:26 app/templates/shop/password.html:26
+msgid "Hifadhi Nenosiri Jipya"
+msgstr ""
+
+#: app/templates/admin/roles.html:5
+msgid "Majukumu na Ruhusa"
+msgstr ""
+
+#: app/templates/admin/roles.html:10
+msgid "Ongeza Jukumu"
+msgstr ""
+
+#: app/templates/admin/roles.html:14
+msgid "Jina la Jukumu"
+msgstr ""
+
+#: app/templates/admin/roles.html:15
+msgid "mfano: Muhasibu"
+msgstr ""
+
+#: app/templates/admin/roles.html:18
+msgid "Ruhusa"
+msgstr ""
+
+#: app/templates/admin/roles.html:26 app/templates/admin/shops.html:32
+#: app/templates/admin/users.html:33 app/templates/cars/list.html:37
+#: app/templates/categories/list.html:17 app/templates/categories/list.html:62
+#: app/templates/drivers/list.html:33
+msgid "Ongeza"
+msgstr ""
+
+#: app/templates/admin/roles.html:37
+msgid "Msimamizi Mkuu"
+msgstr ""
+
+#: app/templates/admin/roles.html:41
+#, python-format
+msgid "Una uhakika unataka kufuta jukumu %(name)s?"
+msgstr ""
+
+#: app/templates/admin/roles.html:49
+msgid "Jukumu hili lina ruhusa zote kila wakati."
+msgstr ""
+
+#: app/templates/admin/roles.html:66 app/templates/collections/form.html:63
+#: app/templates/consumption/form.html:41 app/templates/renewals/index.html:77
+#: app/templates/service/edit.html:28
+msgid "Hifadhi"
+msgstr ""
+
+#: app/templates/admin/shops.html:5
+msgid "Wauzaji wa Vipuri (Shops)"
+msgstr ""
+
+#: app/templates/admin/shops.html:7
+msgid ""
+"Kila muuza ana akaunti yake ya kuingia (ukurasa mmoja wa kuingia na "
+"wafanyakazi, /login). Tiketi hufunguliwa na ofisi kwa ajili ya muuza "
+"husika; muuza ataongeza vipengele alivyotoa na kuwasilisha kwa malipo."
+msgstr ""
+
+#: app/templates/admin/shops.html:13
+msgid "Ongeza Muuza"
+msgstr ""
+
+#: app/templates/admin/shops.html:17
+msgid "Jina la Muuza/Duka"
+msgstr ""
+
+#: app/templates/admin/shops.html:21 app/templates/admin/users.html:14
+msgid "Jina la Mtumiaji (username)"
+msgstr ""
+
+#: app/templates/admin/shops.html:29
+msgid "Simu (si lazima)"
+msgstr ""
+
+#: app/templates/admin/shops.html:39 app/templates/cars/list.html:44
+#: app/templates/categories/list.html:24 app/templates/categories/list.html:69
+#: app/templates/drivers/list.html:40
+msgid "Jina"
+msgstr ""
+
+#: app/templates/admin/shops.html:39
+msgid "Simu"
+msgstr ""
+
+#: app/templates/admin/shops.html:39 app/templates/admin/users.html:40
+#: app/templates/categories/list.html:69
+msgid "Vitendo"
+msgstr ""
+
+#: app/templates/admin/shops.html:55 app/templates/admin/users.html:60
+#: app/templates/cars/list.html:72 app/templates/categories/list.html:31
+#: app/templates/categories/list.html:82 app/templates/drivers/list.html:70
+msgid "Imezimwa"
+msgstr ""
+
+#: app/templates/admin/shops.html:63
+#, python-format
+msgid "Una uhakika unataka %(action)s muuza %(name)s?"
+msgstr ""
+
+#: app/templates/admin/shops.html:63 app/templates/admin/users.html:68
+msgid "kuzima"
+msgstr ""
+
+#: app/templates/admin/shops.html:63 app/templates/admin/users.html:68
+msgid "kuwasha"
+msgstr ""
+
+#: app/templates/admin/shops.html:73 app/templates/admin/users.html:78
+msgid "Nenosiri jipya"
+msgstr ""
+
+#: app/templates/admin/shops.html:80
+msgid "Hakuna wauzaji bado."
+msgstr ""
+
+#: app/templates/admin/users.html:10
+msgid "Ongeza Mtumiaji"
+msgstr ""
+
+#: app/templates/admin/users.html:18
+msgid "Jina Kamili (si lazima)"
+msgstr ""
+
+#: app/templates/admin/users.html:26 app/templates/admin/users.html:40
+msgid "Jukumu"
+msgstr ""
+
+#: app/templates/admin/users.html:40
+msgid "Jina Kamili"
+msgstr ""
+
+#: app/templates/admin/users.html:68
+#, python-format
+msgid "Una uhakika unataka %(action)s mtumiaji %(username)s?"
+msgstr ""
+
+#: app/templates/allowances/index.html:5
+msgid "Posho za Madereva (Driver Allowance Prediction)"
+msgstr ""
+
+#: app/templates/allowances/index.html:8
+msgid "Utabiri wa Posho Inayofuata"
+msgstr ""
+
+#: app/templates/allowances/index.html:14
+#: app/templates/allowances/index.html:71 app/templates/cars/list.html:44
+#: app/templates/reports/analytics.html:68
+#: app/templates/reports/analytics.html:103 app/templates/smslog/index.html:14
+msgid "Dereva"
+msgstr ""
+
+#: app/templates/allowances/index.html:15
+#: app/templates/allowances/index.html:72
+msgid "Kipindi"
+msgstr ""
+
+#: app/templates/allowances/index.html:16
+msgid "Tarehe Inayotarajiwa"
+msgstr ""
+
+#: app/templates/allowances/index.html:18
+msgid "Deni la Gari"
+msgstr ""
+
+#: app/templates/allowances/index.html:34
+msgid "Leo"
+msgstr ""
+
+#: app/templates/allowances/index.html:36
+msgid "Bado"
+msgstr ""
+
+#: app/templates/allowances/index.html:41
+#, python-format
+msgid "Thibitisha dereva wa %(code)s amepokea posho ya %(amount)s?"
+msgstr ""
+
+#: app/templates/allowances/index.html:47
+msgid "Amepokea"
+msgstr ""
+
+#: app/templates/allowances/index.html:53
+msgid "Hakuna magari yenye dereva na lengo la siku."
+msgstr ""
+
+#: app/templates/allowances/index.html:59
+msgid ""
+"Dereva hupokea posho mara mbili kwa mwezi (katikati na mwisho wa mwezi), "
+"kiasi sawa na lengo la siku la gari lake -- siku hiyo dereva huchukua "
+"makusanyo bila kuweka akaunti. Kitufe cha \"Amepokea\" huonekana tu siku "
+"inapofika. Kama gari lina deni, posho hutumika kulipa deni kwanza; "
+"kilichobaki ndicho dereva anachochukua."
+msgstr ""
+
+#: app/templates/allowances/index.html:64
+msgid "Historia ya Posho"
+msgstr ""
+
+#: app/templates/allowances/index.html:74
+msgid "Kwenye Deni"
+msgstr ""
+
+#: app/templates/allowances/index.html:75
+msgid "Fedha Taslimu"
+msgstr ""
+
+#: app/templates/allowances/index.html:91
+#, python-format
+msgid ""
+"Futa posho hii ya %(code)s? Malipo ya deni na ufafanuzi wa upungufu "
+"ulioambatana navyo vitafutwa pia."
+msgstr ""
+
+#: app/templates/allowances/index.html:93
+#: app/templates/collections/list.html:19
+#: app/templates/collections/list.html:64
+#: app/templates/consumption/list.html:27
+#: app/templates/consumption/list.html:49 app/templates/renewals/index.html:132
+#: app/templates/service/index.html:181
+msgid "Futa"
+msgstr ""
+
+#: app/templates/allowances/index.html:98
+msgid "Hakuna posho zilizohifadhiwa."
+msgstr ""
+
+#: app/templates/cars/list.html:13 app/templates/collections/form.html:60
+msgid "Ongeza Gari"
+msgstr ""
+
+#: app/templates/cars/list.html:17
+msgid "Namba ya Gari (code)"
+msgstr ""
+
+#: app/templates/cars/list.html:18
+msgid "mfano: DES"
+msgstr ""
+
+#: app/templates/cars/list.html:21
+msgid "Jina (si lazima)"
+msgstr ""
+
+#: app/templates/cars/list.html:25
+msgid "Dereva (si lazima)"
+msgstr ""
+
+#: app/templates/cars/list.html:27 app/templates/cars/list.html:54
+#: app/templates/drivers/list.html:28 app/templates/drivers/list.html:50
+msgid "hakuna"
+msgstr ""
+
+#: app/templates/cars/list.html:30
+msgid "Dereva mmoja anaendesha gari moja tu. Ongeza dereva mpya kwenye ukurasa wa"
+msgstr ""
+
+#: app/templates/cars/list.html:33
+msgid "Kiasi cha Lengo la Siku (si lazima)"
+msgstr ""
+
+#: app/templates/cars/list.html:34
+msgid "mfano: 45000"
+msgstr ""
+
+#: app/templates/cars/list.html:35
+msgid ""
+"Kiasi ambacho gari hili linatakiwa kukusanya kila siku. Acha 0 kama "
+"hakuna lengo."
+msgstr ""
+
+#: app/templates/cars/list.html:44
+msgid "Lengo la Siku"
+msgstr ""
+
+#: app/templates/cars/list.html:78 app/templates/categories/list.html:37
+#: app/templates/categories/list.html:88 app/templates/drivers/list.html:77
+#: app/templates/renewals/index.html:96
+msgid "Zima"
+msgstr ""
+
+#: app/templates/cars/list.html:78 app/templates/categories/list.html:37
+#: app/templates/categories/list.html:88 app/templates/drivers/list.html:77
+msgid "Washa"
+msgstr ""
+
+#: app/templates/categories/list.html:5
+msgid "Aina za Matumizi (Expense Categories)"
+msgstr ""
+
+#: app/templates/categories/list.html:10
+msgid "Ongeza Aina"
+msgstr ""
+
+#: app/templates/categories/list.html:14 app/templates/categories/list.html:59
+msgid "Jina la Aina"
+msgstr ""
+
+#: app/templates/categories/list.html:15
+msgid "mfano: MAFUTA"
+msgstr ""
+
+#: app/templates/categories/list.html:49
+msgid "Aina za Vipuri/Vipengele vya Huduma (Service Item Categories)"
+msgstr ""
+
+#: app/templates/categories/list.html:50
+msgid ""
+"Hizi ndizo aina zinazotumika kuainisha kila kipengele (kipuri au gharama)"
+" kwenye tiketi za huduma za gari -- mfano Mafuta, Kichujio, Breki, Vipuri"
+" vya Mitambo, Malipo ya Huduma."
+msgstr ""
+
+#: app/templates/categories/list.html:55
+msgid "Ongeza Aina ya Kipuri"
+msgstr ""
+
+#: app/templates/categories/list.html:60 app/templates/shop/ticket.html:117
+msgid "mfano: FILTA YA HEWA"
+msgstr ""
+
+#: app/templates/categories/list.html:77
+msgid "Hifadhi jina jipya"
+msgstr ""
+
+#: app/templates/categories/list.html:94
+msgid "Hakuna aina za vipuri."
+msgstr ""
+
+#: app/templates/categories/list.html:98
+msgid ""
+"Vidokezo vinavyoongezwa na wauzaji wa vipuri (dukani) huonekana hapa pia "
+"-- unaweza kubadilisha jina lake kama halijaandikwa vizuri, au kuzima "
+"aina zisizohitajika."
+msgstr ""
+
+#: app/templates/collections/form.html:2 app/templates/collections/list.html:60
+#: app/templates/consumption/form.html:2 app/templates/consumption/list.html:45
+msgid "Hariri"
+msgstr ""
+
+#: app/templates/collections/form.html:2 app/templates/collections/list.html:7
+msgid "Muamala Mpya"
+msgstr ""
+
+#: app/templates/collections/form.html:5
+#, python-format
+msgid "Hariri Muamala %(trans_no)s"
+msgstr ""
+
+#: app/templates/collections/form.html:5
+msgid "Muamala Mpya wa Makusanyo"
+msgstr ""
+
+#: app/templates/collections/form.html:16
+#: app/templates/reconciliation/index.html:30
+msgid "Tarehe ya Muamala (Benki)"
+msgstr ""
+
+#: app/templates/collections/form.html:19
+msgid "Tarehe ya kupeleka fedha kwa wakala wa benki (kwa ajili ya upatanisho)."
+msgstr ""
+
+#: app/templates/collections/form.html:22
+msgid "Maelezo ya Muamala (si lazima)"
+msgstr ""
+
+#: app/templates/collections/form.html:27
+msgid "Mgawanyo kwa Magari"
+msgstr ""
+
+#: app/templates/collections/form.html:29
+msgid ""
+"Gari moja linaweza kuonekana zaidi ya mara moja likiwa na tarehe tofauti "
+"za makusanyo, mfano dereva akilipa deni la siku iliyopita pamoja na la "
+"leo katika muamala huo huo."
+msgstr ""
+
+#: app/templates/collections/form.html:37
+#: app/templates/collections/list.html:31
+#: app/templates/consumption/list.html:34
+#: app/templates/reconciliation/index.html:33
+#: app/templates/renewals/index.html:120 app/templates/reports/index.html:78
+#: app/templates/reports/index.html:108 app/templates/reports/service.html:119
+#: app/templates/reports/shortfalls.html:84
+#: app/templates/service/index.html:156 app/templates/service/ticket.html:29
+#: app/templates/service/ticket.html:126 app/templates/service/ticket.html:156
+#: app/templates/shop/index.html:36 app/templates/shop/ticket.html:23
+#: app/templates/shop/ticket.html:44 app/templates/shop/ticket.html:66
+msgid "Maelezo"
+msgstr ""
+
+#: app/templates/collections/form.html:64
+#: app/templates/consumption/form.html:42 app/templates/service/edit.html:29
+msgid "Ghairi"
+msgstr ""
+
+#: app/templates/collections/list.html:6
+msgid "Makusanyo (Miamala)"
+msgstr ""
+
+#: app/templates/collections/list.html:18
+#: app/templates/consumption/list.html:26
+msgid "Chuja"
+msgstr ""
+
+#: app/templates/collections/list.html:29
+msgid "Mgawanyo kwa Gari (Tarehe ya Makusanyo)"
+msgstr ""
+
+#: app/templates/collections/list.html:47
+#, python-format
+msgid "Tuma SMS ya makusanyo kwa dereva wa %(code)s?"
+msgstr ""
+
+#: app/templates/collections/list.html:49
+msgid "Tuma SMS"
+msgstr ""
+
+#: app/templates/collections/list.html:58
+msgid "Zaidi ya wiki 1 tangu tarehe ya muamala"
+msgstr ""
+
+#: app/templates/collections/list.html:58 app/templates/reports/service.html:36
+#: app/templates/reports/service.html:131 app/templates/service/index.html:174
+#: app/templates/service/ticket.html:15 app/templates/service/ticket.html:32
+msgid "Imefungwa"
+msgstr ""
+
+#: app/templates/collections/list.html:62
+#, python-format
+msgid "Una uhakika unataka kufuta muamala %(trans_no)s?"
+msgstr ""
+
+#: app/templates/collections/list.html:70
+msgid "Hakuna miamala."
+msgstr ""
+
+#: app/templates/consumption/form.html:2 app/templates/consumption/list.html:7
+msgid "Taarifa Mpya"
+msgstr ""
+
+#: app/templates/consumption/form.html:5
+msgid "Hariri Taarifa ya Matumizi"
+msgstr ""
+
+#: app/templates/consumption/form.html:5
+msgid "Taarifa Mpya ya Matumizi"
+msgstr ""
+
+#: app/templates/consumption/form.html:24 app/templates/reports/index.html:24
+msgid "Aina ya Matumizi"
+msgstr ""
+
+#: app/templates/consumption/form.html:30
+msgid "Unaweza kuongeza aina mpya kwenye ukurasa wa"
+msgstr ""
+
+#: app/templates/consumption/form.html:37 app/templates/debts/index.html:43
+#: app/templates/debts/index.html:90 app/templates/renewals/index.html:74
+#: app/templates/service/edit.html:24 app/templates/service/index.html:131
+#: app/templates/service/ticket.html:80 app/templates/service/ticket.html:218
+#: app/templates/shop/ticket.html:132
+msgid "Maelezo (si lazima)"
+msgstr ""
+
+#: app/templates/consumption/list.html:6
+msgid "Matumizi (Consumption)"
+msgstr ""
+
+#: app/templates/consumption/list.html:15 app/templates/reports/index.html:19
+#: app/templates/reports/service.html:19
+msgid "Gari zote"
+msgstr ""
+
+#: app/templates/consumption/list.html:21 app/templates/reports/index.html:26
+#: app/templates/reports/service.html:26
+msgid "Aina zote"
+msgstr ""
+
+#: app/templates/consumption/list.html:47
+msgid "Futa taarifa hii ya matumizi?"
+msgstr ""
+
+#: app/templates/consumption/list.html:54
+msgid "Hakuna taarifa za matumizi."
+msgstr ""
+
+#: app/templates/debts/index.html:5
+msgid "Madeni (Debt Tracking)"
+msgstr ""
+
+#: app/templates/debts/index.html:8
+msgid "Salio la Madeni kwa Gari"
+msgstr ""
+
+#: app/templates/debts/index.html:10
+msgid "Anadaiwa (Jumla)"
+msgstr ""
+
+#: app/templates/debts/index.html:10
+msgid "Amelipa (Jumla)"
+msgstr ""
+
+#: app/templates/debts/index.html:10 app/templates/reports/analytics.html:30
+#: app/templates/reports/analytics.html:103 app/templates/reports/index.html:48
+#: app/templates/shop/ticket.html:27
+msgid "Baki"
+msgstr ""
+
+#: app/templates/debts/index.html:33
+msgid "Ongeza Deni (Anadaiwa)"
+msgstr ""
+
+#: app/templates/debts/index.html:44
+msgid "Hifadhi Deni"
+msgstr ""
+
+#: app/templates/debts/index.html:49
+msgid "Madeni ya Hivi Karibuni"
+msgstr ""
+
+#: app/templates/debts/index.html:59
+msgid "Futa deni hili?"
+msgstr ""
+
+#: app/templates/debts/index.html:66
+msgid "Hakuna madeni."
+msgstr ""
+
+#: app/templates/debts/index.html:75
+msgid "Ongeza Malipo ya Deni"
+msgstr ""
+
+#: app/templates/debts/index.html:91
+msgid "Hifadhi Malipo"
+msgstr ""
+
+#: app/templates/debts/index.html:96
+msgid "Malipo ya Hivi Karibuni"
+msgstr ""
+
+#: app/templates/debts/index.html:106
+msgid "Futa malipo haya?"
+msgstr ""
+
+#: app/templates/debts/index.html:113
+msgid "Hakuna malipo."
+msgstr ""
+
+#: app/templates/drivers/list.html:13
+msgid "Ongeza Dereva"
+msgstr ""
+
+#: app/templates/drivers/list.html:17
+msgid "Jina la Dereva"
+msgstr ""
+
+#: app/templates/drivers/list.html:21
+msgid "Namba ya Simu (si lazima)"
+msgstr ""
+
+#: app/templates/drivers/list.html:22
+msgid "mfano: 0712345678"
+msgstr ""
+
+#: app/templates/drivers/list.html:23
+msgid "Inatumika kutuma SMS kwa dereva (makusanyo, tatizo, huduma)."
+msgstr ""
+
+#: app/templates/drivers/list.html:26
+msgid "Gari (si lazima)"
+msgstr ""
+
+#: app/templates/drivers/list.html:31
+msgid "Dereva mmoja anaendesha gari moja tu."
+msgstr ""
+
+#: app/templates/drivers/list.html:40 app/templates/drivers/list.html:48
+#: app/templates/smslog/index.html:15
+msgid "Namba ya Simu"
+msgstr ""
+
+#: app/templates/drivers/list.html:63
+msgid "SMS zinaruhusiwa"
+msgstr ""
+
+#: app/templates/drivers/list.html:63
+msgid "SMS zimezimwa"
+msgstr ""
+
+#: app/templates/drivers/list.html:74
+#, python-format
+msgid "Kuzima dereva %(name)s kutamwondoa kwenye gari lake pia. Endelea?"
+msgstr ""
+
+#: app/templates/drivers/list.html:83
+msgid "Hakuna madereva bado."
+msgstr ""
+
+#: app/templates/reconciliation/index.html:2
+msgid "Upatanisho na Benki"
+msgstr ""
+
+#: app/templates/reconciliation/index.html:5
+msgid "Upatanisho na Wakala wa Benki (Bank Reconciliation)"
+msgstr ""
+
+#: app/templates/reconciliation/index.html:7
+msgid ""
+"Historia kamili ya miamala kwa Trans No na Tarehe ya Muamala (tarehe ya "
+"benki), bila mgawanyo wa magari -- kwa ajili ya kulinganisha na taarifa "
+"za wakala wa benki."
+msgstr ""
+
+#: app/templates/reconciliation/index.html:12
+#: app/templates/reports/analytics.html:13 app/templates/reports/index.html:9
+#: app/templates/reports/service.html:9
+#: app/templates/reports/shortfalls.html:14
+msgid "Kuanzia"
+msgstr ""
+
+#: app/templates/reconciliation/index.html:16
+#: app/templates/reports/analytics.html:17 app/templates/reports/index.html:13
+#: app/templates/reports/service.html:13
+#: app/templates/reports/shortfalls.html:18
+msgid "Hadi"
+msgstr ""
+
+#: app/templates/reconciliation/index.html:20
+#: app/templates/reports/analytics.html:21 app/templates/reports/index.html:31
+#: app/templates/reports/service.html:40
+#: app/templates/reports/shortfalls.html:22
+msgid "Onyesha"
+msgstr ""
+
+#: app/templates/reconciliation/index.html:45
+msgid "Hakuna miamala katika kipindi hiki."
+msgstr ""
+
+#: app/templates/renewals/index.html:2
+msgid "Nyaraka za Gari"
+msgstr ""
+
+#: app/templates/renewals/index.html:5
+msgid "Nyaraka za Gari (LATRA, Bima, n.k.)"
+msgstr ""
+
+#: app/templates/renewals/index.html:8
+msgid "Hali ya Nyaraka kwa Kila Gari"
+msgstr ""
+
+#: app/templates/renewals/index.html:15 app/templates/renewals/index.html:120
+msgid "Ilianza"
+msgstr ""
+
+#: app/templates/renewals/index.html:33 app/templates/service/index.html:42
+msgid "Sawa"
+msgstr ""
+
+#: app/templates/renewals/index.html:34 app/templates/service/index.html:43
+msgid "Haijaanzishwa"
+msgstr ""
+
+#: app/templates/renewals/index.html:38
+msgid "Hakuna magari au aina za nyaraka."
+msgstr ""
+
+#: app/templates/renewals/index.html:44
+msgid ""
+"Tarehe ya kuisha inahesabiwa moja kwa moja: mwaka mmoja baada ya tarehe "
+"ya kuanza, ukiondoa siku moja\n"
+"    (mfano: ikianza 22-08-2026, itaisha 21-08-2027). Nyaraka zenye siku 7"
+" au chini kubaki (au zilizokwisha muda)\n"
+"    zinaonekana kwa dharura kwenye Dashboard."
+msgstr ""
+
+#: app/templates/renewals/index.html:53
+msgid "Andika Upya wa Nyaraka"
+msgstr ""
+
+#: app/templates/renewals/index.html:63
+msgid "Aina ya Nyaraka"
+msgstr ""
+
+#: app/templates/renewals/index.html:69
+msgid "Tarehe ya Kuanza"
+msgstr ""
+
+#: app/templates/renewals/index.html:71
+msgid "Tarehe ya kuisha itahesabiwa moja kwa moja (mwaka mmoja - siku 1)."
+msgstr ""
+
+#: app/templates/renewals/index.html:82
+msgid "Aina za Nyaraka"
+msgstr ""
+
+#: app/templates/renewals/index.html:85
+msgid "mfano: FITNESS"
+msgstr ""
+
+#: app/templates/renewals/index.html:109
+msgid "Historia ya Nyaraka"
+msgstr ""
+
+#: app/templates/renewals/index.html:112 app/templates/service/index.html:148
+msgid "Magari Yote"
+msgstr ""
+
+#: app/templates/renewals/index.html:130
+msgid "Futa rekodi hii?"
+msgstr ""
+
+#: app/templates/renewals/index.html:137
+msgid "Hakuna rekodi za nyaraka bado."
+msgstr ""
+
+#: app/templates/reports/analytics.html:2
+msgid "Uchambuzi"
+msgstr ""
+
+#: app/templates/reports/analytics.html:5
+msgid "Uchambuzi wa Magari na Madereva"
+msgstr ""
+
+#: app/templates/reports/analytics.html:7
+msgid ""
+"Muhtasari kwa gari na dereva, magari yenye tatizo, matumizi kwa aina, na "
+"madeni &mdash;\n"
+"  yote kwa kipindi ulichochagua hapa chini."
+msgstr ""
+
+#: app/templates/reports/analytics.html:28
+msgid "Muhtasari kwa Gari (kwa kipindi)"
+msgstr ""
+
+#: app/templates/reports/analytics.html:30
+msgid "Kiwango cha Lengo"
+msgstr ""
+
+#: app/templates/reports/analytics.html:53
+#: app/templates/reports/analytics.html:121 app/templates/reports/index.html:93
+#: app/templates/reports/index.html:122 app/templates/reports/service.html:144
+#: app/templates/service/ticket.html:184 app/templates/shop/ticket.html:94
+msgid "JUMLA"
+msgstr ""
+
+#: app/templates/reports/analytics.html:61
+msgid ""
+"Kiwango cha Lengo = asilimia ya siku katika kipindi hiki ambazo gari "
+"lilifikia lengo lake la siku."
+msgstr ""
+
+#: app/templates/reports/analytics.html:66
+msgid "Magari Yenye Tatizo (Siku Mfululizo Bila Kufikia Lengo)"
+msgstr ""
+
+#: app/templates/reports/analytics.html:68
+msgid "Siku Mfululizo"
+msgstr ""
+
+#: app/templates/reports/analytics.html:82
+#, python-format
+msgid "Tuma SMS ya tatizo kwa dereva wa %(code)s?"
+msgstr ""
+
+#: app/templates/reports/analytics.html:92
+msgid "Hakuna gari lenye tatizo kwa kipindi hiki."
+msgstr ""
+
+#: app/templates/reports/analytics.html:101
+msgid "Muhtasari kwa Dereva (kwa kipindi)"
+msgstr ""
+
+#: app/templates/reports/analytics.html:103
+msgid "Upungufu Wazi"
+msgstr ""
+
+#: app/templates/reports/analytics.html:115
+msgid "Hakuna gari lenye dereva bado. Ongeza dereva kwenye ukurasa wa Magari."
+msgstr ""
+
+#: app/templates/reports/analytics.html:135
+msgid "Matumizi kwa Aina (kwa kipindi)"
+msgstr ""
+
+#: app/templates/reports/analytics.html:146
+msgid "Hakuna matumizi kwa kipindi hiki."
+msgstr ""
+
+#: app/templates/reports/analytics.html:155
+msgid "Madeni kwa Mwezi (kwa kipindi)"
+msgstr ""
+
+#: app/templates/reports/analytics.html:157
+#: app/templates/reports/analytics.html:192
+msgid "Deni Jipya"
+msgstr ""
+
+#: app/templates/reports/analytics.html:158
+#: app/templates/reports/analytics.html:193
+msgid "Malipo"
+msgstr ""
+
+#: app/templates/reports/index.html:41
+msgid "Muhtasari wa Makusanyo na Matumizi kwa Gari"
+msgstr ""
+
+#: app/templates/reports/index.html:70
+#, python-format
+msgid "Ripoti ya Makusanyo (%(count)s miamala)"
+msgstr ""
+
+#: app/templates/reports/index.html:90 app/templates/reports/index.html:119
+#: app/templates/reports/service.html:64 app/templates/reports/service.html:100
+#: app/templates/reports/service.html:141
+msgid "Hakuna data."
+msgstr ""
+
+#: app/templates/reports/index.html:100
+#, python-format
+msgid "Ripoti ya Matumizi (%(count)s taarifa)"
+msgstr ""
+
+#: app/templates/reports/service.html:2
+msgid "Ripoti ya Vipuri na Huduma"
+msgstr ""
+
+#: app/templates/reports/service.html:5
+msgid "Ripoti ya Vipuri na Gharama za Huduma"
+msgstr ""
+
+#: app/templates/reports/service.html:24
+msgid "Aina ya Kipengele"
+msgstr ""
+
+#: app/templates/reports/service.html:31
+msgid "Hali ya Tiketi"
+msgstr ""
+
+#: app/templates/reports/service.html:33
+msgid "Zote"
+msgstr ""
+
+#: app/templates/reports/service.html:34 app/templates/reports/service.html:129
+#: app/templates/reports/shortfalls.html:50
+#: app/templates/service/index.html:173 app/templates/service/ticket.html:14
+msgid "Wazi"
+msgstr ""
+
+#: app/templates/reports/service.html:35 app/templates/reports/service.html:130
+#: app/templates/service/index.html:171 app/templates/service/ticket.html:12
+#: app/templates/shop/index.html:48 app/templates/shop/ticket.html:11
+msgid "Imewasilishwa"
+msgstr ""
+
+#: app/templates/reports/service.html:51
+msgid "Gharama kwa Aina ya Kipengele"
+msgstr ""
+
+#: app/templates/reports/service.html:53
+msgid ""
+"Inaonyesha aina gani ya kipuri/gharama (mafuta, breki, vipuri vya "
+"mitambo, n.k.) inatumia fedha nyingi zaidi."
+msgstr ""
+
+#: app/templates/reports/service.html:55
+msgid "Idadi ya Vipengele"
+msgstr ""
+
+#: app/templates/reports/service.html:72
+msgid "Bei za Vipuri (Historia)"
+msgstr ""
+
+#: app/templates/reports/service.html:75
+msgid ""
+"Kwa kila kipengele kinachojirudia, inaonyesha bei ya chini/wastani/juu na"
+" bei ya mwisho iliyolipwa -- msaada wa\n"
+"    kubaini kama bei ya kipuri fulani imepanda ghafla (mfano: filter ya "
+"mafuta iliyokuwa ikinunuliwa 15,000 sasa 30,000)."
+msgstr ""
+
+#: app/templates/reports/service.html:81 app/templates/reports/service.html:118
+#: app/templates/service/ticket.html:156 app/templates/shop/ticket.html:66
+msgid "Kipengele"
+msgstr ""
+
+#: app/templates/reports/service.html:81 app/templates/reports/service.html:119
+#: app/templates/service/ticket.html:156 app/templates/service/ticket.html:210
+#: app/templates/shop/ticket.html:66 app/templates/shop/ticket.html:124
+msgid "Idadi"
+msgstr ""
+
+#: app/templates/reports/service.html:82
+msgid "Bei ya Chini"
+msgstr ""
+
+#: app/templates/reports/service.html:82
+msgid "Wastani"
+msgstr ""
+
+#: app/templates/reports/service.html:82
+msgid "Bei ya Juu"
+msgstr ""
+
+#: app/templates/reports/service.html:83
+msgid "Bei ya Mwisho"
+msgstr ""
+
+#: app/templates/reports/service.html:83
+msgid "Tarehe ya Mwisho"
+msgstr ""
+
+#: app/templates/reports/service.html:83
+msgid "Gari la Mwisho"
+msgstr ""
+
+#: app/templates/reports/service.html:89
+msgid "Bei imepanda"
+msgstr ""
+
+#: app/templates/reports/service.html:108
+#, python-format
+msgid "Vipengele Vyote (%(count)s)"
+msgstr ""
+
+#: app/templates/reports/service.html:118
+msgid "Chanzo"
+msgstr ""
+
+#: app/templates/reports/service.html:119 app/templates/service/ticket.html:156
+#: app/templates/service/ticket.html:214 app/templates/shop/ticket.html:66
+#: app/templates/shop/ticket.html:128
+msgid "Bei ya Kitengo"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:3
+msgid "Upungufu wa Makusanyo"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:6
+msgid "Ripoti ya Upungufu wa Makusanyo"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:8
+msgid ""
+"Siku ambazo gari halikuleta makusanyo kabisa, au lililoleta ni pungufu ya"
+" Kiasi cha Lengo la Siku\n"
+"  kilichowekwa kwenye ukurasa wa"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:34
+#: app/templates/reports/shortfalls.html:80
+msgid "Lengo"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:35
+#: app/templates/reports/shortfalls.html:81
+msgid "Kilichokusanywa"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:38
+#: app/templates/reports/shortfalls.html:60
+msgid "Fafanua"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:59
+msgid "Maelezo ya upungufu"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:65
+msgid "Hakuna upungufu wazi katika kipindi hiki."
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:96
+msgid "Imefafanuliwa"
+msgstr ""
+
+#: app/templates/reports/shortfalls.html:103
+msgid "Hakuna upungufu uliofafanuliwa katika kipindi hiki."
+msgstr ""
+
+#: app/templates/service/edit.html:2
+msgid "Hariri Tiketi"
+msgstr ""
+
+#: app/templates/service/edit.html:5
+msgid "Hariri Tiketi ya Huduma"
+msgstr ""
+
+#: app/templates/service/edit.html:11 app/templates/service/index.html:112
+#: app/templates/service/ticket.html:28
+msgid "Tarehe ya Huduma"
+msgstr ""
+
+#: app/templates/service/index.html:2
+msgid "Huduma za Gari"
+msgstr ""
+
+#: app/templates/service/index.html:5
+msgid "Huduma za Gari (Service Prediction)"
+msgstr ""
+
+#: app/templates/service/index.html:8
+msgid "Utabiri wa Huduma Inayofuata"
+msgstr ""
+
+#: app/templates/service/index.html:14
+msgid "Huduma ya Mwisho"
+msgstr ""
+
+#: app/templates/service/index.html:15
+msgid "Muda wa Huduma (siku)"
+msgstr ""
+
+#: app/templates/service/index.html:16
+msgid "Siku Zilizosamehewa"
+msgstr ""
+
+#: app/templates/service/index.html:48
+#, python-format
+msgid "Tuma SMS ya huduma kwa dereva wa %(car_code)s?"
+msgstr ""
+
+#: app/templates/service/index.html:56
+msgid "Hakuna magari."
+msgstr ""
+
+#: app/templates/service/index.html:62
+msgid ""
+"Siku ambazo gari halikukusanya kabisa au lilikusanya kiasi kidogo "
+"(upungufu uliofafanuliwa) hazihesabiwi kwenye muda wa huduma — huongeza "
+"tarehe ya huduma inayofuata kwa siku moja kwa kila siku iliyosamehewa."
+msgstr ""
+
+#: app/templates/service/index.html:108
+msgid "Fungua Tiketi Mpya"
+msgstr ""
+
+#: app/templates/service/index.html:114
+msgid ""
+"Kwa huduma ya awali (baseline), weka tarehe halisi ya huduma ya mwisho "
+"hata kama ni ya zamani."
+msgstr ""
+
+#: app/templates/service/index.html:123
+msgid "Muuza (si lazima)"
+msgstr ""
+
+#: app/templates/service/index.html:125
+msgid "-- ndani (bila muuza) --"
+msgstr ""
+
+#: app/templates/service/index.html:128
+msgid ""
+"Ukichagua muuza, tiketi itafunguliwa kwa ajili yake -- ataongeza "
+"vipuri/gharama na kuwasilisha kwa malipo."
+msgstr ""
+
+#: app/templates/service/index.html:134
+msgid "Fungua Tiketi"
+msgstr ""
+
+#: app/templates/service/index.html:137
+msgid ""
+"Bila muuza: utaongeza vipengele mwenyewe kisha ufunge (confirm) tiketi "
+"ili gharama jumla ipelekwe kwenye matumizi ya gari. Kwa muuza: muuza "
+"ndiye ataongeza vipengele na kuwasilisha; wewe utarekodi malipo."
+msgstr ""
+
+#: app/templates/service/index.html:145
+msgid "Tiketi za Huduma"
+msgstr ""
+
+#: app/templates/service/index.html:156
+msgid "Vipengele"
+msgstr ""
+
+#: app/templates/service/index.html:156
+msgid "Gharama"
+msgstr ""
+
+#: app/templates/service/index.html:162
+msgid "Ndani"
+msgstr ""
+
+#: app/templates/service/index.html:168 app/templates/shop/index.html:45
+msgid "Inasubiri Vipengele"
+msgstr ""
+
+#: app/templates/service/index.html:169 app/templates/service/ticket.html:10
+#: app/templates/service/ticket.html:87 app/templates/shop/index.html:46
+#: app/templates/shop/ticket.html:9
+msgid "Imelipwa Kikamilifu"
+msgstr ""
+
+#: app/templates/service/index.html:170 app/templates/service/ticket.html:11
+#: app/templates/shop/ticket.html:10
+msgid "Malipo Sehemu"
+msgstr ""
+
+#: app/templates/service/index.html:178 app/templates/shop/index.html:50
+msgid "Fungua"
+msgstr ""
+
+#: app/templates/service/index.html:179
+msgid "Futa tiketi hii ya huduma?"
+msgstr ""
+
+#: app/templates/service/index.html:186
+msgid "Hakuna tiketi za huduma zilizohifadhiwa."
+msgstr ""
+
+#: app/templates/service/ticket.html:2 app/templates/service/ticket.html:7
+msgid "Tiketi ya Huduma"
+msgstr ""
+
+#: app/templates/service/ticket.html:9
+msgid "Rasimu ya Muuza"
+msgstr ""
+
+#: app/templates/service/ticket.html:18 app/templates/shop/ticket.html:13
+msgid "Rudi"
+msgstr ""
+
+#: app/templates/service/ticket.html:24 app/templates/shop/ticket.html:19
+msgid "Taarifa za Tiketi"
+msgstr ""
+
+#: app/templates/service/ticket.html:30
+msgid "Imefunguliwa"
+msgstr ""
+
+#: app/templates/service/ticket.html:33
+msgid "Aliyefunga"
+msgstr ""
+
+#: app/templates/service/ticket.html:35
+msgid "Gharama Jumla"
+msgstr ""
+
+#: app/templates/service/ticket.html:37 app/templates/shop/ticket.html:26
+msgid "Kimelipwa"
+msgstr ""
+
+#: app/templates/service/ticket.html:38
+msgid "Baki Linalodaiwa"
+msgstr ""
+
+#: app/templates/service/ticket.html:44
+msgid "Hariri Taarifa za Tiketi"
+msgstr ""
+
+#: app/templates/service/ticket.html:51
+#, python-format
+msgid ""
+"Tiketi hii bado ni rasimu ya muuza %(shop_name)s -- inasubiri awasilishe "
+"kabla ya kulipwa."
+msgstr ""
+
+#: app/templates/service/ticket.html:54 app/templates/service/ticket.html:83
+msgid "Rekodi Malipo"
+msgstr ""
+
+#: app/templates/service/ticket.html:56
+#, python-format
+msgid ""
+"Rekodi malipo kwa %(shop_name)s? Kiasi hiki kitapelekwa kwenye matumizi "
+"ya gari %(car_code)s mara moja."
+msgstr ""
+
+#: app/templates/service/ticket.html:59
+msgid "Tarehe ya Malipo"
+msgstr ""
+
+#: app/templates/service/ticket.html:63
+#, python-format
+msgid "Kiasi (Baki: %(balance)s)"
+msgstr ""
+
+#: app/templates/service/ticket.html:68
+msgid "Aina ya Matumizi (itatumika kwa malipo yote ya tiketi hii)"
+msgstr ""
+
+#: app/templates/service/ticket.html:70 app/templates/service/ticket.html:100
+#: app/templates/service/ticket.html:201
+msgid "-- chagua --"
+msgstr ""
+
+#: app/templates/service/ticket.html:77
+msgid "Aina ya matumizi:"
+msgstr ""
+
+#: app/templates/service/ticket.html:92
+msgid "Funga Tiketi"
+msgstr ""
+
+#: app/templates/service/ticket.html:94
+#, python-format
+msgid ""
+"Funga tiketi hii? Gharama jumla ya %(cost)s itapelekwa kwenye matumizi ya"
+" gari %(car_code)s, na hutaweza kuongeza vipengele vingine bila kuifungua"
+" tena."
+msgstr ""
+
+#: app/templates/service/ticket.html:98
+msgid "Aina ya Matumizi (kwa gharama jumla)"
+msgstr ""
+
+#: app/templates/service/ticket.html:107
+msgid ""
+"Hakuna gharama iliyoongezwa -- tiketi itafungwa bila kupeleka chochote "
+"kwenye matumizi."
+msgstr ""
+
+#: app/templates/service/ticket.html:109
+#, python-format
+msgid "Funga Tiketi (%(cost)s)"
+msgstr ""
+
+#: app/templates/service/ticket.html:114
+#, python-format
+msgid ""
+"Fungua tena tiketi hii ya %(car_code)s? Utaweza kuongeza/kufuta vipengele"
+" kisha kufunga tena."
+msgstr ""
+
+#: app/templates/service/ticket.html:116
+msgid "Fungua Tena"
+msgstr ""
+
+#: app/templates/service/ticket.html:124
+msgid "Historia ya Malipo"
+msgstr ""
+
+#: app/templates/service/ticket.html:135
+#, python-format
+msgid "Futa malipo haya ya %(amount)s? Gharama husika itatolewa kwenye matumizi."
+msgstr ""
+
+#: app/templates/service/ticket.html:142 app/templates/shop/ticket.html:53
+msgid "Bado hakuna malipo."
+msgstr ""
+
+#: app/templates/service/ticket.html:152 app/templates/shop/ticket.html:63
+msgid "Vipengele vya Tiketi (Vipuri/Gharama)"
+msgstr ""
+
+#: app/templates/service/ticket.html:170 app/templates/shop/ticket.html:80
+#, python-format
+msgid "Futa kipengele '%(name)s'?"
+msgstr ""
+
+#: app/templates/service/ticket.html:178 app/templates/shop/ticket.html:88
+msgid "Hakuna vipengele bado."
+msgstr ""
+
+#: app/templates/service/ticket.html:195 app/templates/service/ticket.html:222
+#: app/templates/shop/ticket.html:105 app/templates/shop/ticket.html:136
+msgid "Ongeza Kipengele"
+msgstr ""
+
+#: app/templates/service/ticket.html:206 app/templates/shop/ticket.html:120
+msgid "Jina la Kipengele"
+msgstr ""
+
+#: app/templates/service/ticket.html:207 app/templates/shop/ticket.html:121
+msgid "mfano: Filter ya Mafuta"
+msgstr ""
+
+#: app/templates/shop/_layout.html:6 app/templates/shop/_layout.html:17
+msgid "Portal ya Muuzaji Wa Vipuli"
+msgstr ""
+
+#: app/templates/shop/index.html:2 app/templates/shop/index.html:5
+msgid "Tiketi Zangu"
+msgstr ""
+
+#: app/templates/shop/index.html:21
+msgid "Kiasi Ambacho Hakijalipwa"
+msgstr ""
+
+#: app/templates/shop/index.html:30
+msgid ""
+"Tiketi mpya hufunguliwa na ofisi ya BICON TRANS na kukupangia (kwa gari "
+"husika). Zikishafunguliwa zitaonekana hapa chini -- ongeza vipuri/gharama"
+" ulizotoa kisha uwasilishe kwa ofisi ili ulipwe."
+msgstr ""
+
+#: app/templates/shop/index.html:34
+msgid "Tiketi Zote"
+msgstr ""
+
+#: app/templates/shop/index.html:47
+#, python-format
+msgid "Malipo Sehemu (%(paid)s/%(total)s)"
+msgstr ""
+
+#: app/templates/shop/index.html:53
+msgid "Bado hakuna tiketi ulizopangiwa na ofisi."
+msgstr ""
+
+#: app/templates/shop/ticket.html:2 app/templates/shop/ticket.html:7
+msgid "Tiketi"
+msgstr ""
+
+#: app/templates/shop/ticket.html:8
+msgid "Rasimu"
+msgstr ""
+
+#: app/templates/shop/ticket.html:33
+msgid ""
+"Wasilisha tiketi hii? Hutaweza kuongeza/kufuta vipengele tena baada ya "
+"kuwasilisha."
+msgstr ""
+
+#: app/templates/shop/ticket.html:35
+msgid "Wasilisha Tiketi"
+msgstr ""
+
+#: app/templates/shop/ticket.html:42
+msgid "Malipo Yaliyopokelewa"
+msgstr ""
+
+#: app/templates/shop/ticket.html:109
+msgid "Aina (chagua kwenye orodha)"
+msgstr ""
+
+#: app/templates/shop/ticket.html:111
+msgid "chagua"
+msgstr ""
+
+#: app/templates/shop/ticket.html:116
+msgid "Au Aina Mpya (kama haipo hapo juu)"
+msgstr ""
+
+#: app/templates/shop/ticket.html:139
+msgid ""
+"Kama aina ya kipengele chako haipo kwenye orodha, andika jina lake kwenye"
+" 'Aina Mpya' -- litaongezwa kiotomatiki."
+msgstr ""
+
+#: app/templates/smslog/index.html:18
+msgid "Aliyetuma"
+msgstr ""
+
+#: app/templates/smslog/index.html:19
+msgid "Ujumbe / Sababu"
+msgstr ""
+
+#: app/templates/smslog/index.html:31
+msgid "Tatizo"
+msgstr ""
+
+#: app/templates/smslog/index.html:36
+msgid "Imetumwa"
+msgstr ""
+
+#: app/templates/smslog/index.html:37
+msgid "Imeshindikana"
+msgstr ""
+
+#: app/templates/smslog/index.html:43
+msgid "Hakuna SMS zilizotumwa bado."
+msgstr ""
+

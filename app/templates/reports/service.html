@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Ripoti ya Vipuri na Huduma') }} - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3"><i class="bi bi-wrench text-primary"></i> {{ _('Ripoti ya Vipuri na Gharama za Huduma') }}</h4>
+
+<form class="row g-2 mb-4 card-panel" method="get">
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Kuanzia') }}</label>
+    <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Hadi') }}</label>
+    <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Gari') }}</label>
+    <select class="form-select" name="car_id">
+      <option value="">{{ _('Gari zote') }}</option>
+      {% for c in cars %}<option value="{{ c.id }}" {{ 'selected' if car_id==c.id else '' }}>{{ c.code }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Aina ya Kipengele') }}</label>
+    <select class="form-select" name="category_id">
+      <option value="">{{ _('Aina zote') }}</option>
+      {% for cat in item_categories %}<option value="{{ cat.id }}" {{ 'selected' if category_id==cat.id else '' }}>{{ cat.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Hali ya Tiketi') }}</label>
+    <select class="form-select" name="status">
+      <option value="">{{ _('Zote') }}</option>
+      <option value="open" {{ 'selected' if status=='open' else '' }}>{{ _('Wazi') }}</option>
+      <option value="submitted" {{ 'selected' if status=='submitted' else '' }}>{{ _('Imewasilishwa') }}</option>
+      <option value="confirmed" {{ 'selected' if status=='confirmed' else '' }}>{{ _('Imefungwa') }}</option>
+    </select>
+  </div>
+  <div class="col-auto d-flex align-items-end">
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Onyesha') }}</button>
+  </div>
+</form>
+
+{% set qs = { 'start': start.isoformat(), 'end': end.isoformat() } %}
+{% if car_id %}{% set _x = qs.update({'car_id': car_id}) %}{% endif %}
+{% if category_id %}{% set _x = qs.update({'category_id': category_id}) %}{% endif %}
+{% if status %}{% set _x = qs.update({'status': status}) %}{% endif %}
+
+<div class="card-panel mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <strong><i class="bi bi-tags text-primary"></i> {{ _('Gharama kwa Aina ya Kipengele') }}</strong>
+  </div>
+  <div class="form-text mb-2">{{ _('Inaonyesha aina gani ya kipuri/gharama (mafuta, breki, vipuri vya mitambo, n.k.) inatumia fedha nyingi zaidi.') }}</div>
+  <table class="table table-sm table-money mb-0">
+    <thead><tr><th>{{ _('Aina') }}</th><th class="amount">{{ _('Idadi ya Vipengele') }}</th><th class="amount">{{ _('Jumla') }}</th></tr></thead>
+    <tbody>
+      {% for r in category_totals %}
+      <tr>
+        <td>{{ r.category }}</td>
+        <td class="amount">{{ r.count }}</td>
+        <td class="amount">{{ r.total | money }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card-panel mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <strong><i class="bi bi-graph-up text-primary"></i> {{ _('Bei za Vipuri (Historia)') }}</strong>
+  </div>
+  <div class="form-text mb-2">
+    {{ _('Kwa kila kipengele kinachojirudia, inaonyesha bei ya chini/wastani/juu na bei ya mwisho iliyolipwa -- msaada wa
+    kubaini kama bei ya kipuri fulani imepanda ghafla (mfano: filter ya mafuta iliyokuwa ikinunuliwa 15,000 sasa 30,000).') }}
+  </div>
+  <table class="table table-sm table-money mb-0">
+    <thead>
+      <tr>
+        <th>{{ _('Kipengele') }}</th><th>{{ _('Aina') }}</th><th class="amount">{{ _('Idadi') }}</th>
+        <th class="amount">{{ _('Bei ya Chini') }}</th><th class="amount">{{ _('Wastani') }}</th><th class="amount">{{ _('Bei ya Juu') }}</th>
+        <th class="amount">{{ _('Bei ya Mwisho') }}</th><th>{{ _('Tarehe ya Mwisho') }}</th><th>{{ _('Gari la Mwisho') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in price_history %}
+      <tr class="{{ 'table-warning' if r.price_rising else '' }}">
+        <td>{{ r.name }} {% if r.price_rising %}<i class="bi bi-exclamation-triangle-fill text-warning" title="{{ _('Bei imepanda') }}"></i>{% endif %}</td>
+        <td>{{ r.category }}</td>
+        <td class="amount">{{ r.count }}</td>
+        <td class="amount">{{ r.min_unit_cost | money }}</td>
+        <td class="amount">{{ r.avg_unit_cost | money }}</td>
+        <td class="amount">{{ r.max_unit_cost | money }}</td>
+        <td class="amount">{{ r.last_unit_cost | money }}</td>
+        <td>{{ r.last_date.strftime('%d-%m-%Y') }}</td>
+        <td>{{ r.last_car }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card-panel">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <strong><i class="bi bi-list-ul text-primary"></i> {{ _('Vipengele Vyote (%(count)s)', count=rows | length) }}</strong>
+    <span>
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reports.service_xlsx', **qs) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+      <a class="btn btn-sm btn-outline-danger" href="{{ url_for('reports.service_pdf', **qs) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+    </span>
+  </div>
+  <div style="max-height: 420px; overflow-y: auto;">
+  <table class="table table-sm table-money mb-0">
+    <thead>
+      <tr>
+        <th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Chanzo') }}</th><th>{{ _('Hali') }}</th><th>{{ _('Aina') }}</th><th>{{ _('Kipengele') }}</th>
+        <th class="amount">{{ _('Idadi') }}</th><th class="amount">{{ _('Bei ya Kitengo') }}</th><th class="amount">{{ _('Jumla') }}</th><th>{{ _('Maelezo') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.date.strftime('%d-%m-%Y') }}</td>
+        <td><a href="{{ url_for('service.ticket_detail', service_id=r.ticket_id) }}">{{ r.car }}</a></td>
+        <td>{{ r.source }}</td>
+        <td>
+          {% if r.status == 'open' %}<span class="badge text-bg-warning">{{ _('Wazi') }}</span>
+          {% elif r.status == 'submitted' %}<span class="badge text-bg-info">{{ _('Imewasilishwa') }}</span>
+          {% else %}<span class="badge text-bg-success">{{ _('Imefungwa') }}</span>{% endif %}
+        </td>
+        <td>{{ r.category }}</td>
+        <td>{{ r.name }}</td>
+        <td class="amount">{{ r.quantity | int if r.quantity == r.quantity | int else r.quantity }}</td>
+        <td class="amount">{{ r.unit_cost | money }}</td>
+        <td class="amount">{{ r.cost | money }}</td>
+        <td class="text-muted small">{{ r.note }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="10" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot><tr class="table-light fw-bold"><td colspan="8">{{ _('JUMLA') }}</td><td class="amount">{{ total | money }}</td><td></td></tr></tfoot>
+  </table>
+  </div>
+</div>
+
+{% endblock %}

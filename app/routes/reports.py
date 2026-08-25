@@ -1,17 +1,32 @@
 from datetime import date
 
 from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
 from ..export_excel import (
     build_collections_excel,
     build_consumption_excel,
+    build_service_items_excel,
     build_shortfalls_excel,
     build_summary_excel,
 )
-from ..export_pdf import build_collections_pdf, build_consumption_pdf, build_shortfalls_pdf, build_summary_pdf
+from ..export_pdf import (
+    build_collections_pdf,
+    build_consumption_pdf,
+    build_service_items_pdf,
+    build_shortfalls_pdf,
+    build_summary_pdf,
+)
 from ..extensions import db
-from ..models import Car, ExpenseCategory, ShortfallClearance
-from ..report_data import collections_rows, consumption_rows, summary_rows
+from ..models import Car, ExpenseCategory, ServiceItemCategory, ShortfallClearance
+from ..report_data import (
+    collections_rows,
+    consumption_rows,
+    service_category_totals,
+    service_item_price_history,
+    service_item_rows,
+    summary_rows,
+)
 from ..security import get_current_user, require_permission
 from ..sms import can_send, send_and_log
 from ..utils import (
@@ -119,6 +134,58 @@ def consumption_pdf():
     return _send(buf, f"matumizi_{start}_{end}.pdf", "pdf")
 
 
+def _service_filters():
+    car_id = request.args.get("car_id", type=int)
+    category_id = request.args.get("category_id", type=int)
+    status = request.args.get("status") or None
+    return car_id, category_id, status
+
+
+@bp.route("/service")
+def service_index():
+    start, end = _range()
+    car_id, category_id, status = _service_filters()
+
+    rows, total = service_item_rows(start, end, car_id, category_id, status)
+    cat_totals = service_category_totals(rows)
+    price_history = service_item_price_history(rows)
+
+    return render_template(
+        "reports/service.html",
+        start=start,
+        end=end,
+        car_id=car_id,
+        category_id=category_id,
+        status=status,
+        cars=Car.query.order_by(Car.code).all(),
+        item_categories=ServiceItemCategory.query.order_by(ServiceItemCategory.name).all(),
+        rows=rows,
+        total=total,
+        category_totals=cat_totals,
+        price_history=price_history,
+    )
+
+
+@bp.route("/service.xlsx")
+def service_xlsx():
+    start, end = _range()
+    car_id, category_id, status = _service_filters()
+    rows, total = service_item_rows(start, end, car_id, category_id, status)
+    cat_totals = service_category_totals(rows)
+    buf = build_service_items_excel(rows, total, cat_totals, start, end)
+    return _send(buf, f"vipuri_huduma_{start}_{end}.xlsx", "xlsx")
+
+
+@bp.route("/service.pdf")
+def service_pdf():
+    start, end = _range()
+    car_id, category_id, status = _service_filters()
+    rows, total = service_item_rows(start, end, car_id, category_id, status)
+    cat_totals = service_category_totals(rows)
+    buf = build_service_items_pdf(rows, total, cat_totals, start, end)
+    return _send(buf, f"vipuri_huduma_{start}_{end}.pdf", "pdf")
+
+
 @bp.route("/analytics")
 def analytics():
     start, end = _range()
@@ -152,7 +219,7 @@ def send_streak_sms(car_id):
 
     streak_row = next((s for s in shortfall_streaks(start, end) if s["car"].id == car_id), None)
     if streak_row is None:
-        flash(f"Gari {car.code} halina tatizo la siku mfululizo kwa sasa.", "danger")
+        flash(_("Gari %(code)s halina tatizo la siku mfululizo kwa sasa.", code=car.code), "danger")
         return redirect(url_for("reports.analytics", start=start.isoformat(), end=end.isoformat()))
 
     ok, reason = can_send(car)
@@ -166,7 +233,7 @@ def send_streak_sms(car_id):
     )
     sent, error = send_and_log(car, "streak", message, get_current_user())
     if sent:
-        flash(f"SMS ya tatizo imetumwa kwa dereva wa {car.code}.", "success")
+        flash(_("SMS ya tatizo imetumwa kwa dereva wa %(code)s.", code=car.code), "success")
     else:
         flash(error, "danger")
     return redirect(url_for("reports.analytics", start=start.isoformat(), end=end.isoformat()))
@@ -206,9 +273,9 @@ def clear_shortfall():
     description = (request.form.get("description") or "").strip()
 
     if not description:
-        flash("Weka maelezo ya upungufu kabla ya kufafanua.", "danger")
+        flash(_("Weka maelezo ya upungufu kabla ya kufafanua."), "danger")
     elif not shortfall_date:
-        flash("Tarehe si sahihi.", "danger")
+        flash(_("Tarehe si sahihi."), "danger")
     else:
         existing = ShortfallClearance.query.filter_by(car_id=car_id, date=shortfall_date).first()
         if existing:
@@ -216,7 +283,7 @@ def clear_shortfall():
         else:
             db.session.add(ShortfallClearance(car_id=car_id, date=shortfall_date, description=description))
         db.session.commit()
-        flash("Upungufu umefafanuliwa.", "success")
+        flash(_("Upungufu umefafanuliwa."), "success")
 
     return redirect(url_for("reports.shortfalls", start=start, end=end))
 

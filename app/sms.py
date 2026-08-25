@@ -5,13 +5,15 @@ import re
 import urllib.error
 import urllib.request
 
+from flask_babel import gettext as _
+
 BEEM_SEND_URL = "https://apisms.beem.africa/v1/send"
 
 
 class SmsError(Exception):
     """Raised for any reason an SMS could not be sent -- missing config, a bad
-    phone number, or a Beem API/network failure. Message is Swahili, safe to
-    flash directly to the user."""
+    phone number, or a Beem API/network failure. Message is translated (see
+    flask_babel usage below), safe to flash directly to the user."""
 
 
 def normalize_phone(raw):
@@ -33,15 +35,17 @@ def can_send(car):
     all, independent of who's asking (permission is checked separately per view)."""
     driver = car.driver
     if driver is None:
-        return False, f"Gari {car.code} halina dereva aliyewekwa."
+        return False, _("Gari %(code)s halina dereva aliyewekwa.", code=car.code)
     if not driver.active:
-        return False, f"Dereva wa {car.code} amezimwa."
+        return False, _("Dereva wa %(code)s amezimwa.", code=car.code)
     if not driver.sms_enabled:
-        return False, f"SMS zimezimwa kwa dereva wa {car.code}."
+        return False, _("SMS zimezimwa kwa dereva wa %(code)s.", code=car.code)
     if not driver.phone:
-        return False, f"Namba ya simu ya dereva wa {car.code} haijawekwa."
+        return False, _("Namba ya simu ya dereva wa %(code)s haijawekwa.", code=car.code)
     if not normalize_phone(driver.phone):
-        return False, f"Namba ya simu ya dereva wa {car.code} si sahihi ({driver.phone})."
+        return False, _(
+            "Namba ya simu ya dereva wa %(code)s si sahihi (%(phone)s).", code=car.code, phone=driver.phone
+        )
     return True, None
 
 
@@ -51,11 +55,11 @@ def send_sms(phone, message):
     secret_key = os.environ.get("BULK_SMS_SECRET_KEY")
     sender_id = os.environ.get("BEEM_SENDER_ID")
     if not api_key or not secret_key or not sender_id:
-        raise SmsError("Mipangilio ya SMS (Beem) haijakamilika kwenye seva. Wasiliana na msimamizi.")
+        raise SmsError(_("Mipangilio ya SMS (Beem) haijakamilika kwenye seva. Wasiliana na msimamizi."))
 
     dest = normalize_phone(phone)
     if not dest:
-        raise SmsError(f"Namba ya simu si sahihi: {phone}")
+        raise SmsError(_("Namba ya simu si sahihi: %(phone)s", phone=phone))
 
     payload = {
         "source_addr": sender_id,
@@ -77,14 +81,18 @@ def send_sms(phone, message):
         with urllib.request.urlopen(req, timeout=15) as resp:
             body = json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
-        raise SmsError(f"Beem SMS imekataa ombi ({e.code}): {e.read().decode()[:200]}")
+        raise SmsError(
+            _("Beem SMS imekataa ombi (%(code)s): %(detail)s", code=e.code, detail=e.read().decode()[:200])
+        )
     except urllib.error.URLError as e:
-        raise SmsError(f"Imeshindwa kuwasiliana na Beem SMS: {e.reason}")
+        raise SmsError(_("Imeshindwa kuwasiliana na Beem SMS: %(reason)s", reason=e.reason))
     except (ValueError, TimeoutError) as e:
-        raise SmsError(f"Jibu lisilotarajiwa kutoka Beem SMS: {e}")
+        raise SmsError(_("Jibu lisilotarajiwa kutoka Beem SMS: %(error)s", error=e))
 
     if not body.get("successful"):
-        raise SmsError(f"Beem SMS imekataa ujumbe: {body.get('message') or body}")
+        raise SmsError(
+            _("Beem SMS imekataa ujumbe: %(detail)s", detail=body.get("message") or body)
+        )
 
 
 def send_and_log(car, scenario, message, user):

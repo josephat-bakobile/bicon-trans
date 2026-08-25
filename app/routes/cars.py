@@ -1,4 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, Driver
@@ -29,9 +30,9 @@ def _assign_driver(car, driver_id):
         return None
     driver = Driver.query.get(driver_id)
     if driver is None:
-        return "Dereva huyo hayupo."
+        return _("Dereva huyo hayupo.")
     if driver.car is not None and driver.car.id != car.id:
-        return f"Dereva {driver.name} tayari anaendesha gari {driver.car.code}."
+        return _("Dereva %(name)s tayari anaendesha gari %(code)s.", name=driver.name, code=driver.car.code)
     car.driver_id = driver.id
     return None
 
@@ -54,9 +55,9 @@ def new():
     driver_id = request.form.get("driver_id", type=int)
     daily_target = float(request.form.get("daily_target") or 0)
     if not code:
-        flash("Namba ya gari (code) inahitajika.", "danger")
+        flash(_("Namba ya gari (code) inahitajika."), "danger")
     elif Car.query.filter_by(code=code).first():
-        flash(f"Gari {code} tayari lipo.", "danger")
+        flash(_("Gari %(code)s tayari lipo.", code=code), "danger")
     else:
         car = Car(code=code, name=name, daily_target=daily_target)
         error = _assign_driver(car, driver_id)
@@ -65,7 +66,7 @@ def new():
         else:
             db.session.add(car)
             db.session.commit()
-            flash(f"Gari {code} limeongezwa.", "success")
+            flash(_("Gari %(code)s limeongezwa.", code=code), "success")
     return redirect(url_for("cars.list_view"))
 
 
@@ -82,7 +83,7 @@ def update_target(car_id):
     car = Car.query.get_or_404(car_id)
     car.daily_target = float(request.form.get("daily_target") or 0)
     db.session.commit()
-    flash(f"Kiasi cha lengo la siku la {car.code} kimesasishwa.", "success")
+    flash(_("Kiasi cha lengo la siku la %(code)s kimesasishwa.", code=car.code), "success")
     return redirect(url_for("cars.list_view"))
 
 
@@ -95,5 +96,5 @@ def update_driver(car_id):
         flash(error, "danger")
     else:
         db.session.commit()
-        flash(f"Dereva wa {car.code} amesasishwa.", "success")
+        flash(_("Dereva wa %(code)s amesasishwa.", code=car.code), "success")
     return redirect(url_for("cars.list_view"))

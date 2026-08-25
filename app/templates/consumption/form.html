@@ -1,18 +1,19 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Hariri' if entry else 'Taarifa Mpya' }} - BICON TRANS{% endblock %}
+{% block title %}{{ _('Hariri') if entry else _('Taarifa Mpya') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi {{ 'bi-pencil' if entry else 'bi-fuel-pump' }} text-primary"></i> {{ 'Hariri Taarifa ya Matumizi' if entry else 'Taarifa Mpya ya Matumizi' }}</h4>
+<h4 class="mb-3"><i class="bi {{ 'bi-pencil' if entry else 'bi-fuel-pump' }} text-primary"></i> {{ _('Hariri Taarifa ya Matumizi') if entry else _('Taarifa Mpya ya Matumizi') }}</h4>
 
 <div class="card-panel" style="max-width: 560px;">
   <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
-      <label class="form-label">Tarehe</label>
+      <label class="form-label">{{ _('Tarehe') }}</label>
       <input type="date" class="form-control" name="date" required value="{{ entry.date.isoformat() if entry else '' }}"
              min="{{ min_entry_date_iso }}" max="{{ today_iso }}">
     </div>
     <div class="mb-3">
-      <label class="form-label">Gari</label>
+      <label class="form-label">{{ _('Gari') }}</label>
       <select class="form-select" name="car_id" required>
         {% for c in cars %}
         <option value="{{ c.id }}" {{ 'selected' if entry and entry.car_id == c.id else '' }}>{{ c.code }}</option>
@@ -20,25 +21,25 @@
       </select>
     </div>
     <div class="mb-3">
-      <label class="form-label">Aina ya Matumizi</label>
+      <label class="form-label">{{ _('Aina ya Matumizi') }}</label>
       <select class="form-select" name="category_id" required>
         {% for cat in categories %}
         <option value="{{ cat.id }}" {{ 'selected' if entry and entry.category_id == cat.id else '' }}>{{ cat.name }}</option>
         {% endfor %}
       </select>
-      <div class="form-text">Unaweza kuongeza aina mpya kwenye ukurasa wa <a href="{{ url_for('categories.list_view') }}">Aina za Matumizi</a>.</div>
+      <div class="form-text">{{ _('Unaweza kuongeza aina mpya kwenye ukurasa wa') }} <a href="{{ url_for('categories.list_view') }}">{{ _('Aina za Matumizi') }}</a>.</div>
     </div>
     <div class="mb-3">
-      <label class="form-label">Kiasi</label>
+      <label class="form-label">{{ _('Kiasi') }}</label>
       <input type="number" step="0.01" min="0" class="form-control" name="amount" required value="{{ entry.amount if entry else '' }}">
     </div>
     <div class="mb-3">
-      <label class="form-label">Maelezo (si lazima)</label>
+      <label class="form-label">{{ _('Maelezo (si lazima)') }}</label>
       <textarea class="form-control" name="description" rows="2">{{ entry.description if entry else '' }}</textarea>
     </div>
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Hifadhi</button>
-      <a href="{{ url_for('consumption.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> Ghairi</a>
+      <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> {{ _('Hifadhi') }}</button>
+      <a href="{{ url_for('consumption.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> {{ _('Ghairi') }}</a>
     </div>
   </form>
 </div>

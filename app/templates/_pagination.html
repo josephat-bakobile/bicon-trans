@@ -1,6 +1,6 @@
 {% macro render_pagination(endpoint, page, pages, page_param, extra_args) %}
 {% if pages > 1 %}
-<nav aria-label="Kurasa">
+<nav aria-label="{{ _('Kurasa') }}">
   <ul class="pagination pagination-sm mb-0 mt-2">
     <li class="page-item {{ 'disabled' if page <= 1 }}">
       <a class="page-link" href="{{ url_for(endpoint, **dict(extra_args, **{page_param: page - 1})) }}"><i class="bi bi-chevron-left"></i></a>

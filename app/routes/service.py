@@ -1,31 +1,31 @@
-from datetime import date
+from datetime import date, datetime
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
-from ..car_service import predict_for_car, service_predictions
+from ..car_service import predict_for_car, service_predictions, shop_dashboard
 from ..extensions import db
-from ..models import Car, CarService, ConsumptionEntry, ExpenseCategory, ShortfallClearance
+from ..models import (
+    Car,
+    CarService,
+    CarServiceItem,
+    ConsumptionEntry,
+    ExpenseCategory,
+    ServiceItemCategory,
+    Shop,
+    ShopServicePayment,
+    ShortfallClearance,
+)
 from ..security import get_current_user, require_permission
 from ..sms import can_send, send_and_log
-from ..utils import parse_date
+from ..utils import parse_date, validate_service_date
 
 bp = Blueprint("service", __name__)
 
 
-def _validate_service_date(d):
-    """Service dates (unlike collections/consumption) may legitimately be far in
-    the past -- backfilling a car's baseline/last-known service date -- so this
-    only rejects missing values and future dates, not old ones."""
-    if d is None:
-        return "Tarehe ya huduma si sahihi."
-    if d > date.today():
-        return f"Tarehe ya huduma haiwezi kuwa baadaye ya leo ({date.today().strftime('%d-%m-%Y')})."
-    return None
-
-
 def _apply_cost(service, car_id, cost, category_id, service_date, description):
-    """Keep the linked ConsumptionEntry (if any) in sync with the service form's
-    cost field: create/update/remove it so it always mirrors the service entry."""
+    """Keep the linked ConsumptionEntry (if any) in sync with the ticket's total
+    cost: create/update/remove it so it always mirrors the confirmed ticket."""
     if cost > 0:
         if service.consumption_entry_id:
             entry = service.consumption_entry
@@ -109,7 +109,8 @@ def index():
         predictions=predictions,
         history=history,
         cars=Car.query.order_by(Car.code).all(),
-        categories=ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all(),
+        shops=Shop.query.filter_by(active=True).order_by(Shop.name).all(),
+        shop_dashboard=shop_dashboard(),
         car_id=car_id,
     )
 
@@ -117,61 +118,259 @@ def index():
 @bp.route("/new", methods=["POST"])
 def new():
     service_date = parse_date(request.form.get("service_date"), date.today())
-    error = _validate_service_date(service_date)
+    error = validate_service_date(service_date)
     car_id = int(request.form["car_id"])
     description = (request.form.get("description") or "").strip() or None
-    cost = float(request.form.get("cost") or 0)
-    category_id = request.form.get("category_id", type=int)
+    shop_id = request.form.get("shop_id", type=int) or None
 
     if error:
         flash(error, "danger")
-    elif cost > 0 and not category_id:
-        flash("Chagua aina ya matumizi kwa gharama ya huduma.", "danger")
-    else:
-        car = Car.query.get_or_404(car_id)
-        service = CarService(car_id=car_id, service_date=service_date, description=description)
-        db.session.add(service)
-        db.session.flush()
-        _apply_cost(service, car_id, cost, category_id, service_date, description)
-        _sync_service_clearance(service, car, service_date)
-        db.session.commit()
-        flash("Huduma ya gari imehifadhiwa.", "success")
+        return redirect(url_for("service.index"))
 
-    return redirect(url_for("service.index"))
+    car = Car.query.get_or_404(car_id)
+    shop = Shop.query.get_or_404(shop_id) if shop_id else None
+    service = CarService(
+        car_id=car_id, service_date=service_date, description=description, status="open", shop_id=shop_id
+    )
+    db.session.add(service)
+    db.session.flush()
+    if shop is None:
+        # Only a staff-logged service day means the car sat idle -- a ticket
+        # opened for a vendor doesn't auto-excuse that day's collection.
+        _sync_service_clearance(service, car, service_date)
+    db.session.commit()
+    if shop:
+        flash(_("Tiketi imefunguliwa kwa muuza %(shop_name)s. Wanaweza kuongeza vipengele na kuwasilisha.", shop_name=shop.name), "success")
+    else:
+        flash(_("Tiketi ya huduma imefunguliwa. Ongeza vipengele (vipuri/gharama) kisha ufunge tiketi."), "success")
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+
+@bp.route("/<int:service_id>")
+def ticket_detail(service_id):
+    service = CarService.query.get_or_404(service_id)
+    return render_template(
+        "service/ticket.html",
+        service=service,
+        item_categories=ServiceItemCategory.query.filter_by(active=True).order_by(ServiceItemCategory.name).all(),
+        expense_categories=ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all(),
+    )
+
+
+@bp.route("/<int:service_id>/items/new", methods=["POST"])
+def add_item(service_id):
+    service = CarService.query.get_or_404(service_id)
+    if service.shop_id:
+        flash(_("Tiketi hii ni ya muuza -- vipengele vyake vinasimamiwa na muuza mwenyewe."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+    if not service.is_open:
+        flash(_("Tiketi imefungwa -- huwezi kuongeza kipengele. Ifungue tena kwanza."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+    category_id = request.form.get("category_id", type=int)
+    name = (request.form.get("name") or "").strip()
+    quantity = float(request.form.get("quantity") or 1)
+    unit_cost = float(request.form.get("unit_cost") or 0)
+    note = (request.form.get("note") or "").strip() or None
+
+    if not name:
+        flash(_("Weka jina la kipengele (kipuri/gharama)."), "danger")
+    elif not category_id:
+        flash(_("Chagua aina ya kipengele."), "danger")
+    elif quantity <= 0:
+        flash(_("Idadi lazima iwe zaidi ya sifuri."), "danger")
+    elif unit_cost < 0:
+        flash(_("Bei ya kitengo si sahihi."), "danger")
+    else:
+        db.session.add(
+            CarServiceItem(
+                service_id=service.id,
+                category_id=category_id,
+                name=name,
+                quantity=quantity,
+                unit_cost=unit_cost,
+                cost=quantity * unit_cost,
+                note=note,
+            )
+        )
+        db.session.commit()
+        flash(_("Kipengele '%(name)s' kimeongezwa.", name=name), "success")
+
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+
+@bp.route("/<int:service_id>/items/<int:item_id>/delete", methods=["POST"])
+def delete_item(service_id, item_id):
+    service = CarService.query.get_or_404(service_id)
+    item = CarServiceItem.query.filter_by(id=item_id, service_id=service.id).first_or_404()
+    if service.shop_id:
+        flash(_("Tiketi hii ni ya muuza -- vipengele vyake vinasimamiwa na muuza mwenyewe."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+    if not service.is_open:
+        flash(_("Tiketi imefungwa -- huwezi kufuta kipengele. Ifungue tena kwanza."), "danger")
+    else:
+        db.session.delete(item)
+        db.session.commit()
+        flash(_("Kipengele kimefutwa."), "info")
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+
+@bp.route("/<int:service_id>/confirm", methods=["POST"])
+def confirm(service_id):
+    service = CarService.query.get_or_404(service_id)
+    if service.shop_id:
+        flash(_("Tiketi ya muuza inafungwa kwa kulipa (rekodi malipo), siyo kwa kitufe hiki."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+    if not service.is_open:
+        flash(_("Tiketi hii tayari imefungwa."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+    total = service.total_cost
+    category_id = request.form.get("category_id", type=int)
+
+    if total > 0 and not category_id:
+        flash(_("Chagua aina ya matumizi itakayopokea gharama ya tiketi hii."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+    car = service.car
+    _apply_cost(service, car.id, total, category_id, service.service_date, service.description)
+    service.status = "confirmed"
+    service.confirmed_at = datetime.utcnow()
+    service.confirmed_by_id = get_current_user().id
+    db.session.commit()
+    flash(_("Tiketi imefungwa. Gharama ya %(total)s imepelekwa kwenye matumizi ya gari %(car_code)s.", total=f"{total:,.0f}", car_code=car.code), "success")
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+
+@bp.route("/<int:service_id>/reopen", methods=["POST"])
+def reopen(service_id):
+    service = CarService.query.get_or_404(service_id)
+    if service.is_open:
+        flash(_("Tiketi hii tayari iko wazi."), "danger")
+    elif service.shop_id and service.payments:
+        flash(_("Tiketi hii tayari ina malipo -- futa malipo kwanza kabla ya kuifungua tena."), "danger")
+    else:
+        service.status = "open"
+        service.confirmed_at = None
+        service.confirmed_by_id = None
+        db.session.commit()
+        flash(_("Tiketi imefunguliwa tena. Unaweza kuongeza/kufuta vipengele kisha kufunga tena."), "success")
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+
+@bp.route("/<int:service_id>/payments/new", methods=["POST"])
+def add_payment(service_id):
+    service = CarService.query.get_or_404(service_id)
+    if not service.shop_id:
+        flash(_("Tiketi hii siyo ya muuza."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+    if not service.is_submitted:
+        flash(_("Tiketi hii haijawasilishwa au tayari imelipwa kikamilifu."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+    payment_date = parse_date(request.form.get("date"), date.today())
+    error = validate_service_date(payment_date)
+    amount = float(request.form.get("amount") or 0)
+    note = (request.form.get("note") or "").strip() or None
+    category_id = service.payment_category_id or request.form.get("category_id", type=int)
+
+    if error:
+        flash(error, "danger")
+    elif amount <= 0:
+        flash(_("Kiasi cha malipo lazima kiwe zaidi ya sifuri."), "danger")
+    elif amount > service.balance_due + 0.01:
+        flash(_("Kiasi kinazidi baki linalodaiwa (%(balance)s).", balance=f"{service.balance_due:,.0f}"), "danger")
+    elif not category_id:
+        flash(_("Chagua aina ya matumizi kwa malipo haya (itatumika kwa malipo yote ya tiketi hii)."), "danger")
+    else:
+        if not service.payment_category_id:
+            service.payment_category_id = category_id
+        entry = ConsumptionEntry(
+            date=payment_date,
+            car_id=service.car_id,
+            category_id=service.payment_category_id,
+            amount=amount,
+            description=f"Malipo kwa {service.shop.name} - Tiketi #{service.id}" + (f" ({note})" if note else ""),
+        )
+        db.session.add(entry)
+        db.session.flush()
+        # Appended via the relationship (not db.session.add with a bare service_id)
+        # so service.payments/paid_amount reflect it immediately below -- the
+        # balance_due check above already lazy-loaded and cached that collection.
+        service.payments.append(
+            ShopServicePayment(
+                amount=amount,
+                date=payment_date,
+                note=note,
+                consumption_entry_id=entry.id,
+                recorded_by_id=get_current_user().id,
+            )
+        )
+        db.session.flush()
+        if service.paid_amount >= service.total_cost:
+            service.status = "confirmed"
+            service.confirmed_at = datetime.utcnow()
+            service.confirmed_by_id = get_current_user().id
+            flash(_("Malipo ya %(amount)s yamerekodiwa. Tiketi imelipwa kikamilifu.", amount=f"{amount:,.0f}"), "success")
+        else:
+            flash(_("Malipo ya %(amount)s yamerekodiwa. Baki: %(balance)s.", amount=f"{amount:,.0f}", balance=f"{service.balance_due:,.0f}"), "success")
+        db.session.commit()
+
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
+
+
+@bp.route("/<int:service_id>/payments/<int:payment_id>/delete", methods=["POST"])
+def delete_payment(service_id, payment_id):
+    service = CarService.query.get_or_404(service_id)
+    payment = ShopServicePayment.query.filter_by(id=payment_id, service_id=service.id).first_or_404()
+
+    entry = payment.consumption_entry
+    was_confirmed = service.status == "confirmed"
+    db.session.delete(payment)
+    if entry:
+        db.session.delete(entry)
+    db.session.flush()
+    if was_confirmed and service.paid_amount < service.total_cost:
+        service.status = "submitted"
+        service.confirmed_at = None
+        service.confirmed_by_id = None
+    db.session.commit()
+    flash(_("Malipo yamefutwa."), "info")
+    return redirect(url_for("service.ticket_detail", service_id=service.id))
 
 
 @bp.route("/<int:service_id>/edit", methods=["GET", "POST"])
 def edit(service_id):
     service = CarService.query.get_or_404(service_id)
+    if service.shop_id:
+        flash(_("Tiketi hii ni ya muuza -- taarifa zake zinasimamiwa na muuza mwenyewe."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+    if not service.is_open:
+        flash(_("Tiketi iliyofungwa haiwezi kuhaririwa. Ifungue tena kwanza."), "danger")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
+
     cars = Car.query.order_by(Car.code).all()
-    categories = ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all()
 
     if request.method == "POST":
         service_date = parse_date(request.form.get("service_date"), service.service_date)
-        error = _validate_service_date(service_date)
+        error = validate_service_date(service_date)
         car_id = int(request.form["car_id"])
         description = (request.form.get("description") or "").strip() or None
-        cost = float(request.form.get("cost") or 0)
-        category_id = request.form.get("category_id", type=int)
 
         if error:
             flash(error, "danger")
-            return render_template("service/edit.html", service=service, cars=cars, categories=categories)
-        if cost > 0 and not category_id:
-            flash("Chagua aina ya matumizi kwa gharama ya huduma.", "danger")
-            return render_template("service/edit.html", service=service, cars=cars, categories=categories)
+            return render_template("service/edit.html", service=service, cars=cars)
 
         car = Car.query.get_or_404(car_id)
         service.service_date = service_date
         service.car_id = car_id
         service.description = description
-        _apply_cost(service, car_id, cost, category_id, service_date, description)
         _sync_service_clearance(service, car, service_date)
         db.session.commit()
-        flash("Huduma ya gari imesasishwa.", "success")
-        return redirect(url_for("service.index"))
+        flash(_("Tiketi ya huduma imesasishwa."), "success")
+        return redirect(url_for("service.ticket_detail", service_id=service.id))
 
-    return render_template("service/edit.html", service=service, cars=cars, categories=categories)
+    return render_template("service/edit.html", service=service, cars=cars)
 
 
 @bp.route("/<int:service_id>/delete", methods=["POST"])
@@ -179,13 +378,16 @@ def delete(service_id):
     service = CarService.query.get_or_404(service_id)
     linked = service.consumption_entry
     clearance = service.shortfall_clearance
+    payment_entries = [p.consumption_entry for p in service.payments if p.consumption_entry]
     db.session.delete(service)
     if linked:
         db.session.delete(linked)
     if clearance:
         db.session.delete(clearance)
+    for entry in payment_entries:
+        db.session.delete(entry)
     db.session.commit()
-    flash("Huduma ya gari imefutwa.", "info")
+    flash(_("Tiketi ya huduma imefutwa."), "info")
     return redirect(url_for("service.index"))
 
 
@@ -194,7 +396,7 @@ def update_interval(car_id):
     car = Car.query.get_or_404(car_id)
     car.service_interval_days = int(request.form.get("service_interval_days") or 20)
     db.session.commit()
-    flash(f"Muda wa huduma wa {car.code} umesasishwa.", "success")
+    flash(_("Muda wa huduma wa %(car_code)s umesasishwa.", car_code=car.code), "success")
     return redirect(url_for("service.index"))
 
 
@@ -206,7 +408,7 @@ def send_service_sms(car_id):
     next_url = request.form.get("next") or url_for("service.index")
 
     if prediction["status"] not in ("overdue", "due_soon"):
-        flash(f"Gari {car.code} halihitaji huduma kwa sasa.", "danger")
+        flash(_("Gari %(car_code)s halihitaji huduma kwa sasa.", car_code=car.code), "danger")
         return redirect(next_url)
 
     ok, reason = can_send(car)
@@ -224,7 +426,7 @@ def send_service_sms(car_id):
     )
     sent, error = send_and_log(car, "service", message, get_current_user())
     if sent:
-        flash(f"SMS ya huduma imetumwa kwa dereva wa {car.code}.", "success")
+        flash(_("SMS ya huduma imetumwa kwa dereva wa %(car_code)s.", car_code=car.code), "success")
     else:
         flash(error, "danger")
     return redirect(next_url)

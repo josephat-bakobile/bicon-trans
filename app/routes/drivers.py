@@ -1,4 +1,5 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, Driver
@@ -17,9 +18,9 @@ def _assign_car(driver, car_id):
     """None on success, else a Swahili error message."""
     new_car = Car.query.get(car_id) if car_id else None
     if car_id and new_car is None:
-        return "Gari hilo halipo."
+        return _("Gari hilo halipo.")
     if new_car is not None and new_car.driver_id is not None and new_car.driver_id != driver.id:
-        return f"Gari {new_car.code} tayari lina dereva mwingine."
+        return _("Gari %(code)s tayari lina dereva mwingine.", code=new_car.code)
 
     if driver.car is not None and (new_car is None or driver.car.id != new_car.id):
         driver.car.driver_id = None
@@ -35,16 +36,16 @@ def new():
     car_id = request.form.get("car_id", type=int)
 
     if not name:
-        flash("Jina la dereva linahitajika.", "danger")
+        flash(_("Jina la dereva linahitajika."), "danger")
         return redirect(url_for("drivers.list_view"))
 
     if car_id:
         car = Car.query.get(car_id)
         if car is None:
-            flash("Gari hilo halipo.", "danger")
+            flash(_("Gari hilo halipo."), "danger")
             return redirect(url_for("drivers.list_view"))
         if car.driver_id is not None:
-            flash(f"Gari {car.code} tayari lina dereva mwingine.", "danger")
+            flash(_("Gari %(code)s tayari lina dereva mwingine.", code=car.code), "danger")
             return redirect(url_for("drivers.list_view"))
 
     driver = Driver(name=name, phone=phone)
@@ -53,7 +54,7 @@ def new():
     if car_id:
         Car.query.get(car_id).driver_id = driver.id
     db.session.commit()
-    flash(f"Dereva {name} ameongezwa.", "success")
+    flash(_("Dereva %(name)s ameongezwa.", name=name), "success")
     return redirect(url_for("drivers.list_view"))
 
 
@@ -65,7 +66,7 @@ def edit(driver_id):
     car_id = request.form.get("car_id", type=int)
 
     if not name:
-        flash("Jina la dereva linahitajika.", "danger")
+        flash(_("Jina la dereva linahitajika."), "danger")
         return redirect(url_for("drivers.list_view"))
 
     error = _assign_car(driver, car_id)
@@ -76,7 +77,7 @@ def edit(driver_id):
     driver.name = name
     driver.phone = phone
     db.session.commit()
-    flash(f"Dereva {driver.name} amesasishwa.", "success")
+    flash(_("Dereva %(name)s amesasishwa.", name=driver.name), "success")
     return redirect(url_for("drivers.list_view"))
 
 

@@ -1,0 +1,59 @@
+{% extends "shop/_layout.html" %}
+{% block title %}{{ _('Tiketi Zangu') }} - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3"><i class="bi bi-receipt text-primary"></i> {{ _('Tiketi Zangu') }}</h4>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-4">
+    <div class="stat-tile collected">
+      <div class="icon-badge"><i class="bi bi-receipt-cutoff"></i></div>
+      <div class="body">
+        <div class="label">{{ _('Tiketi Zinazoendelea') }}</div>
+        <div class="value">{{ active_count }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-4">
+    <div class="stat-tile debt">
+      <div class="icon-badge"><i class="bi bi-cash-stack"></i></div>
+      <div class="body">
+        <div class="label">{{ _('Kiasi Ambacho Hakijalipwa') }}</div>
+        <div class="value">{{ unpaid_total | money }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-panel mb-4">
+  <i class="bi bi-info-circle text-primary"></i>
+  {{ _("Tiketi mpya hufunguliwa na ofisi ya BICON TRANS na kukupangia (kwa gari husika). Zikishafunguliwa zitaonekana hapa chini -- ongeza vipuri/gharama ulizotoa kisha uwasilishe kwa ofisi ili ulipwe.") }}
+</div>
+
+<div class="card-panel">
+  <strong><i class="bi bi-list-ul text-primary"></i> {{ _('Tiketi Zote') }}</strong>
+  <table class="table table-sm table-money mt-2 mb-0">
+    <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th>{{ _('Maelezo') }}</th><th class="amount">{{ _('Jumla') }}</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
+    <tbody>
+      {% for t in tickets %}
+      <tr>
+        <td>{{ t.service_date.strftime('%d-%m-%Y') }}</td>
+        <td>{{ t.car.code }}</td>
+        <td>{{ t.description or '-' }}</td>
+        <td class="amount">{{ t.total_cost | money }}</td>
+        <td>
+          {% if t.is_open %}<span class="badge text-bg-secondary">{{ _('Inasubiri Vipengele') }}</span>
+          {% elif t.payment_status == 'paid' %}<span class="badge text-bg-success">{{ _('Imelipwa Kikamilifu') }}</span>
+          {% elif t.payment_status == 'partial' %}<span class="badge text-bg-warning">{{ _('Malipo Sehemu (%(paid)s/%(total)s)', paid=(t.paid_amount | money), total=(t.total_cost | money)) }}</span>
+          {% else %}<span class="badge text-bg-info">{{ _('Imewasilishwa') }}</span>{% endif %}
+        </td>
+        <td class="text-end"><a href="{{ url_for('shop_portal.ticket_detail', service_id=t.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> {{ _('Fungua') }}</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted text-center py-3">{{ _('Bado hakuna tiketi ulizopangiwa na ofisi.') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

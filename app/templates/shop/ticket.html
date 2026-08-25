@@ -1,0 +1,145 @@
+{% extends "shop/_layout.html" %}
+{% block title %}{{ _('Tiketi') }} #{{ service.id }} - BICON TRANS{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">
+    <i class="bi bi-receipt text-primary"></i> {{ _('Tiketi') }} #{{ service.id }} -- {{ service.car.code }}
+    {% if service.is_open %}<span class="badge text-bg-secondary">{{ _('Rasimu') }}</span>
+    {% elif service.payment_status == 'paid' %}<span class="badge text-bg-success">{{ _('Imelipwa Kikamilifu') }}</span>
+    {% elif service.payment_status == 'partial' %}<span class="badge text-bg-warning">{{ _('Malipo Sehemu') }}</span>
+    {% else %}<span class="badge text-bg-info">{{ _('Imewasilishwa') }}</span>{% endif %}
+  </h4>
+  <a href="{{ url_for('shop_portal.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> {{ _('Rudi') }}</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-panel">
+      <strong><i class="bi bi-info-circle text-primary"></i> {{ _('Taarifa za Tiketi') }}</strong>
+      <table class="table table-sm mt-2 mb-0">
+        <tr><th>{{ _('Gari') }}</th><td>{{ service.car.code }}</td></tr>
+        <tr><th>{{ _('Tarehe') }}</th><td>{{ service.service_date.strftime('%d-%m-%Y') }}</td></tr>
+        <tr><th>{{ _('Maelezo') }}</th><td>{{ service.description or '-' }}</td></tr>
+        <tr><th>{{ _('Jumla') }}</th><td class="fw-bold">{{ service.total_cost | money }}</td></tr>
+        {% if not service.is_open %}
+        <tr><th>{{ _('Kimelipwa') }}</th><td>{{ service.paid_amount | money }}</td></tr>
+        <tr><th>{{ _('Baki') }}</th><td>{{ service.balance_due | money }}</td></tr>
+        {% endif %}
+      </table>
+
+      {% if service.is_open %}
+      <form method="post" action="{{ url_for('shop_portal.submit', service_id=service.id) }}" class="confirm-form mt-2"
+            data-confirm="{{ _('Wasilisha tiketi hii? Hutaweza kuongeza/kufuta vipengele tena baada ya kuwasilisha.') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-success btn-sm w-100"><i class="bi bi-send"></i> {{ _('Wasilisha Tiketi') }}</button>
+      </form>
+      {% endif %}
+    </div>
+
+    {% if not service.is_open %}
+    <div class="card-panel mt-4">
+      <strong><i class="bi bi-cash-coin text-primary"></i> {{ _('Malipo Yaliyopokelewa') }}</strong>
+      <table class="table table-sm table-money mt-2 mb-0">
+        <thead><tr><th>{{ _('Tarehe') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Maelezo') }}</th></tr></thead>
+        <tbody>
+          {% for p in service.payments %}
+          <tr>
+            <td>{{ p.date.strftime('%d-%m-%Y') }}</td>
+            <td class="amount">{{ p.amount | money }}</td>
+            <td>{{ p.note or '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="text-muted text-center py-3">{{ _('Bado hakuna malipo.') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card-panel">
+      <strong><i class="bi bi-list-check text-primary"></i> {{ _('Vipengele vya Tiketi (Vipuri/Gharama)') }}</strong>
+      <table class="table table-sm table-money mt-2 mb-0">
+        <thead>
+          <tr><th>{{ _('Aina') }}</th><th>{{ _('Kipengele') }}</th><th class="amount">{{ _('Idadi') }}</th><th class="amount">{{ _('Bei ya Kitengo') }}</th><th class="amount">{{ _('Jumla') }}</th><th>{{ _('Maelezo') }}</th>{% if service.is_open %}<th></th>{% endif %}</tr>
+        </thead>
+        <tbody>
+          {% for item in service.items %}
+          <tr>
+            <td>{{ item.category.name }}</td>
+            <td>{{ item.name }}</td>
+            <td class="amount">{{ item.quantity | int if item.quantity == item.quantity | int else item.quantity }}</td>
+            <td class="amount">{{ item.unit_cost | money }}</td>
+            <td class="amount">{{ item.cost | money }}</td>
+            <td>{{ item.note or '-' }}</td>
+            {% if service.is_open %}
+            <td class="text-end">
+              <form method="post" action="{{ url_for('shop_portal.delete_item', service_id=service.id, item_id=item.id) }}"
+                    class="confirm-form" data-confirm="{{ _("Futa kipengele '%(name)s'?", name=item.name) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+              </form>
+            </td>
+            {% endif %}
+          </tr>
+          {% else %}
+          <tr><td colspan="{{ 7 if service.is_open else 6 }}" class="text-muted text-center py-3">{{ _('Hakuna vipengele bado.') }}</td></tr>
+          {% endfor %}
+        </tbody>
+        {% if service.items %}
+        <tfoot>
+          <tr class="fw-bold">
+            <td colspan="4" class="text-end">{{ _('JUMLA') }}</td>
+            <td class="amount">{{ service.total_cost | money }}</td>
+            <td colspan="{{ 2 if service.is_open else 1 }}"></td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+
+    {% if service.is_open %}
+    <div class="card-panel mt-4">
+      <strong><i class="bi bi-plus-circle text-primary"></i> {{ _('Ongeza Kipengele') }}</strong>
+      <form method="post" action="{{ url_for('shop_portal.add_item', service_id=service.id) }}" class="row g-2 mt-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="col-md-3">
+          <label class="form-label">{{ _('Aina (chagua kwenye orodha)') }}</label>
+          <select class="form-select" name="category_id">
+            <option value="">-- {{ _('chagua') }} --</option>
+            {% for cat in item_categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{{ _('Au Aina Mpya (kama haipo hapo juu)') }}</label>
+          <input type="text" class="form-control text-uppercase" name="new_category_name" placeholder="{{ _('mfano: FILTA YA HEWA') }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{{ _('Jina la Kipengele') }}</label>
+          <input type="text" class="form-control" name="name" placeholder="{{ _('mfano: Filter ya Mafuta') }}" required>
+        </div>
+        <div class="col-md-1">
+          <label class="form-label">{{ _('Idadi') }}</label>
+          <input type="number" step="0.01" min="0.01" class="form-control" name="quantity" value="1" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">{{ _('Bei ya Kitengo') }}</label>
+          <input type="number" step="0.01" min="0" class="form-control" name="unit_cost" placeholder="0" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ _('Maelezo (si lazima)') }}</label>
+          <input type="text" class="form-control" name="note">
+        </div>
+        <div class="col-12">
+          <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> {{ _('Ongeza Kipengele') }}</button>
+        </div>
+      </form>
+      <div class="form-text mt-2">{{ _("Kama aina ya kipengele chako haipo kwenye orodha, andika jina lake kwenye 'Aina Mpya' -- litaongezwa kiotomatiki.") }}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

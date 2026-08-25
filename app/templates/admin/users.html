@@ -1,42 +1,43 @@
 {% extends "base.html" %}
-{% block title %}Watumiaji - BICON TRANS{% endblock %}
+{% block title %}{{ _('Watumiaji') }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi bi-people text-primary"></i> Watumiaji</h4>
+<h4 class="mb-3"><i class="bi bi-people text-primary"></i> {{ _('Watumiaji') }}</h4>
 
 <div class="row g-4">
   <div class="col-lg-4">
     <div class="card-panel">
-      <strong><i class="bi bi-person-plus text-primary"></i> Ongeza Mtumiaji</strong>
+      <strong><i class="bi bi-person-plus text-primary"></i> {{ _('Ongeza Mtumiaji') }}</strong>
       <form method="post" action="{{ url_for('admin.users_new') }}" class="mt-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-2">
-          <label class="form-label">Jina la Mtumiaji (username)</label>
+          <label class="form-label">{{ _('Jina la Mtumiaji (username)') }}</label>
           <input type="text" class="form-control" name="username" required autocapitalize="off">
         </div>
         <div class="mb-2">
-          <label class="form-label">Jina Kamili (si lazima)</label>
+          <label class="form-label">{{ _('Jina Kamili (si lazima)') }}</label>
           <input type="text" class="form-control" name="full_name">
         </div>
         <div class="mb-2">
-          <label class="form-label">Nenosiri</label>
+          <label class="form-label">{{ _('Nenosiri') }}</label>
           <input type="password" class="form-control" name="password" required>
         </div>
         <div class="mb-2">
-          <label class="form-label">Jukumu</label>
+          <label class="form-label">{{ _('Jukumu') }}</label>
           <select class="form-select" name="role_id" required>
             {% for role in roles %}
             <option value="{{ role.id }}">{{ role.name }}</option>
             {% endfor %}
           </select>
         </div>
-        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Ongeza</button>
+        <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> {{ _('Ongeza') }}</button>
       </form>
     </div>
   </div>
   <div class="col-lg-8">
     <div class="card-panel">
       <table class="table table-sm align-middle mb-0">
-        <thead><tr><th>Username</th><th>Jina Kamili</th><th>Jukumu</th><th>Hali</th><th class="text-end">Vitendo</th></tr></thead>
+        <thead><tr><th>Username</th><th>{{ _('Jina Kamili') }}</th><th>{{ _('Jukumu') }}</th><th>{{ _('Hali') }}</th><th class="text-end">{{ _('Vitendo') }}</th></tr></thead>
         <tbody>
           {% for u in users %}
           <tr>
@@ -44,6 +45,7 @@
             <td>{{ u.full_name or '-' }}</td>
             <td>
               <form method="post" action="{{ url_for('admin.users_edit', user_id=u.id) }}" class="d-flex gap-1">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="full_name" value="{{ u.full_name or '' }}">
                 <select name="role_id" class="form-select form-select-sm" style="max-width:150px;">
                   {% for role in roles %}
@@ -55,7 +57,7 @@
             </td>
             <td>
               {% if u.active %}<span class="badge text-bg-success">Active</span>
-              {% else %}<span class="badge text-bg-secondary">Imezimwa</span>{% endif %}
+              {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
             </td>
             <td class="text-end">
               <div class="d-flex gap-1 justify-content-end flex-wrap">
@@ -63,7 +65,8 @@
                   <i class="bi bi-key"></i>
                 </button>
                 <form method="post" action="{{ url_for('admin.users_toggle', user_id=u.id) }}" class="confirm-form"
-                      data-confirm="Una uhakika unataka {{ 'kuzima' if u.active else 'kuwasha' }} mtumiaji {{ u.username }}?">
+                      data-confirm="{{ _('Una uhakika unataka %(action)s mtumiaji %(username)s?', action=(_('kuzima') if u.active else _('kuwasha')), username=u.username) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-sm btn-outline-secondary">
                     <i class="bi {{ 'bi-toggle-off' if u.active else 'bi-toggle-on' }}"></i>
                   </button>
@@ -71,7 +74,8 @@
               </div>
               <div class="collapse mt-2 text-start" id="pw-{{ u.id }}">
                 <form method="post" action="{{ url_for('admin.users_reset_password', user_id=u.id) }}" class="d-flex gap-1">
-                  <input type="password" name="password" placeholder="Nenosiri jipya" class="form-control form-control-sm" required>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="password" name="password" placeholder="{{ _('Nenosiri jipya') }}" class="form-control form-control-sm" required>
                   <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i></button>
                 </form>
               </div>

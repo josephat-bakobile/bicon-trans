@@ -54,6 +54,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
+    language = db.Column(db.String(5), default="sw", nullable=False)
+    failed_attempts = db.Column(db.Integer, default=0, nullable=False)
+    locked_until = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     role = db.relationship("Role")
@@ -262,14 +265,69 @@ class DriverAllowance(db.Model):
         return self.amount - self.applied_to_debt
 
 
+class ServiceItemCategory(db.Model):
+    """Classifies a CarServiceItem line (oil, oil filter, brake pads, mechanical
+    parts, service/labour charges, ...) -- a finer granularity than ExpenseCategory,
+    which only classifies the aggregate consumption bucket a ticket's total lands in."""
+
+    __tablename__ = "service_item_categories"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return self.name
+
+
+class Shop(db.Model):
+    """An external parts/repair vendor account. Logs into its own portal
+    (session["shop_id"], see security.get_current_shop) separate from staff
+    Users -- a shop can only ever see and act on its own CarService tickets."""
+
+    __tablename__ = "shops"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    phone = db.Column(db.String(20))
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    language = db.Column(db.String(5), default="sw", nullable=False)
+    failed_attempts = db.Column(db.Integer, default=0, nullable=False)
+    locked_until = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def set_password(self, raw_password):
+        self.password_hash = generate_password_hash(raw_password)
+
+    def check_password(self, raw_password):
+        return check_password_hash(self.password_hash, raw_password)
+
+    def __repr__(self):
+        return self.name
+
+
 class CarService(db.Model):
-    """A service event performed on a car. The most recent row per car is the
-    baseline the next-service prediction counts forward from; the first row ever
-    entered for a car (which may be backfilled) is simply its baseline. If a cost
-    is recorded, a linked ConsumptionEntry is auto-created so it flows into the
-    existing consumption totals/reports without double entry. A car doesn't
-    collect on the day it's serviced either, so a linked ShortfallClearance is
-    kept in sync the same way, auto-explaining that day's shortfall."""
+    """A service ticket for a car. Starts "open" so items (parts/charges) can be
+    added. Two ways to close it out:
+    - Staff ticket (shop_id is None): staff clicks "confirm" once, booking the
+      full total_cost into a single ConsumptionEntry immediately (status jumps
+      straight from "open" to "confirmed").
+    - Shop ticket (shop_id set): the shop submits it ("open" -> "submitted"),
+      locking items; staff then records one or more payments (ShopServicePayment)
+      against it, each mirrored into its own ConsumptionEntry dated on the
+      payment date. Once paid_amount >= total_cost the ticket auto-advances to
+      "confirmed" ("Imelipwa Kikamilifu").
+    A confirmed ticket may be reopened to fix a mistake (only if a shop ticket
+    has no payments yet -- see routes.service.reopen) -- re-confirming a staff
+    ticket updates the same ConsumptionEntry in place rather than duplicating it.
+    Only staff (non-shop) tickets sync a ShortfallClearance -- a shop billing a
+    part doesn't mean the car sat idle that day the way a staff-logged service
+    day does, so shop tickets never touch collection shortfalls. Likewise only
+    staff tickets count toward the next-service interval baseline (see
+    car_service.predict_for_car)."""
 
     __tablename__ = "car_services"
 
@@ -277,6 +335,11 @@ class CarService(db.Model):
     car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
     service_date = db.Column(db.Date, nullable=False, default=date_cls.today)
     description = db.Column(db.String(255))
+    status = db.Column(db.String(10), default="open", nullable=False)  # 'open' | 'submitted' | 'confirmed'
+    confirmed_at = db.Column(db.DateTime)
+    confirmed_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"))
+    payment_category_id = db.Column(db.Integer, db.ForeignKey("expense_categories.id"))
     consumption_entry_id = db.Column(
         db.Integer, db.ForeignKey("consumption_entries.id"), unique=True
     )
@@ -286,12 +349,97 @@ class CarService(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")
+    confirmed_by = db.relationship("User")
+    shop = db.relationship("Shop")
+    payment_category = db.relationship("ExpenseCategory")
     consumption_entry = db.relationship("ConsumptionEntry")
     shortfall_clearance = db.relationship("ShortfallClearance")
+    items = db.relationship(
+        "CarServiceItem",
+        backref="ticket",
+        cascade="all, delete-orphan",
+        order_by="CarServiceItem.id",
+    )
+    payments = db.relationship(
+        "ShopServicePayment",
+        backref="service",
+        cascade="all, delete-orphan",
+        order_by="ShopServicePayment.id",
+    )
+
+    @property
+    def total_cost(self):
+        return sum(item.cost for item in self.items)
+
+    @property
+    def paid_amount(self):
+        return sum(p.amount for p in self.payments)
+
+    @property
+    def balance_due(self):
+        return self.total_cost - self.paid_amount
+
+    @property
+    def payment_status(self):
+        if self.paid_amount <= 0:
+            return "unpaid"
+        if self.paid_amount < self.total_cost:
+            return "partial"
+        return "paid"
 
     @property
     def cost(self):
-        return self.consumption_entry.amount if self.consumption_entry else 0.0
+        return self.consumption_entry.amount if self.consumption_entry else self.total_cost
+
+    @property
+    def is_open(self):
+        return self.status == "open"
+
+    @property
+    def is_submitted(self):
+        return self.status == "submitted"
+
+
+class ShopServicePayment(db.Model):
+    """One payment staff made to a shop against its ticket -- partial or full.
+    Mirrored 1:1 into its own ConsumptionEntry dated on the payment date (not the
+    ticket's service_date), so car consumption reflects money as it actually
+    leaves, matching however many partial payments a ticket takes to settle."""
+
+    __tablename__ = "shop_service_payments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    service_id = db.Column(db.Integer, db.ForeignKey("car_services.id"), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    date = db.Column(db.Date, nullable=False, default=date_cls.today)
+    note = db.Column(db.String(255))
+    consumption_entry_id = db.Column(
+        db.Integer, db.ForeignKey("consumption_entries.id"), unique=True
+    )
+    recorded_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    consumption_entry = db.relationship("ConsumptionEntry")
+    recorded_by = db.relationship("User")
+
+
+class CarServiceItem(db.Model):
+    """One priced line on a service ticket -- a part or charge (e.g. "Oil Filter
+    x1 @ 15,000"). Only addable/removable while its ticket is open."""
+
+    __tablename__ = "car_service_items"
+
+    id = db.Column(db.Integer, primary_key=True)
+    service_id = db.Column(db.Integer, db.ForeignKey("car_services.id"), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey("service_item_categories.id"), nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    quantity = db.Column(db.Float, default=1.0, nullable=False)
+    unit_cost = db.Column(db.Float, nullable=False)
+    cost = db.Column(db.Float, nullable=False)
+    note = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    category = db.relationship("ServiceItemCategory")
 
 
 class DocumentType(db.Model):

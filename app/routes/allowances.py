@@ -1,6 +1,7 @@
 from datetime import date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
 from ..driver_allowance import allowance_predictions, give_allowance, predict_for_car, reverse_allowance
 from ..models import Car, DriverAllowance
@@ -32,14 +33,14 @@ def confirm():
         and prediction["period_type"] == period_type
     )
     if not matches:
-        flash(f"Utabiri wa posho ya {car.code} umebadilika, tafadhali onyesha upya ukurasa.", "danger")
+        flash(_("Utabiri wa posho ya %(code)s umebadilika, tafadhali onyesha upya ukurasa.", code=car.code), "danger")
         return redirect(url_for("allowances.index"))
     if prediction["status"] not in ("due", "overdue"):
-        flash(f"Siku ya posho ya {car.code} bado haijafika.", "danger")
+        flash(_("Siku ya posho ya %(code)s bado haijafika.", code=car.code), "danger")
         return redirect(url_for("allowances.index"))
 
     give_allowance(car, period_year, period_month, period_type, date.today())
-    flash(f"Posho ya dereva wa {car.code} imehifadhiwa.", "success")
+    flash(_("Posho ya dereva wa %(code)s imehifadhiwa.", code=car.code), "success")
     return redirect(url_for("allowances.index"))
 
 
@@ -48,5 +49,5 @@ def delete(allowance_id):
     allowance = DriverAllowance.query.get_or_404(allowance_id)
     car_code = allowance.car.code
     reverse_allowance(allowance)
-    flash(f"Posho ya {car_code} imefutwa.", "info")
+    flash(_("Posho ya %(code)s imefutwa.", code=car_code), "info")
     return redirect(url_for("allowances.index"))

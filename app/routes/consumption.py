@@ -1,6 +1,7 @@
 from datetime import date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, ConsumptionEntry, ExpenseCategory
@@ -60,7 +61,7 @@ def new():
         )
         db.session.add(entry)
         db.session.commit()
-        flash("Taarifa ya matumizi imehifadhiwa.", "success")
+        flash(_("Taarifa ya matumizi imehifadhiwa."), "success")
         return redirect(url_for("consumption.list_view"))
 
     return render_template("consumption/form.html", cars=cars, categories=categories, entry=None)
@@ -85,7 +86,7 @@ def edit(entry_id):
         entry.amount = float(request.form["amount"])
         entry.description = (request.form.get("description") or "").strip() or None
         db.session.commit()
-        flash("Taarifa ya matumizi imesasishwa.", "success")
+        flash(_("Taarifa ya matumizi imesasishwa."), "success")
         return redirect(url_for("consumption.list_view"))
 
     return render_template("consumption/form.html", cars=cars, categories=categories, entry=entry)
@@ -96,5 +97,5 @@ def delete(entry_id):
     entry = ConsumptionEntry.query.get_or_404(entry_id)
     db.session.delete(entry)
     db.session.commit()
-    flash("Taarifa ya matumizi imefutwa.", "info")
+    flash(_("Taarifa ya matumizi imefutwa."), "info")
     return redirect(url_for("consumption.list_view"))
