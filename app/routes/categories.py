@@ -36,6 +36,14 @@ def toggle(category_id):
     return redirect(url_for("categories.list_view"))
 
 
+@bp.route("/<int:category_id>/toggle_service", methods=["POST"])
+def toggle_service(category_id):
+    category = ExpenseCategory.query.get_or_404(category_id)
+    category.is_service = not category.is_service
+    db.session.commit()
+    return redirect(url_for("categories.list_view"))
+
+
 @bp.route("/items/new", methods=["POST"])
 def new_item_category():
     name = (request.form.get("name") or "").strip().upper()

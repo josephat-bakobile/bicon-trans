@@ -370,6 +370,43 @@ def _migrate_schema():
         )
         db.session.commit()
 
+    # Service categorization: which ExpenseCategory a staff ticket represents
+    # (SERVICE vs MATUMIZI), and whether that category counts as a "real"
+    # service toward the next-service-due prediction.
+    expense_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(expense_categories)")).fetchall()]
+    if "is_service" not in expense_cols:
+        db.session.execute(text("ALTER TABLE expense_categories ADD COLUMN is_service BOOLEAN NOT NULL DEFAULT 0"))
+        db.session.execute(text("UPDATE expense_categories SET is_service = 1 WHERE name = 'SERVICE'"))
+        db.session.commit()
+
+    if "category_id" not in service_cols:
+        db.session.execute(
+            text("ALTER TABLE car_services ADD COLUMN category_id INTEGER REFERENCES expense_categories(id)")
+        )
+        db.session.commit()
+
+        # Backfill from history: a confirmed staff ticket's category was
+        # already recorded on its ConsumptionEntry at confirm time, so reuse
+        # that. A ticket with no cost (no linked entry) has no such record --
+        # default it to SERVICE so pre-existing baselines aren't silently
+        # dropped from the prediction the first time this runs.
+        db.session.execute(
+            text(
+                "UPDATE car_services SET category_id = ("
+                "SELECT category_id FROM consumption_entries "
+                "WHERE consumption_entries.id = car_services.consumption_entry_id"
+                ") WHERE shop_id IS NULL AND consumption_entry_id IS NOT NULL"
+            )
+        )
+        db.session.execute(
+            text(
+                "UPDATE car_services SET category_id = "
+                "(SELECT id FROM expense_categories WHERE name = 'SERVICE') "
+                "WHERE shop_id IS NULL AND category_id IS NULL"
+            )
+        )
+        db.session.commit()
+
     # Self-service password change + login lockout + per-account language
     # preference: same three columns added to both users and shops.
     for table in ("users", "shops"):
@@ -393,8 +430,11 @@ def _seed_defaults():
             db.session.add(Car(code=code))
     if ExpenseCategory.query.count() == 0:
         db.session.add(ExpenseCategory(name="MATUMIZI"))
-    if not ExpenseCategory.query.filter_by(name="SERVICE").first():
-        db.session.add(ExpenseCategory(name="SERVICE"))
+    service_category = ExpenseCategory.query.filter_by(name="SERVICE").first()
+    if not service_category:
+        db.session.add(ExpenseCategory(name="SERVICE", is_service=True))
+    elif not service_category.is_service:
+        service_category.is_service = True
     if DocumentType.query.count() == 0:
         for name in ["LATRA", "BIMA (INSURANCE)", "LESENI YA BARABARA"]:
             db.session.add(DocumentType(name=name))

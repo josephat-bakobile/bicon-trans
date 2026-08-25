@@ -22,7 +22,7 @@
     <div class="card-panel">
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
-          <thead><tr><th>{{ _('Jina') }}</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
+          <thead><tr><th>{{ _('Jina') }}</th><th>{{ _('Hali') }}</th><th>{{ _('Huduma ya Gari?') }}</th><th></th></tr></thead>
           <tbody>
             {% for cat in categories %}
             <tr>
@@ -31,11 +31,21 @@
                 {% if cat.active %}<span class="badge text-bg-success">Active</span>
                 {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
               </td>
+              <td>
+                {% if cat.is_service %}<span class="badge text-bg-primary">{{ _('Ndiyo') }}</span>
+                {% else %}<span class="badge text-bg-secondary">{{ _('Hapana') }}</span>{% endif %}
+              </td>
               <td class="text-end">
-                <form method="post" action="{{ url_for('categories.toggle', category_id=cat.id) }}">
+                <form method="post" action="{{ url_for('categories.toggle', category_id=cat.id) }}" class="d-inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-sm btn-outline-secondary">
                     <i class="bi {{ 'bi-toggle-off' if cat.active else 'bi-toggle-on' }}"></i> {{ _('Zima') if cat.active else _('Washa') }}
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('categories.toggle_service', category_id=cat.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-primary" title="{{ _('Badilisha kama aina hii inahesabiwa kwenye ratiba ya huduma inayofuata.') }}">
+                    <i class="bi bi-wrench"></i> {{ _('Zima Huduma') if cat.is_service else _('Washa Huduma') }}
                   </button>
                 </form>
               </td>

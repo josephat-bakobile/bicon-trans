@@ -116,6 +116,10 @@ class ExpenseCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
+    # Marks this as a "real" vehicle service (vs. a general MATUMIZI cost) --
+    # only staff tickets booked under an is_service category count toward the
+    # next-service-due prediction (see car_service.predict_for_car).
+    is_service = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
@@ -330,7 +334,8 @@ class CarService(db.Model):
     Only staff (non-shop) tickets sync a ShortfallClearance -- a shop billing a
     part doesn't mean the car sat idle that day the way a staff-logged service
     day does, so shop tickets never touch collection shortfalls. Likewise only
-    staff tickets count toward the next-service interval baseline (see
+    staff tickets booked under an is_service ExpenseCategory (see category_id)
+    count toward the next-service interval baseline (see
     car_service.predict_for_car)."""
 
     __tablename__ = "car_services"
@@ -345,6 +350,11 @@ class CarService(db.Model):
     confirmed_at = db.Column(db.DateTime)
     confirmed_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"))
+    # Chosen when a staff (non-shop) ticket is opened -- e.g. SERVICE vs
+    # MATUMIZI. Reused as-is at confirm time so it's only asked once, and read
+    # by car_service.predict_for_car to decide whether this ticket counts
+    # toward the next-service interval (only categories with is_service=True do).
+    category_id = db.Column(db.Integer, db.ForeignKey("expense_categories.id"))
     payment_category_id = db.Column(db.Integer, db.ForeignKey("expense_categories.id"))
     consumption_entry_id = db.Column(
         db.Integer, db.ForeignKey("consumption_entries.id"), unique=True
@@ -358,7 +368,8 @@ class CarService(db.Model):
     approved_by = db.relationship("User", foreign_keys=[approved_by_id])
     confirmed_by = db.relationship("User", foreign_keys=[confirmed_by_id])
     shop = db.relationship("Shop")
-    payment_category = db.relationship("ExpenseCategory")
+    category = db.relationship("ExpenseCategory", foreign_keys=[category_id])
+    payment_category = db.relationship("ExpenseCategory", foreign_keys=[payment_category_id])
     consumption_entry = db.relationship("ConsumptionEntry")
     shortfall_clearance = db.relationship("ShortfallClearance")
     items = db.relationship(

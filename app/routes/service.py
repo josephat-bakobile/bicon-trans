@@ -110,6 +110,7 @@ def index():
         history=history,
         cars=Car.query.order_by(Car.code).all(),
         shops=Shop.query.filter_by(active=True).order_by(Shop.name).all(),
+        expense_categories=ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all(),
         shop_dashboard=shop_dashboard(),
         car_id=car_id,
     )
@@ -122,15 +123,25 @@ def new():
     car_id = int(request.form["car_id"])
     description = (request.form.get("description") or "").strip() or None
     shop_id = request.form.get("shop_id", type=int) or None
+    category_id = request.form.get("category_id", type=int) or None
 
     if error:
         flash(error, "danger")
         return redirect(url_for("service.index"))
 
+    if not shop_id and not category_id:
+        flash(_("Chagua aina ya huduma (mfano SERVICE) kwa tiketi hii."), "danger")
+        return redirect(url_for("service.index"))
+
     car = Car.query.get_or_404(car_id)
     shop = Shop.query.get_or_404(shop_id) if shop_id else None
     service = CarService(
-        car_id=car_id, service_date=service_date, description=description, status="open", shop_id=shop_id
+        car_id=car_id,
+        service_date=service_date,
+        description=description,
+        status="open",
+        shop_id=shop_id,
+        category_id=category_id if not shop_id else None,
     )
     db.session.add(service)
     db.session.flush()
@@ -226,13 +237,17 @@ def confirm(service_id):
         return redirect(url_for("service.ticket_detail", service_id=service.id))
 
     total = service.total_cost
-    category_id = request.form.get("category_id", type=int)
+    # Normally already set when the ticket was opened (see routes.service.new) --
+    # only asked here as a fallback for tickets opened before that field existed.
+    category_id = service.category_id or request.form.get("category_id", type=int)
 
     if total > 0 and not category_id:
         flash(_("Chagua aina ya matumizi itakayopokea gharama ya tiketi hii."), "danger")
         return redirect(url_for("service.ticket_detail", service_id=service.id))
 
     car = service.car
+    if not service.category_id:
+        service.category_id = category_id
     _apply_cost(service, car.id, total, category_id, service.service_date, service.description)
     service.status = "confirmed"
     service.confirmed_at = datetime.utcnow()
@@ -380,27 +395,33 @@ def edit(service_id):
         return redirect(url_for("service.ticket_detail", service_id=service.id))
 
     cars = Car.query.order_by(Car.code).all()
+    expense_categories = ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all()
 
     if request.method == "POST":
         service_date = parse_date(request.form.get("service_date"), service.service_date)
         error = validate_service_date(service_date)
         car_id = int(request.form["car_id"])
         description = (request.form.get("description") or "").strip() or None
+        category_id = request.form.get("category_id", type=int)
 
         if error:
             flash(error, "danger")
-            return render_template("service/edit.html", service=service, cars=cars)
+            return render_template("service/edit.html", service=service, cars=cars, expense_categories=expense_categories)
+        if not category_id:
+            flash(_("Chagua aina ya huduma (mfano SERVICE) kwa tiketi hii."), "danger")
+            return render_template("service/edit.html", service=service, cars=cars, expense_categories=expense_categories)
 
         car = Car.query.get_or_404(car_id)
         service.service_date = service_date
         service.car_id = car_id
         service.description = description
+        service.category_id = category_id
         _sync_service_clearance(service, car, service_date)
         db.session.commit()
         flash(_("Tiketi ya huduma imesasishwa."), "success")
         return redirect(url_for("service.ticket_detail", service_id=service.id))
 
-    return render_template("service/edit.html", service=service, cars=cars)
+    return render_template("service/edit.html", service=service, cars=cars, expense_categories=expense_categories)
 
 
 @bp.route("/<int:service_id>/delete", methods=["POST"])

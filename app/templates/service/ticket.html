@@ -27,6 +27,17 @@
         <table class="table table-sm mt-2 mb-0">
           <tr><th>{{ _('Gari') }}</th><td>{{ service.car.code }}</td></tr>
           {% if service.shop_id %}<tr><th>{{ _('Muuza') }}</th><td>{{ service.shop.name }}</td></tr>{% endif %}
+          {% if not service.shop_id %}
+          <tr>
+            <th>{{ _('Aina ya Huduma') }}</th>
+            <td>
+              {{ service.category.name if service.category_id else '-' }}
+              {% if service.category_id and not service.category.is_service %}
+              <span class="badge text-bg-secondary ms-1" title="{{ _('Aina hii haihesabiwi kwenye ratiba ya huduma inayofuata.') }}">{{ _('haihesabiwi kwenye ratiba') }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
           <tr><th>{{ _('Tarehe ya Huduma') }}</th><td>{{ service.service_date.strftime('%d-%m-%Y') }}</td></tr>
           <tr><th>{{ _('Maelezo') }}</th><td>{{ service.description or '-' }}</td></tr>
           <tr><th>{{ _('Imefunguliwa') }}</th><td>{{ service.created_at.strftime('%d-%m-%Y %H:%M') }}</td></tr>
@@ -115,6 +126,9 @@
               data-confirm="{{ _('Funga tiketi hii? Gharama jumla ya %(cost)s itapelekwa kwenye matumizi ya gari %(car_code)s, na hutaweza kuongeza vipengele vingine bila kuifungua tena.', cost=(service.total_cost | money), car_code=service.car.code) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           {% if service.total_cost > 0 %}
+          {% if service.category_id %}
+          <div class="form-text mb-2">{{ _('Aina ya huduma:') }} <strong>{{ service.category.name }}</strong></div>
+          {% else %}
           <div class="mb-2">
             <label class="form-label">{{ _('Aina ya Matumizi (kwa gharama jumla)') }}</label>
             <select class="form-select" name="category_id" required>
@@ -124,6 +138,7 @@
               {% endfor %}
             </select>
           </div>
+          {% endif %}
           {% else %}
           <div class="form-text">{{ _('Hakuna gharama iliyoongezwa -- tiketi itafungwa bila kupeleka chochote kwenye matumizi.') }}</div>
           {% endif %}

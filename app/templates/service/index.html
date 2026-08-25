@@ -128,6 +128,16 @@
           <div class="form-text">{{ _('Ukichagua muuza, tiketi itafunguliwa kwa ajili yake -- ataongeza vipuri/gharama na kuwasilisha kwa malipo.') }}</div>
         </div>
         <div class="mb-2">
+          <label class="form-label">{{ _('Aina ya Huduma (kwa tiketi za ndani)') }}</label>
+          <select class="form-select" name="category_id">
+            <option value="">{{ _('-- chagua --') }}</option>
+            {% for cat in expense_categories %}
+            <option value="{{ cat.id }}" {{ 'selected' if cat.name == 'SERVICE' else '' }}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">{{ _('Chagua SERVICE kwa huduma halisi ya gari (itahesabiwa kwenye ratiba ya huduma inayofuata). MATUMIZI haitahesabiwa kwenye ratiba hiyo. Haihitajiki ukichagua muuza hapo juu.') }}</div>
+        </div>
+        <div class="mb-2">
           <label class="form-label">{{ _('Maelezo (si lazima)') }}</label>
           <textarea class="form-control" name="description" rows="2"></textarea>
         </div>

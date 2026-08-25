@@ -21,6 +21,16 @@
       </select>
     </div>
     <div class="mb-3">
+      <label class="form-label">{{ _('Aina ya Huduma') }}</label>
+      <select class="form-select" name="category_id" required>
+        <option value="">{{ _('-- chagua --') }}</option>
+        {% for cat in expense_categories %}
+        <option value="{{ cat.id }}" {{ 'selected' if service.category_id == cat.id else '' }}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+      <div class="form-text">{{ _('Chagua SERVICE kwa huduma halisi ya gari (itahesabiwa kwenye ratiba ya huduma inayofuata).') }}</div>
+    </div>
+    <div class="mb-3">
       <label class="form-label">{{ _('Maelezo (si lazima)') }}</label>
       <textarea class="form-control" name="description" rows="2">{{ service.description or '' }}</textarea>
     </div>

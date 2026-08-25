@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from .models import Car, CarService, ShortfallClearance
+from .models import Car, CarService, ExpenseCategory, ShortfallClearance
 
 DUE_SOON_DAYS = 3
 
@@ -18,14 +18,17 @@ def _excused_dates(car_id, after_date):
 
 def predict_for_car(car, today=None):
     """Next service due date for a car, counted forward from its most recent
-    staff-logged CarService entry (shop-submitted parts tickets are excluded --
-    a shop billing one part isn't necessarily a full physical service day, so it
-    shouldn't reset this clock). Only days the car worked normally count toward
+    staff-logged CarService entry booked under an is_service category (e.g.
+    SERVICE, not MATUMIZI) -- shop-submitted parts tickets are excluded (a shop
+    billing one part isn't necessarily a full physical service day), and so are
+    staff tickets for incidental costs that aren't a real service, so neither
+    should reset this clock. Only days the car worked normally count toward
     the interval -- each excused (uncollected/partial + cleared) day in between
     pushes the due date one calendar day later."""
     today = today or date.today()
     last = (
-        CarService.query.filter_by(car_id=car.id, shop_id=None)
+        CarService.query.join(ExpenseCategory, CarService.category_id == ExpenseCategory.id)
+        .filter(CarService.car_id == car.id, CarService.shop_id.is_(None), ExpenseCategory.is_service.is_(True))
         .order_by(CarService.service_date.desc(), CarService.id.desc())
         .first()
     )
