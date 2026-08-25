@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-25 11:45+0300\n"
+"POT-Creation-Date: 2026-08-25 12:02+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1114,14 +1114,8 @@ msgstr ""
 msgid "Simu (si lazima)"
 msgstr ""
 
-#: app/templates/admin/shops.html:39 app/templates/cars/list.html:44
-#: app/templates/categories/list.html:24 app/templates/categories/list.html:69
-#: app/templates/drivers/list.html:40
-msgid "Jina"
-msgstr ""
-
 #: app/templates/admin/shops.html:39
-msgid "Simu"
+msgid "Jina / Simu"
 msgstr ""
 
 #: app/templates/admin/shops.html:39 app/templates/admin/users.html:40
@@ -1129,30 +1123,34 @@ msgstr ""
 msgid "Vitendo"
 msgstr ""
 
-#: app/templates/admin/shops.html:55 app/templates/admin/users.html:60
+#: app/templates/admin/shops.html:47
+msgid "Simu"
+msgstr ""
+
+#: app/templates/admin/shops.html:54 app/templates/admin/users.html:60
 #: app/templates/cars/list.html:72 app/templates/categories/list.html:31
 #: app/templates/categories/list.html:82 app/templates/drivers/list.html:70
 msgid "Imezimwa"
 msgstr ""
 
-#: app/templates/admin/shops.html:63
+#: app/templates/admin/shops.html:62
 #, python-format
 msgid "Una uhakika unataka %(action)s muuza %(name)s?"
 msgstr ""
 
-#: app/templates/admin/shops.html:63 app/templates/admin/users.html:68
+#: app/templates/admin/shops.html:62 app/templates/admin/users.html:68
 msgid "kuzima"
 msgstr ""
 
-#: app/templates/admin/shops.html:63 app/templates/admin/users.html:68
+#: app/templates/admin/shops.html:62 app/templates/admin/users.html:68
 msgid "kuwasha"
 msgstr ""
 
-#: app/templates/admin/shops.html:73 app/templates/admin/users.html:78
+#: app/templates/admin/shops.html:72 app/templates/admin/users.html:78
 msgid "Nenosiri jipya"
 msgstr ""
 
-#: app/templates/admin/shops.html:80
+#: app/templates/admin/shops.html:79
 msgid "Hakuna wauzaji bado."
 msgstr ""
 
@@ -1308,6 +1306,11 @@ msgstr ""
 msgid ""
 "Kiasi ambacho gari hili linatakiwa kukusanya kila siku. Acha 0 kama "
 "hakuna lengo."
+msgstr ""
+
+#: app/templates/cars/list.html:44 app/templates/categories/list.html:24
+#: app/templates/categories/list.html:69 app/templates/drivers/list.html:40
+msgid "Jina"
 msgstr ""
 
 #: app/templates/cars/list.html:44
