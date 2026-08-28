@@ -421,6 +421,33 @@ def _migrate_schema():
             db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN locked_until DATETIME"))
             db.session.commit()
 
+    # Debt repayment mechanism: a debt is repaid either through an extra amount
+    # tacked onto daily collections or redirected out of the driver's allowance.
+    # Existing debts/payments predate this distinction, so they default to
+    # 'collection' (start_date = the debt's own date) and stay untyped
+    # (return_type NULL) respectively -- only the new automatic flows tag payments.
+    debt_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(debts)")).fetchall()]
+    if "return_type" not in debt_cols:
+        db.session.execute(text("ALTER TABLE debts ADD COLUMN return_type VARCHAR(20) NOT NULL DEFAULT 'collection'"))
+        db.session.commit()
+    if "start_date" not in debt_cols:
+        db.session.execute(text("ALTER TABLE debts ADD COLUMN start_date DATE"))
+        db.session.execute(text("UPDATE debts SET start_date = date WHERE start_date IS NULL"))
+        db.session.commit()
+
+    debt_payment_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(debt_payments)")).fetchall()]
+    if "return_type" not in debt_payment_cols:
+        db.session.execute(text("ALTER TABLE debt_payments ADD COLUMN return_type VARCHAR(20)"))
+        db.session.commit()
+    if "source_collection_line_id" not in debt_payment_cols:
+        db.session.execute(
+            text(
+                "ALTER TABLE debt_payments ADD COLUMN source_collection_line_id INTEGER "
+                "REFERENCES collection_lines(id)"
+            )
+        )
+        db.session.commit()
+
 
 def _seed_defaults():
     from .models import Car, DocumentType, ExpenseCategory

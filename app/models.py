@@ -190,22 +190,37 @@ class ConsumptionEntry(db.Model):
 
 
 class Debt(db.Model):
-    """An amount a car owes (increases the outstanding balance)."""
+    """An amount a car owes (increases the outstanding balance). return_type decides
+    which mechanism pays it back: 'collection' means the driver adds a fixed extra
+    (utils.DEBT_COLLECTION_EXTRA) on top of the daily target, auto-deducted whenever
+    a day's collection beats the target (see utils.apply_collection_debt_repayment);
+    'allowance' means it's redirected out of the driver's next confirmed
+    DriverAllowance instead (see driver_allowance.give_allowance). start_date is the
+    first day either mechanism is allowed to draw against this debt."""
 
     __tablename__ = "debts"
+
+    RETURN_TYPES = ("collection", "allowance")
 
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False, default=date_cls.today)
     car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(255))
+    return_type = db.Column(db.String(20), nullable=False, default="collection")
+    start_date = db.Column(db.Date, default=lambda ctx: ctx.get_current_parameters().get("date") or date_cls.today())
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")
 
 
 class DebtPayment(db.Model):
-    """An amount a car has paid back (reduces the outstanding balance)."""
+    """An amount a car has paid back (reduces the outstanding balance). return_type,
+    when set, marks which repayment bucket produced this payment ('collection' or
+    'allowance') so car_debt_balance() can report each bucket separately -- left null
+    for manually recorded payments not tied to either automatic mechanism.
+    source_collection_line_id links a 'collection' payment back to the CollectionLine
+    whose surplus produced it, so editing/deleting that line can undo the payment too."""
 
     __tablename__ = "debt_payments"
 
@@ -214,6 +229,8 @@ class DebtPayment(db.Model):
     car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(255))
+    return_type = db.Column(db.String(20))
+    source_collection_line_id = db.Column(db.Integer, db.ForeignKey("collection_lines.id"))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")

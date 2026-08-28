@@ -104,7 +104,7 @@ def predict_for_car(car, today=None):
         "scheduled_date": scheduled_date,
         "days_remaining": days_remaining,
         "status": status,
-        "debt_balance": car_debt_balance(car.id),
+        "debt_balance": car_debt_balance(car.id, return_type="allowance", as_of=scheduled_date),
         "projected_amount": car.daily_target,
     }
 
@@ -123,7 +123,11 @@ def give_allowance(car, period_year, period_month, period_type, given_date):
     that day's shortfall (the driver keeps the collection instead of depositing it,
     so the day always shows short unless explained)."""
     amount = car.daily_target
-    debt_balance = car_debt_balance(car.id)
+    # Only debts flagged 'allowance' are drawn down here -- a 'collection'-type
+    # debt is repaid through the driver's daily collections instead (see
+    # utils.apply_collection_debt_repayment), so it must not also come out of
+    # the allowance.
+    debt_balance = car_debt_balance(car.id, return_type="allowance", as_of=given_date)
     applied_to_debt = min(amount, debt_balance) if debt_balance > 0 else 0.0
     cash_amount = amount - applied_to_debt
     driver_name = car.driver.name if car.driver else "-"
@@ -145,6 +149,7 @@ def give_allowance(car, period_year, period_month, period_type, given_date):
             date=given_date,
             car_id=car.id,
             amount=applied_to_debt,
+            return_type="allowance",
             description=f"Malipo ya deni kutoka posho ya dereva {driver_name} ({period_label})",
         )
         db.session.add(payment)

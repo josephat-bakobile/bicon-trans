@@ -7,7 +7,14 @@ from ..extensions import db
 from ..models import Car, CollectionLine, CollectionTransaction
 from ..security import get_current_user, require_permission
 from ..sms import can_send, send_and_log
-from ..utils import next_trans_no, parse_date, transaction_locked, validate_entry_date
+from ..utils import (
+    apply_collection_debt_repayment,
+    next_trans_no,
+    parse_date,
+    remove_collection_debt_payments,
+    transaction_locked,
+    validate_entry_date,
+)
 
 bp = Blueprint("collections", __name__)
 
@@ -127,16 +134,20 @@ def new():
         txn = CollectionTransaction(transaction_date=tdate, note=note, trans_no=trans_no)
         db.session.add(txn)
         db.session.flush()
+        car_map = {c.id: c for c in cars}
         for line in lines:
-            db.session.add(
-                CollectionLine(
-                    transaction_id=txn.id,
-                    car_id=line["car_id"],
-                    amount=line["amount"],
-                    note=line["note"],
-                    collection_date=line["collection_date"],
-                )
+            cl = CollectionLine(
+                transaction_id=txn.id,
+                car_id=line["car_id"],
+                amount=line["amount"],
+                note=line["note"],
+                collection_date=line["collection_date"],
             )
+            db.session.add(cl)
+            db.session.flush()
+            car = car_map.get(line["car_id"])
+            if car:
+                apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id)
         db.session.commit()
         flash(_("Muamala %(trans_no)s umehifadhiwa.", trans_no=txn.trans_no), "success")
         return redirect(url_for("collections.list_view"))
@@ -189,17 +200,23 @@ def edit(txn_id):
         txn.transaction_date = tdate
         txn.note = note
         txn.trans_no = trans_no
+        old_line_ids = [l.id for l in txn.lines]
+        remove_collection_debt_payments(old_line_ids)
         CollectionLine.query.filter_by(transaction_id=txn.id).delete()
+        car_map = {c.id: c for c in cars}
         for line in lines:
-            db.session.add(
-                CollectionLine(
-                    transaction_id=txn.id,
-                    car_id=line["car_id"],
-                    amount=line["amount"],
-                    note=line["note"],
-                    collection_date=line["collection_date"],
-                )
+            cl = CollectionLine(
+                transaction_id=txn.id,
+                car_id=line["car_id"],
+                amount=line["amount"],
+                note=line["note"],
+                collection_date=line["collection_date"],
             )
+            db.session.add(cl)
+            db.session.flush()
+            car = car_map.get(line["car_id"])
+            if car:
+                apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id)
         db.session.commit()
         flash(_("Muamala %(trans_no)s umesasishwa.", trans_no=txn.trans_no), "success")
         return redirect(url_for("collections.list_view"))
@@ -224,6 +241,7 @@ def delete(txn_id):
         return redirect(url_for("collections.list_view"))
 
     trans_no = txn.trans_no
+    remove_collection_debt_payments([l.id for l in txn.lines])
     db.session.delete(txn)
     db.session.commit()
     flash(_("Muamala %(trans_no)s umefutwa.", trans_no=trans_no), "info")

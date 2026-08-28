@@ -23,6 +23,11 @@ TRANSACTION_EDIT_WINDOW_DAYS = 7
 MAX_BACKDATE_DAYS = 7
 LAUNCH_DATE = date(2026, 8, 16)
 
+# Fixed extra a driver tacks onto their daily collection while repaying a
+# 'collection'-type debt -- e.g. a car with a 45,000 target collects 50,000, and
+# the 5,000 surplus is auto-recorded as a debt payment (see apply_collection_debt_repayment).
+DEBT_COLLECTION_EXTRA = 5000.0
+
 
 def transaction_locked(txn_date):
     """Collection transactions older than the edit window can no longer be changed."""
@@ -127,18 +132,60 @@ def period_totals(start=None, end=None):
     }
 
 
-def car_debt_balance(car_id):
-    """Outstanding debt balance (owed - paid) for a single car, all time."""
-    owed = (
-        db.session.query(func.coalesce(func.sum(Debt.amount), 0.0)).filter(Debt.car_id == car_id).scalar() or 0.0
-    )
-    paid = (
-        db.session.query(func.coalesce(func.sum(DebtPayment.amount), 0.0))
-        .filter(DebtPayment.car_id == car_id)
-        .scalar()
-        or 0.0
-    )
+def car_debt_balance(car_id, return_type=None, as_of=None):
+    """Outstanding debt balance (owed - paid) for a single car, all time by default.
+    Pass return_type ('collection' | 'allowance') to scope to debts/payments tagged
+    with that repayment bucket, and as_of to only count debts whose start_date has
+    already arrived by that date -- the two automatic repayment paths use both so
+    each only draws against debts flagged for it that are already due to start."""
+    owed_q = db.session.query(func.coalesce(func.sum(Debt.amount), 0.0)).filter(Debt.car_id == car_id)
+    paid_q = db.session.query(func.coalesce(func.sum(DebtPayment.amount), 0.0)).filter(DebtPayment.car_id == car_id)
+    if return_type:
+        owed_q = owed_q.filter(Debt.return_type == return_type)
+        paid_q = paid_q.filter(DebtPayment.return_type == return_type)
+    if as_of:
+        owed_q = owed_q.filter(Debt.start_date <= as_of)
+    owed = owed_q.scalar() or 0.0
+    paid = paid_q.scalar() or 0.0
     return owed - paid
+
+
+def apply_collection_debt_repayment(car, collection_date, collected_amount, collection_line_id):
+    """Auto-repays up to DEBT_COLLECTION_EXTRA off a car's 'collection'-type debt
+    whenever a day's collection beats the car's daily_target -- the driver already
+    added the extra on top of the target themselves, so the surplus counts as a debt
+    payment without touching the recorded collection amount. No-op if the car has no
+    target, the day didn't beat it, or no 'collection' debt has started yet.
+    Returns the DebtPayment created, or None."""
+    if not car.daily_target or collected_amount <= car.daily_target:
+        return None
+    balance = car_debt_balance(car.id, return_type="collection", as_of=collection_date)
+    if balance <= 0:
+        return None
+    applied = min(DEBT_COLLECTION_EXTRA, balance)
+    payment = DebtPayment(
+        date=collection_date,
+        car_id=car.id,
+        amount=applied,
+        return_type="collection",
+        source_collection_line_id=collection_line_id,
+        description=_(
+            "Malipo ya deni kiotomatiki kutoka ziada ya makusanyo (%(collected)s > lengo %(target)s)",
+            collected=f"{collected_amount:,.0f}",
+            target=f"{car.daily_target:,.0f}",
+        ),
+    )
+    db.session.add(payment)
+    return payment
+
+
+def remove_collection_debt_payments(line_ids):
+    """Deletes any auto-generated 'collection' debt payments tied to these
+    CollectionLine ids -- call before those lines are replaced or deleted so an
+    edited/removed collection doesn't leave a stale debt reduction behind."""
+    if not line_ids:
+        return
+    DebtPayment.query.filter(DebtPayment.source_collection_line_id.in_(line_ids)).delete(synchronize_session=False)
 
 
 def debt_balances():

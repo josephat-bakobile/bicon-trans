@@ -42,22 +42,43 @@
           </select>
         </div>
         <div class="col-6"><input type="number" step="0.01" min="0" class="form-control" name="amount" placeholder="{{ _('Kiasi') }}" required></div>
-        <div class="col-6"><input type="text" class="form-control" name="description" placeholder="{{ _('Maelezo (si lazima)') }}"></div>
+        <div class="col-12">
+          <select class="form-select" name="return_type">
+            <option value="collection">{{ _('Kwenye Makusanyo ya Kila Siku (+%(extra)s/siku)', extra=(debt_collection_extra | money)) }}</option>
+            <option value="allowance">{{ _('Kwenye Posho ya Dereva') }}</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="form-text mb-1">{{ _('Anaanza Kurejesha') }}</label>
+          <input type="date" class="form-control" name="start_date" max="{{ today_iso }}">
+        </div>
+        <div class="col-12"><input type="text" class="form-control" name="description" placeholder="{{ _('Maelezo (si lazima)') }}"></div>
         <div class="col-12"><button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> {{ _('Hifadhi Deni') }}</button></div>
       </form>
+      <div class="form-text mt-2">
+        {{ _('"Kwenye Makusanyo": kuanzia tarehe ya kuanza, mara makusanyo ya siku yakizidi lengo la gari, ziada (mpaka %(extra)s) hukatwa kiotomatiki kwenye deni bila kubadilisha makusanyo yaliyorekodiwa. "Kwenye Posho": deni hukatwa kwenye posho ya dereva inayofuata badala ya makusanyo ya kila siku.', extra=(debt_collection_extra | money)) }}
+      </div>
     </div>
 
     <div class="card-panel">
       <strong><i class="bi bi-clock-history text-primary"></i> {{ _('Madeni ya Hivi Karibuni') }}</strong>
       <div class="table-responsive">
         <table class="table table-sm table-money mt-2 mb-0">
-          <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th></th></tr></thead>
+          <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Aina ya Kurejesha') }}</th><th>{{ _('Anaanza') }}</th><th></th></tr></thead>
           <tbody>
             {% for d in debts %}
             <tr>
               <td>{{ d.date.strftime('%d-%m-%Y') }}</td>
               <td>{{ d.car.code }}</td>
               <td class="amount">{{ d.amount | money }}</td>
+              <td>
+                {% if d.return_type == 'allowance' %}
+                <span class="badge text-bg-info">{{ _('Posho') }}</span>
+                {% else %}
+                <span class="badge text-bg-secondary">{{ _('Makusanyo') }}</span>
+                {% endif %}
+              </td>
+              <td>{{ d.start_date.strftime('%d-%m-%Y') if d.start_date else '-' }}</td>
               <td class="text-end">
                 <form method="post" action="{{ url_for('debts.delete_debt', debt_id=d.id) }}" class="confirm-form" data-confirm="{{ _('Futa deni hili?') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -66,7 +87,7 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna madeni.') }}</td></tr>
+            <tr><td colspan="6" class="text-muted text-center py-3">{{ _('Hakuna madeni.') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -100,13 +121,22 @@
       <strong><i class="bi bi-clock-history text-primary"></i> {{ _('Malipo ya Hivi Karibuni') }}</strong>
       <div class="table-responsive">
         <table class="table table-sm table-money mt-2 mb-0">
-          <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th></th></tr></thead>
+          <thead><tr><th>{{ _('Tarehe') }}</th><th>{{ _('Gari') }}</th><th class="amount">{{ _('Kiasi') }}</th><th>{{ _('Chanzo') }}</th><th></th></tr></thead>
           <tbody>
             {% for p in payments %}
             <tr>
               <td>{{ p.date.strftime('%d-%m-%Y') }}</td>
               <td>{{ p.car.code }}</td>
               <td class="amount">{{ p.amount | money }}</td>
+              <td>
+                {% if p.return_type == 'collection' %}
+                <span class="badge text-bg-secondary">{{ _('Makusanyo') }}</span>
+                {% elif p.return_type == 'allowance' %}
+                <span class="badge text-bg-info">{{ _('Posho') }}</span>
+                {% else %}
+                <span class="text-muted">-</span>
+                {% endif %}
+              </td>
               <td class="text-end">
                 <form method="post" action="{{ url_for('debts.delete_payment', payment_id=p.id) }}" class="confirm-form" data-confirm="{{ _('Futa malipo haya?') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -115,7 +145,7 @@
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna malipo.') }}</td></tr>
+            <tr><td colspan="5" class="text-muted text-center py-3">{{ _('Hakuna malipo.') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>

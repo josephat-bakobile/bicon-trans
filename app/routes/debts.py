@@ -5,7 +5,7 @@ from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, Debt, DebtPayment
-from ..utils import car_debt_balance, debt_balances, parse_date, validate_entry_date
+from ..utils import DEBT_COLLECTION_EXTRA, car_debt_balance, debt_balances, parse_date, validate_entry_date
 
 bp = Blueprint("debts", __name__)
 
@@ -16,7 +16,14 @@ def index():
     debts = Debt.query.order_by(Debt.date.desc(), Debt.id.desc()).limit(20).all()
     payments = DebtPayment.query.order_by(DebtPayment.date.desc(), DebtPayment.id.desc()).limit(20).all()
     cars = Car.query.filter_by(active=True).order_by(Car.code).all()
-    return render_template("debts/index.html", balances=balances, debts=debts, payments=payments, cars=cars)
+    return render_template(
+        "debts/index.html",
+        balances=balances,
+        debts=debts,
+        payments=payments,
+        cars=cars,
+        debt_collection_extra=DEBT_COLLECTION_EXTRA,
+    )
 
 
 @bp.route("/new", methods=["POST"])
@@ -27,12 +34,19 @@ def new_debt():
         flash(error, "danger")
         return redirect(url_for("debts.index"))
 
+    return_type = request.form.get("return_type") or "collection"
+    if return_type not in Debt.RETURN_TYPES:
+        return_type = "collection"
+    start_date = parse_date(request.form.get("start_date"), debt_date)
+
     db.session.add(
         Debt(
             date=debt_date,
             car_id=int(request.form["car_id"]),
             amount=float(request.form["amount"]),
             description=(request.form.get("description") or "").strip() or None,
+            return_type=return_type,
+            start_date=start_date,
         )
     )
     db.session.commit()
