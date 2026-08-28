@@ -353,7 +353,11 @@ class CarService(db.Model):
     day does, so shop tickets never touch collection shortfalls. Likewise only
     staff tickets booked under an is_service ExpenseCategory (see category_id)
     count toward the next-service interval baseline (see
-    car_service.predict_for_car)."""
+    car_service.predict_for_car).
+    A staff ticket booked under an is_service category always excuses its
+    service_date from shortfalls immediately. Any other category only does so
+    if affects_shortfall is set, and only once the ticket is confirmed/closed
+    -- while still open (or if reopened) it does not affect shortfalls."""
 
     __tablename__ = "car_services"
 
@@ -372,6 +376,12 @@ class CarService(db.Model):
     # by car_service.predict_for_car to decide whether this ticket counts
     # toward the next-service interval (only categories with is_service=True do).
     category_id = db.Column(db.Integer, db.ForeignKey("expense_categories.id"))
+    # Only consulted for a non-is_service category: whether this ticket should
+    # excuse its service_date from collection shortfalls at all. An is_service
+    # category always does so immediately, regardless of this flag (see
+    # routes.service._sync_service_clearance callers). When set, the excuse is
+    # only applied once the ticket is confirmed/closed, not while still open.
+    affects_shortfall = db.Column(db.Boolean, default=False, nullable=False)
     payment_category_id = db.Column(db.Integer, db.ForeignKey("expense_categories.id"))
     consumption_entry_id = db.Column(
         db.Integer, db.ForeignKey("consumption_entries.id"), unique=True

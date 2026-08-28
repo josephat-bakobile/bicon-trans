@@ -435,6 +435,22 @@ def _migrate_schema():
         db.session.execute(text("UPDATE debts SET start_date = date WHERE start_date IS NULL"))
         db.session.commit()
 
+    # Non-SERVICE tickets used to always excuse their service_date immediately
+    # (same as SERVICE); now that's opt-in and deferred until confirm/close.
+    # Backfill True for any ticket that already carries a synced clearance so
+    # existing data keeps behaving the same way if it's later edited/reopened.
+    if "affects_shortfall" not in service_cols:
+        db.session.execute(
+            text("ALTER TABLE car_services ADD COLUMN affects_shortfall BOOLEAN NOT NULL DEFAULT 0")
+        )
+        db.session.execute(
+            text(
+                "UPDATE car_services SET affects_shortfall = 1 "
+                "WHERE shop_id IS NULL AND shortfall_clearance_id IS NOT NULL"
+            )
+        )
+        db.session.commit()
+
     debt_payment_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(debt_payments)")).fetchall()]
     if "return_type" not in debt_payment_cols:
         db.session.execute(text("ALTER TABLE debt_payments ADD COLUMN return_type VARCHAR(20)"))

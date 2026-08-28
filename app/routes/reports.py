@@ -228,8 +228,8 @@ def send_streak_sms(car_id):
         return redirect(url_for("reports.analytics", start=start.isoformat(), end=end.isoformat()))
 
     message = (
-        f"Habari {car.driver.name}, gari {car.code} halijafikia lengo la siku kwa siku "
-        f"{streak_row['streak_days']} mfululizo. Tafadhali wasiliana na ofisi haraka. - BICON TRANS"
+        f"Habari {car.driver.name}, hujafikia lengo la siku kwa siku "
+        f"{streak_row['streak_days']} mfululizo. Tafadhali wasiliana na ofisi haraka."
     )
     sent, error = send_and_log(car, "streak", message, get_current_user())
     if sent:

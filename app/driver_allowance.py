@@ -104,7 +104,10 @@ def predict_for_car(car, today=None):
         "scheduled_date": scheduled_date,
         "days_remaining": days_remaining,
         "status": status,
-        "debt_balance": car_debt_balance(car.id, return_type="allowance", as_of=scheduled_date),
+        # Total debt outstanding on the car, regardless of repayment type --
+        # display-only, so staff see the full picture here even though only
+        # 'allowance'-type debt is actually drawn down by give_allowance below.
+        "debt_balance": car_debt_balance(car.id),
         "projected_amount": car.daily_target,
     }
 

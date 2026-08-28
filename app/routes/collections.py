@@ -6,9 +6,10 @@ from flask_babel import gettext as _
 from ..extensions import db
 from ..models import Car, CollectionLine, CollectionTransaction
 from ..security import get_current_user, require_permission
-from ..sms import can_send, send_and_log
+from ..sms import can_send, send_and_log, send_debt_payment_sms
 from ..utils import (
     apply_collection_debt_repayment,
+    car_debt_balance,
     next_trans_no,
     parse_date,
     remove_collection_debt_payments,
@@ -135,6 +136,7 @@ def new():
         db.session.add(txn)
         db.session.flush()
         car_map = {c.id: c for c in cars}
+        debt_payments = []
         for line in lines:
             cl = CollectionLine(
                 transaction_id=txn.id,
@@ -147,9 +149,13 @@ def new():
             db.session.flush()
             car = car_map.get(line["car_id"])
             if car:
-                apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id)
+                payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id)
+                if payment:
+                    debt_payments.append((car, payment.amount))
         db.session.commit()
         flash(_("Muamala %(trans_no)s umehifadhiwa.", trans_no=txn.trans_no), "success")
+        for car, amount in debt_payments:
+            send_debt_payment_sms(car, amount, car_debt_balance(car.id), get_current_user())
         return redirect(url_for("collections.list_view"))
 
     values = _values_from_txn(None)
@@ -204,6 +210,7 @@ def edit(txn_id):
         remove_collection_debt_payments(old_line_ids)
         CollectionLine.query.filter_by(transaction_id=txn.id).delete()
         car_map = {c.id: c for c in cars}
+        debt_payments = []
         for line in lines:
             cl = CollectionLine(
                 transaction_id=txn.id,
@@ -216,9 +223,13 @@ def edit(txn_id):
             db.session.flush()
             car = car_map.get(line["car_id"])
             if car:
-                apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id)
+                payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id)
+                if payment:
+                    debt_payments.append((car, payment.amount))
         db.session.commit()
         flash(_("Muamala %(trans_no)s umesasishwa.", trans_no=txn.trans_no), "success")
+        for car, amount in debt_payments:
+            send_debt_payment_sms(car, amount, car_debt_balance(car.id), get_current_user())
         return redirect(url_for("collections.list_view"))
 
     values = _values_from_txn(txn)
@@ -266,8 +277,7 @@ def send_collection_sms(txn_id, car_id):
 
     message = (
         f"Habari {car.driver.name}, tumepokea makusanyo ya TSh {line.amount:,.0f} "
-        f"kwa gari {car.code} tarehe {line.collection_date.strftime('%d-%m-%Y')} "
-        f"(Trans No: {txn.trans_no}). Asante. - BICON TRANS"
+        f"tarehe {line.collection_date.strftime('%d-%m-%Y')}. Asante."
     )
     sent, error = send_and_log(car, "collection", message, get_current_user())
     if sent:

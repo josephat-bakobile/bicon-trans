@@ -35,9 +35,9 @@
           {% elif p.status == 'due_soon' %}<span class="badge text-bg-info">{{ _('Inakaribia') }}</span>
           {% else %}<span class="badge text-bg-secondary">{{ _('Bado') }}</span>{% endif %}
         </td>
-        <td class="text-end">
+        <td class="text-end text-nowrap">
           {% if p.status in ('overdue', 'due') %}
-          <form method="post" action="{{ url_for('allowances.confirm') }}" class="confirm-form"
+          <form method="post" action="{{ url_for('allowances.confirm') }}" class="confirm-form d-inline"
                 data-confirm="{{ _('Thibitisha dereva wa %(code)s amepokea posho ya %(amount)s?', code=p.car.code, amount=(p.projected_amount | money)) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="car_id" value="{{ p.car.id }}">
@@ -45,6 +45,13 @@
             <input type="hidden" name="period_month" value="{{ p.period_month }}">
             <input type="hidden" name="period_type" value="{{ p.period_type }}">
             <button class="btn btn-sm btn-primary"><i class="bi bi-check2-circle"></i> {{ _('Amepokea') }}</button>
+          </form>
+          {% endif %}
+          {% if p.status in ('overdue', 'due', 'due_soon') and current_user.has_permission('sms') and sms_ready(p.car) %}
+          <form method="post" action="{{ url_for('allowances.send_allowance_sms', car_id=p.car.id) }}" class="confirm-form d-inline"
+                data-confirm="{{ _('Tuma SMS ya posho kwa dereva wa %(code)s?', code=p.car.code) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
           </form>
           {% endif %}
         </td>

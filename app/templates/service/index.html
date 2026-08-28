@@ -129,13 +129,20 @@
         </div>
         <div class="mb-2">
           <label class="form-label">{{ _('Aina ya Huduma (kwa tiketi za ndani)') }}</label>
-          <select class="form-select" name="category_id">
+          <select class="form-select" name="category_id" id="newServiceCategory" onchange="toggleNewAffectsShortfall()">
             <option value="">{{ _('-- chagua --') }}</option>
             {% for cat in expense_categories %}
-            <option value="{{ cat.id }}" {{ 'selected' if cat.name == 'SERVICE' else '' }}>{{ cat.name }}</option>
+            <option value="{{ cat.id }}" data-is-service="{{ '1' if cat.is_service else '0' }}" {{ 'selected' if cat.name == 'SERVICE' else '' }}>{{ cat.name }}</option>
             {% endfor %}
           </select>
-          <div class="form-text">{{ _('Chagua SERVICE kwa huduma halisi ya gari (itahesabiwa kwenye ratiba ya huduma inayofuata). MATUMIZI haitahesabiwa kwenye ratiba hiyo. Haihitajiki ukichagua muuza hapo juu.') }}</div>
+          <div class="form-text">{{ _('Chagua SERVICE kwa huduma halisi ya gari (itahesabiwa kwenye ratiba ya huduma inayofuata na kuathiri upungufu wa makusanyo mara moja). Aina nyingine haihesabiwi kwenye ratiba hiyo. Haihitajiki ukichagua muuza hapo juu.') }}</div>
+        </div>
+        <div class="mb-2" id="newAffectsShortfallWrap">
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="affects_shortfall" value="1" id="newAffectsShortfall">
+            <label class="form-check-label" for="newAffectsShortfall">{{ _('Iathiri upungufu wa makusanyo (siku hii haitahesabiwa kama upungufu)') }}</label>
+          </div>
+          <div class="form-text">{{ _('Ikiwa umechagua, athari itatumika tu baada ya tiketi hii kufungwa (confirm), siyo mara moja.') }}</div>
         </div>
         <div class="mb-2">
           <label class="form-label">{{ _('Maelezo (si lazima)') }}</label>
@@ -143,6 +150,17 @@
         </div>
         <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> {{ _('Fungua Tiketi') }}</button>
       </form>
+      <script>
+        function toggleNewAffectsShortfall() {
+          var sel = document.getElementById('newServiceCategory');
+          var opt = sel.options[sel.selectedIndex];
+          var isService = opt && opt.getAttribute('data-is-service') === '1';
+          var wrap = document.getElementById('newAffectsShortfallWrap');
+          wrap.style.display = isService ? 'none' : '';
+          if (isService) document.getElementById('newAffectsShortfall').checked = false;
+        }
+        toggleNewAffectsShortfall();
+      </script>
       <div class="form-text mt-2">
         {{ _('Bila muuza: utaongeza vipengele mwenyewe kisha ufunge (confirm) tiketi ili gharama jumla ipelekwe kwenye matumizi ya gari. Kwa muuza: muuza ndiye ataongeza vipengele na kuwasilisha; wewe utarekodi malipo.') }}
       </div>

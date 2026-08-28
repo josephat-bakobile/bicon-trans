@@ -37,6 +37,20 @@
               {% endif %}
             </td>
           </tr>
+          <tr>
+            <th>{{ _('Upungufu wa Makusanyo') }}</th>
+            <td>
+              {% if service.category_id and service.category.is_service %}
+              <span class="badge text-bg-success">{{ _('Imeathiriwa (SERVICE)') }}</span>
+              {% elif service.shortfall_clearance_id %}
+              <span class="badge text-bg-success">{{ _('Imeathiriwa') }}</span>
+              {% elif service.affects_shortfall %}
+              <span class="badge text-bg-warning">{{ _('Itaathiriwa baada ya kufungwa') }}</span>
+              {% else %}
+              <span class="badge text-bg-secondary">{{ _('Haiathiriwi') }}</span>
+              {% endif %}
+            </td>
+          </tr>
           {% endif %}
           <tr><th>{{ _('Tarehe ya Huduma') }}</th><td>{{ service.service_date.strftime('%d-%m-%Y') }}</td></tr>
           <tr><th>{{ _('Maelezo') }}</th><td>{{ service.description or '-' }}</td></tr>

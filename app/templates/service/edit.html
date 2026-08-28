@@ -22,13 +22,20 @@
     </div>
     <div class="mb-3">
       <label class="form-label">{{ _('Aina ya Huduma') }}</label>
-      <select class="form-select" name="category_id" required>
+      <select class="form-select" name="category_id" id="editServiceCategory" onchange="toggleEditAffectsShortfall()" required>
         <option value="">{{ _('-- chagua --') }}</option>
         {% for cat in expense_categories %}
-        <option value="{{ cat.id }}" {{ 'selected' if service.category_id == cat.id else '' }}>{{ cat.name }}</option>
+        <option value="{{ cat.id }}" data-is-service="{{ '1' if cat.is_service else '0' }}" {{ 'selected' if service.category_id == cat.id else '' }}>{{ cat.name }}</option>
         {% endfor %}
       </select>
-      <div class="form-text">{{ _('Chagua SERVICE kwa huduma halisi ya gari (itahesabiwa kwenye ratiba ya huduma inayofuata).') }}</div>
+      <div class="form-text">{{ _('Chagua SERVICE kwa huduma halisi ya gari (itahesabiwa kwenye ratiba ya huduma inayofuata na kuathiri upungufu wa makusanyo mara moja).') }}</div>
+    </div>
+    <div class="mb-3" id="editAffectsShortfallWrap">
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" name="affects_shortfall" value="1" id="editAffectsShortfall" {{ 'checked' if service.affects_shortfall else '' }}>
+        <label class="form-check-label" for="editAffectsShortfall">{{ _('Iathiri upungufu wa makusanyo (siku hii haitahesabiwa kama upungufu)') }}</label>
+      </div>
+      <div class="form-text">{{ _('Ikiwa umechagua, athari itatumika tu baada ya tiketi hii kufungwa (confirm), siyo mara moja.') }}</div>
     </div>
     <div class="mb-3">
       <label class="form-label">{{ _('Maelezo (si lazima)') }}</label>
@@ -40,5 +47,17 @@
     </div>
   </form>
 </div>
+
+<script>
+  function toggleEditAffectsShortfall() {
+    var sel = document.getElementById('editServiceCategory');
+    var opt = sel.options[sel.selectedIndex];
+    var isService = opt && opt.getAttribute('data-is-service') === '1';
+    var wrap = document.getElementById('editAffectsShortfallWrap');
+    wrap.style.display = isService ? 'none' : '';
+    if (isService) document.getElementById('editAffectsShortfall').checked = false;
+  }
+  toggleEditAffectsShortfall();
+</script>
 
 {% endblock %}

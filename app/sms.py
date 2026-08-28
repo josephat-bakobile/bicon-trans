@@ -95,6 +95,30 @@ def send_sms(phone, message):
         )
 
 
+def send_debt_payment_sms(car, amount_paid, balance, user=None):
+    """Notifies car's driver that a debt payment was just recorded -- how much
+    was paid and how much remains, or that the debt is now fully cleared.
+    Best-effort: silently returns (False, reason) if the driver isn't set up to
+    receive SMS, same checks as a manual send (see can_send)."""
+    ok, reason = can_send(car)
+    if not ok:
+        return False, reason
+    if balance <= 0.01:
+        message = _(
+            "Habari %(name)s, malipo ya %(amount)s yamepokelewa. Hongera, deni lako limekwisha kabisa!",
+            name=car.driver.name,
+            amount=f"{amount_paid:,.0f}",
+        )
+    else:
+        message = _(
+            "Habari %(name)s, malipo ya %(amount)s yamepokelewa. Deni linalobaki: %(balance)s.",
+            name=car.driver.name,
+            amount=f"{amount_paid:,.0f}",
+            balance=f"{balance:,.0f}",
+        )
+    return send_and_log(car, "debt_payment", message, user)
+
+
 def send_and_log(car, scenario, message, user):
     """Sends the SMS for a car/scenario and always records the attempt (sent or
     failed) to SmsLog. Returns (ok, error_message). Caller is expected to have

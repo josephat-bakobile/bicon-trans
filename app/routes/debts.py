@@ -5,6 +5,8 @@ from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, Debt, DebtPayment
+from ..security import get_current_user
+from ..sms import send_debt_payment_sms
 from ..utils import DEBT_COLLECTION_EXTRA, car_debt_balance, debt_balances, parse_date, validate_entry_date
 
 bp = Blueprint("debts", __name__)
@@ -99,6 +101,7 @@ def new_payment():
     )
     db.session.commit()
     flash(_("Malipo ya deni yamehifadhiwa."), "success")
+    send_debt_payment_sms(car, amount, car_debt_balance(car_id), get_current_user())
     return redirect(url_for("debts.index"))
 
 

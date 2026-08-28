@@ -93,6 +93,18 @@ def _sync_service_clearance(service, car, service_date):
     service.shortfall_clearance_id = clearance.id
 
 
+def _clear_service_clearance(service):
+    """Removes a previously synced clearance -- used when a ticket no longer
+    qualifies to excuse its service_date (reopened, or edited away from an
+    is_service category while still open)."""
+    if not service.shortfall_clearance_id:
+        return
+    clearance = service.shortfall_clearance
+    service.shortfall_clearance_id = None
+    db.session.flush()
+    db.session.delete(clearance)
+
+
 @bp.route("/")
 def index():
     car_id = request.args.get("car_id", type=int)
@@ -124,6 +136,7 @@ def new():
     description = (request.form.get("description") or "").strip() or None
     shop_id = request.form.get("shop_id", type=int) or None
     category_id = request.form.get("category_id", type=int) or None
+    affects_shortfall = request.form.get("affects_shortfall") == "1"
 
     if error:
         flash(error, "danger")
@@ -135,6 +148,7 @@ def new():
 
     car = Car.query.get_or_404(car_id)
     shop = Shop.query.get_or_404(shop_id) if shop_id else None
+    category = ExpenseCategory.query.get(category_id) if category_id and not shop_id else None
     service = CarService(
         car_id=car_id,
         service_date=service_date,
@@ -142,12 +156,15 @@ def new():
         status="open",
         shop_id=shop_id,
         category_id=category_id if not shop_id else None,
+        affects_shortfall=bool(category and category.is_service) or affects_shortfall,
     )
     db.session.add(service)
     db.session.flush()
-    if shop is None:
-        # Only a staff-logged service day means the car sat idle -- a ticket
-        # opened for a vendor doesn't auto-excuse that day's collection.
+    if shop is None and category and category.is_service:
+        # An is_service category means the car sat idle that day -- excuse it
+        # immediately. Any other category, even if marked affects_shortfall,
+        # waits until the ticket is confirmed/closed (see confirm()) -- a
+        # ticket opened for a vendor never auto-excuses that day's collection.
         _sync_service_clearance(service, car, service_date)
     db.session.commit()
     if shop:
@@ -249,6 +266,11 @@ def confirm(service_id):
     if not service.category_id:
         service.category_id = category_id
     _apply_cost(service, car.id, total, category_id, service.service_date, service.description)
+    category = service.category
+    if service.affects_shortfall and not (category and category.is_service):
+        # is_service tickets are already synced from new()/edit() -- only a
+        # non-is_service ticket with affects_shortfall waits until this point.
+        _sync_service_clearance(service, car, service.service_date)
     service.status = "confirmed"
     service.confirmed_at = datetime.utcnow()
     service.confirmed_by_id = get_current_user().id
@@ -268,6 +290,12 @@ def reopen(service_id):
         service.status = "open"
         service.confirmed_at = None
         service.confirmed_by_id = None
+        category = service.category
+        if not (category and category.is_service):
+            # Only synced at confirm-time for these -- reopening means it's no
+            # longer confirmed/closed, so it shouldn't excuse the date until
+            # re-confirmed. An is_service ticket keeps its clearance regardless.
+            _clear_service_clearance(service)
         db.session.commit()
         flash(_("Tiketi imefunguliwa tena. Unaweza kuongeza/kufuta vipengele kisha kufunga tena."), "success")
     return redirect(url_for("service.ticket_detail", service_id=service.id))
@@ -403,6 +431,7 @@ def edit(service_id):
         car_id = int(request.form["car_id"])
         description = (request.form.get("description") or "").strip() or None
         category_id = request.form.get("category_id", type=int)
+        affects_shortfall = request.form.get("affects_shortfall") == "1"
 
         if error:
             flash(error, "danger")
@@ -412,11 +441,21 @@ def edit(service_id):
             return render_template("service/edit.html", service=service, cars=cars, expense_categories=expense_categories)
 
         car = Car.query.get_or_404(car_id)
+        category = ExpenseCategory.query.get_or_404(category_id)
         service.service_date = service_date
         service.car_id = car_id
         service.description = description
         service.category_id = category_id
-        _sync_service_clearance(service, car, service_date)
+        if category.is_service:
+            service.affects_shortfall = True
+            _sync_service_clearance(service, car, service_date)
+        else:
+            # Still open -- a non-is_service ticket only excuses its date once
+            # confirmed (see confirm()), so just record the intent here and
+            # drop any clearance it may have carried from a prior is_service
+            # category (or from before this flow existed).
+            service.affects_shortfall = affects_shortfall
+            _clear_service_clearance(service)
         db.session.commit()
         flash(_("Tiketi ya huduma imesasishwa."), "success")
         return redirect(url_for("service.ticket_detail", service_id=service.id))
@@ -471,10 +510,7 @@ def send_service_sms(car_id):
         timing = f"lilipaswa kufanyiwa huduma tarehe {prediction['due_date'].strftime('%d-%m-%Y')} (limechelewa)"
     else:
         timing = f"linahitaji huduma tarehe {prediction['due_date'].strftime('%d-%m-%Y')} (siku {prediction['days_remaining']} zijazo)"
-    message = (
-        f"Habari {car.driver.name}, gari {car.code} {timing}. "
-        f"Tafadhali panga huduma haraka. - BICON TRANS"
-    )
+    message = f"Habari {car.driver.name}, gari lako {timing}. Tafadhali panga haraka."
     sent, error = send_and_log(car, "service", message, get_current_user())
     if sent:
         flash(_("SMS ya huduma imetumwa kwa dereva wa %(car_code)s.", car_code=car.code), "success")
