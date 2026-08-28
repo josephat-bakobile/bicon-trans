@@ -80,7 +80,7 @@
                 </span>
               </td>
               <td class="text-end">
-                {% if current_user.has_permission('sms') and sms_ready(s.car) %}
+                {% if current_user.has_permission('sms') %}
                 <form method="post" action="{{ url_for('reports.send_streak_sms', car_id=s.car.id) }}" class="confirm-form"
                       data-confirm="{{ _('Tuma SMS ya tatizo kwa dereva wa %(code)s?', code=s.car.code) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
