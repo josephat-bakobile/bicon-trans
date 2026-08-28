@@ -50,7 +50,7 @@
         </div>
         <div class="col-12">
           <label class="form-text mb-1">{{ _('Anaanza Kurejesha') }}</label>
-          <input type="date" class="form-control" name="start_date" max="{{ today_iso }}">
+          <input type="date" class="form-control" name="start_date" min="{{ today_iso }}">
         </div>
         <div class="col-12"><input type="text" class="form-control" name="description" placeholder="{{ _('Maelezo (si lazima)') }}"></div>
         <div class="col-12"><button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> {{ _('Hifadhi Deni') }}</button></div>
