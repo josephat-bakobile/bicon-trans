@@ -65,7 +65,7 @@ def send_allowance_sms(car_id):
         return redirect(url_for("allowances.index"))
 
     message = _(
-        "Habari %(name)s, siku yako ya kuchukua posho (%(period)s) ni tarehe %(date)s. Tafadhali fika ofisini.",
+        "Habari %(name)s, siku yako ya kuchukua posho (%(period)s) ni tarehe %(date)s.",
         name=car.driver.name,
         period=prediction["period_label"],
         date=prediction["scheduled_date"].strftime("%d-%m-%Y"),

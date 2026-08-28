@@ -95,6 +95,28 @@ def send_sms(phone, message):
         )
 
 
+DEBT_REPAYMENT_METHOD_LABELS = {
+    "collection": "makusanyo yako ya kila siku",
+    "allowance": "posho yako",
+}
+
+
+def send_debt_added_sms(car, amount, return_type, user=None):
+    """Notifies car's driver that a debt was just recorded against them, and how
+    it will be repaid (out of daily collections vs. their allowance)."""
+    ok, reason = can_send(car)
+    if not ok:
+        return False, reason
+    method = DEBT_REPAYMENT_METHOD_LABELS.get(return_type, DEBT_REPAYMENT_METHOD_LABELS["collection"])
+    message = _(
+        "Habari %(name)s, umewekewa deni la TSh %(amount)s. Litalipwa kupitia %(method)s.",
+        name=car.driver.name,
+        amount=f"{amount:,.0f}",
+        method=method,
+    )
+    return send_and_log(car, "debt_added", message, user)
+
+
 def send_debt_payment_sms(car, amount_paid, balance, user=None):
     """Notifies car's driver that a debt payment was just recorded -- how much
     was paid and how much remains, or that the debt is now fully cleared.

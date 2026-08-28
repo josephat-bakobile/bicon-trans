@@ -6,7 +6,7 @@ from flask_babel import gettext as _
 from ..extensions import db
 from ..models import Car, Debt, DebtPayment
 from ..security import get_current_user
-from ..sms import send_debt_payment_sms
+from ..sms import send_debt_added_sms, send_debt_payment_sms
 from ..utils import DEBT_COLLECTION_EXTRA, car_debt_balance, debt_balances, parse_date, validate_entry_date
 
 bp = Blueprint("debts", __name__)
@@ -41,18 +41,20 @@ def new_debt():
         return_type = "collection"
     start_date = parse_date(request.form.get("start_date"), debt_date)
 
-    db.session.add(
-        Debt(
-            date=debt_date,
-            car_id=int(request.form["car_id"]),
-            amount=float(request.form["amount"]),
-            description=(request.form.get("description") or "").strip() or None,
-            return_type=return_type,
-            start_date=start_date,
-        )
+    car_id = int(request.form["car_id"])
+    amount = float(request.form["amount"])
+    debt = Debt(
+        date=debt_date,
+        car_id=car_id,
+        amount=amount,
+        description=(request.form.get("description") or "").strip() or None,
+        return_type=return_type,
+        start_date=start_date,
     )
+    db.session.add(debt)
     db.session.commit()
     flash(_("Deni limehifadhiwa."), "success")
+    send_debt_added_sms(debt.car, amount, return_type, get_current_user())
     return redirect(url_for("debts.index"))
 
 
