@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 from flask_babel import gettext as _
@@ -227,9 +227,13 @@ def send_streak_sms(car_id):
         flash(reason, "danger")
         return redirect(url_for("reports.analytics", start=start.isoformat(), end=end.isoformat()))
 
-    message = (
-        f"Habari {car.driver.name}, hujafikia lengo la siku kwa siku "
-        f"{streak_row['streak_days']} mfululizo. Tafadhali wasiliana na ofisi haraka."
+    streak_start = end - timedelta(days=streak_row["streak_days"] - 1)
+    message = _(
+        "Habari %(name)s, hujafikia lengo la siku kutoka %(start)s hadi %(end)s. "
+        "Kama sio sahihi, tutaharifu.",
+        name=car.driver.name,
+        start=streak_start.strftime("%d-%m-%Y"),
+        end=end.strftime("%d-%m-%Y"),
     )
     sent, error = send_and_log(car, "streak", message, get_current_user())
     if sent:
