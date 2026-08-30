@@ -150,16 +150,20 @@ def car_debt_balance(car_id, return_type=None, as_of=None):
     return owed - paid
 
 
-def apply_collection_debt_repayment(car, collection_date, collected_amount, collection_line_id):
+def apply_collection_debt_repayment(car, collection_date, collected_amount, collection_line_id, transaction_date):
     """Auto-repays up to DEBT_COLLECTION_EXTRA off a car's 'collection'-type debt
     whenever a day's collection beats the car's daily_target -- the driver already
     added the extra on top of the target themselves, so the surplus counts as a debt
     payment without touching the recorded collection amount. No-op if the car has no
     target, the day didn't beat it, or no 'collection' debt has started yet.
+    Whether a debt has "started" is judged against transaction_date (the date the
+    collection was actually entered/saved), not collection_date -- a line can be a
+    backdated catch-up entry for a day before the debt's start_date even though the
+    debt is already active by the time it's being recorded.
     Returns the DebtPayment created, or None."""
     if not car.daily_target or collected_amount <= car.daily_target:
         return None
-    balance = car_debt_balance(car.id, return_type="collection", as_of=collection_date)
+    balance = car_debt_balance(car.id, return_type="collection", as_of=transaction_date)
     if balance <= 0:
         return None
     applied = min(DEBT_COLLECTION_EXTRA, balance)

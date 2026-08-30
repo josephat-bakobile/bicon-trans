@@ -149,7 +149,7 @@ def new():
             db.session.flush()
             car = car_map.get(line["car_id"])
             if car:
-                payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id)
+                payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id, tdate)
                 if payment:
                     debt_payments.append((car, payment.amount))
         db.session.commit()
@@ -223,7 +223,7 @@ def edit(txn_id):
             db.session.flush()
             car = car_map.get(line["car_id"])
             if car:
-                payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id)
+                payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id, tdate)
                 if payment:
                     debt_payments.append((car, payment.amount))
         db.session.commit()
