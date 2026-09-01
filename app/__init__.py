@@ -434,6 +434,40 @@ def _migrate_schema():
         db.session.execute(text("ALTER TABLE debts ADD COLUMN start_date DATE"))
         db.session.execute(text("UPDATE debts SET start_date = date WHERE start_date IS NULL"))
         db.session.commit()
+    if "consumption_entry_id" not in debt_cols:
+        db.session.execute(
+            text(
+                "ALTER TABLE debts ADD COLUMN consumption_entry_id INTEGER "
+                "REFERENCES consumption_entries(id)"
+            )
+        )
+        db.session.commit()
+
+        # Every debt from here on mirrors into a MADENI expense entry (see
+        # routes.debts.new_debt) so a payout counts against collection-minus-
+        # consumption immediately, not just once repaid. Backfill the same
+        # entry for debts that already existed before that link was added, so
+        # historical totals reflect it too.
+        from .models import ConsumptionEntry, Debt, ExpenseCategory
+
+        madeni_category = ExpenseCategory.query.filter_by(name="MADENI").first()
+        if not madeni_category:
+            madeni_category = ExpenseCategory(name="MADENI")
+            db.session.add(madeni_category)
+            db.session.flush()
+
+        for debt in Debt.query.filter_by(consumption_entry_id=None).all():
+            entry = ConsumptionEntry(
+                date=debt.date,
+                car_id=debt.car_id,
+                category_id=madeni_category.id,
+                amount=debt.amount,
+                description=debt.description,
+            )
+            db.session.add(entry)
+            db.session.flush()
+            debt.consumption_entry_id = entry.id
+        db.session.commit()
 
     # Non-SERVICE tickets used to always excuse their service_date immediately
     # (same as SERVICE); now that's opt-in and deferred until confirm/close.
@@ -478,6 +512,8 @@ def _seed_defaults():
         db.session.add(ExpenseCategory(name="SERVICE", is_service=True))
     elif not service_category.is_service:
         service_category.is_service = True
+    if not ExpenseCategory.query.filter_by(name="MADENI").first():
+        db.session.add(ExpenseCategory(name="MADENI"))
     if DocumentType.query.count() == 0:
         for name in ["LATRA", "BIMA (INSURANCE)", "LESENI YA BARABARA"]:
             db.session.add(DocumentType(name=name))

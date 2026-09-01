@@ -196,7 +196,11 @@ class Debt(db.Model):
     a day's collection beats the target (see utils.apply_collection_debt_repayment);
     'allowance' means it's redirected out of the driver's next confirmed
     DriverAllowance instead (see driver_allowance.give_allowance). start_date is the
-    first day either mechanism is allowed to draw against this debt."""
+    first day either mechanism is allowed to draw against this debt.
+    Also mirrored 1:1 into its own ConsumptionEntry under the MADENI category (see
+    routes.debts.new_debt) so the money handed out shows up as consumption -- without
+    it a car's collected-minus-consumed net would look better than reality just
+    because the debt payout never left the books."""
 
     __tablename__ = "debts"
 
@@ -209,9 +213,13 @@ class Debt(db.Model):
     description = db.Column(db.String(255))
     return_type = db.Column(db.String(20), nullable=False, default="collection")
     start_date = db.Column(db.Date, default=lambda ctx: ctx.get_current_parameters().get("date") or date_cls.today())
+    consumption_entry_id = db.Column(
+        db.Integer, db.ForeignKey("consumption_entries.id"), unique=True
+    )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")
+    consumption_entry = db.relationship("ConsumptionEntry")
 
 
 class DebtPayment(db.Model):

@@ -4,10 +4,17 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext as _
 
 from ..extensions import db
-from ..models import Car, Debt, DebtPayment
+from ..models import Car, ConsumptionEntry, Debt, DebtPayment, ExpenseCategory
 from ..security import get_current_user
 from ..sms import send_debt_added_sms, send_debt_payment_sms
 from ..utils import DEBT_COLLECTION_EXTRA, car_debt_balance, debt_balances, parse_date, validate_entry_date
+
+MADENI_CATEGORY_NAME = "MADENI"
+
+
+def _madeni_category():
+    return ExpenseCategory.query.filter_by(name=MADENI_CATEGORY_NAME).first()
+
 
 bp = Blueprint("debts", __name__)
 
@@ -43,15 +50,28 @@ def new_debt():
 
     car_id = int(request.form["car_id"])
     amount = float(request.form["amount"])
+    description = (request.form.get("description") or "").strip() or None
     debt = Debt(
         date=debt_date,
         car_id=car_id,
         amount=amount,
-        description=(request.form.get("description") or "").strip() or None,
+        description=description,
         return_type=return_type,
         start_date=start_date,
     )
     db.session.add(debt)
+
+    entry = ConsumptionEntry(
+        date=debt_date,
+        car_id=car_id,
+        category_id=_madeni_category().id,
+        amount=amount,
+        description=description,
+    )
+    db.session.add(entry)
+    db.session.flush()
+    debt.consumption_entry_id = entry.id
+
     db.session.commit()
     flash(_("Deni limehifadhiwa."), "success")
     send_debt_added_sms(debt.car, amount, return_type, get_current_user())
@@ -61,7 +81,10 @@ def new_debt():
 @bp.route("/<int:debt_id>/delete", methods=["POST"])
 def delete_debt(debt_id):
     d = Debt.query.get_or_404(debt_id)
+    linked = d.consumption_entry
     db.session.delete(d)
+    if linked is not None:
+        db.session.delete(linked)
     db.session.commit()
     flash(_("Deni limefutwa."), "info")
     return redirect(url_for("debts.index"))
