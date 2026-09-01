@@ -4,10 +4,25 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext as _
 
 from ..extensions import db
-from ..models import Car, ConsumptionEntry, ExpenseCategory
+from ..models import Car, CarService, ConsumptionEntry, Debt, ExpenseCategory, ShopServicePayment
 from ..utils import parse_date, validate_entry_date
 
 bp = Blueprint("consumption", __name__)
+
+
+def _locked_source_message(entry):
+    """None if entry is a plain, freely editable/deletable ConsumptionEntry.
+    Otherwise a Swahili message explaining where it actually needs to be
+    changed -- it's a 1:1 mirror of a Debt/CarService/ShopServicePayment (see
+    those models' consumption_entry_id), so editing or deleting it here would
+    desync it from the record that owns it."""
+    if Debt.query.filter_by(consumption_entry_id=entry.id).first():
+        return _("Taarifa hii inatokana na deni -- ibadilishe au ifute kutoka ukurasa wa Madeni.")
+    if CarService.query.filter_by(consumption_entry_id=entry.id).first():
+        return _("Taarifa hii inatokana na tiketi ya huduma -- ibadilishe au ifute kutoka ukurasa wa Huduma.")
+    if ShopServicePayment.query.filter_by(consumption_entry_id=entry.id).first():
+        return _("Taarifa hii inatokana na malipo ya huduma -- ibadilishe au ifute kutoka ukurasa wa Huduma.")
+    return None
 
 
 @bp.route("/")
@@ -73,6 +88,11 @@ def edit(entry_id):
     cars = Car.query.filter_by(active=True).order_by(Car.code).all()
     categories = ExpenseCategory.query.filter_by(active=True).order_by(ExpenseCategory.name).all()
 
+    locked_message = _locked_source_message(entry)
+    if locked_message:
+        flash(locked_message, "danger")
+        return redirect(url_for("consumption.list_view"))
+
     if request.method == "POST":
         new_date = parse_date(request.form.get("date"), entry.date)
         error = validate_entry_date(new_date)
@@ -95,6 +115,12 @@ def edit(entry_id):
 @bp.route("/<int:entry_id>/delete", methods=["POST"])
 def delete(entry_id):
     entry = ConsumptionEntry.query.get_or_404(entry_id)
+
+    locked_message = _locked_source_message(entry)
+    if locked_message:
+        flash(locked_message, "danger")
+        return redirect(url_for("consumption.list_view"))
+
     db.session.delete(entry)
     db.session.commit()
     flash(_("Taarifa ya matumizi imefutwa."), "info")
