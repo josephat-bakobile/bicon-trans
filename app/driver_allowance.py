@@ -6,6 +6,10 @@ from .models import Car, CarService, DebtPayment, DriverAllowance, ShortfallClea
 from .utils import car_debt_balance
 
 MID_MONTH_START_DAY = 13
+# A period this many days overdue without a confirmed DriverAllowance is
+# forfeited -- the prediction moves on to the next period instead of showing
+# it as ever-more overdue.
+OVERDUE_SKIP_DAYS = 3
 
 PERIOD_LABELS = {"kati": "katikati ya mwezi", "mwisho": "mwisho wa mwezi"}
 PERIOD_ORDER = {"kati": 0, "mwisho": 1}
@@ -73,7 +77,10 @@ def scheduled_date_for(car_id, period_year, period_month, period_type):
 def predict_for_car(car, today=None):
     """Next due allowance period for a car, counted forward from its most recent
     DriverAllowance. A car with no history yet defaults to this month's mid-month
-    slot."""
+    slot. A period left unconfirmed for OVERDUE_SKIP_DAYS days or more is skipped
+    forward to the next one (kati -> mwisho -> next month's kati -> ...), so a
+    driver who misses a slot doesn't just accumulate an ever-larger overdue count
+    against a payment that was never given."""
     today = today or date.today()
     last = _last_allowance(car.id)
 
@@ -82,8 +89,12 @@ def predict_for_car(car, today=None):
     else:
         period_year, period_month, period_type = _next_period(last.period_year, last.period_month, last.period_type)
 
-    scheduled_date = scheduled_date_for(car.id, period_year, period_month, period_type)
-    days_remaining = (scheduled_date - today).days
+    while True:
+        scheduled_date = scheduled_date_for(car.id, period_year, period_month, period_type)
+        days_remaining = (scheduled_date - today).days
+        if days_remaining > -OVERDUE_SKIP_DAYS:
+            break
+        period_year, period_month, period_type = _next_period(period_year, period_month, period_type)
 
     if days_remaining < 0:
         status = "overdue"

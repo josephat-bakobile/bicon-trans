@@ -141,24 +141,27 @@ def send_debt_payment_sms(car, amount_paid, balance, user=None):
     return send_and_log(car, "debt_payment", message, user)
 
 
-def send_and_log(car, scenario, message, user):
+def send_and_log(car, scenario, message, user, phone=None):
     """Sends the SMS for a car/scenario and always records the attempt (sent or
     failed) to SmsLog. Returns (ok, error_message). Caller is expected to have
-    already checked can_send(car) so this only covers actual send attempts."""
+    already checked can_send(car) so this only covers actual send attempts.
+    phone overrides the destination (e.g. a vendor's number instead of the
+    driver's) -- when given, the log isn't attributed to a driver."""
     from .extensions import db
     from .models import SmsLog
 
-    driver = car.driver
+    driver = None if phone else car.driver
+    dest_phone = phone or (driver.phone if driver else None)
     log = SmsLog(
         car_id=car.id,
         driver_id=driver.id if driver else None,
-        phone=driver.phone if driver else None,
+        phone=dest_phone,
         scenario=scenario,
         message=message,
         sent_by_id=user.id if user else None,
     )
     try:
-        send_sms(driver.phone, message)
+        send_sms(dest_phone, message)
         log.status = "sent"
         db.session.add(log)
         db.session.commit()
@@ -169,3 +172,36 @@ def send_and_log(car, scenario, message, user):
         db.session.add(log)
         db.session.commit()
         return False, str(e)
+
+
+def can_send_shop(shop):
+    """(bool, reason) -- whether this vendor (shop) is set up to receive SMS at
+    all, mirroring can_send's checks for a driver."""
+    if shop is None:
+        return False, _("Muuza hajapangwa.")
+    if not shop.active:
+        return False, _("Muuza %(name)s amezimwa.", name=shop.name)
+    if not shop.phone:
+        return False, _("Namba ya simu ya muuza %(name)s haijawekwa.", name=shop.name)
+    if not normalize_phone(shop.phone):
+        return False, _(
+            "Namba ya simu ya muuza %(name)s si sahihi (%(phone)s).", name=shop.name, phone=shop.phone
+        )
+    return True, None
+
+
+def send_ticket_opened_sms(service, user=None):
+    """Notifies the vendor that a new service ticket has been opened for one of
+    their cars, so they know to log into the shop portal and start adding
+    items. Best-effort, same silent-failure pattern as send_debt_added_sms."""
+    shop = service.shop
+    ok, reason = can_send_shop(shop)
+    if not ok:
+        return False, reason
+    message = _(
+        "Habari %(shop_name)s, tiketi namba %(ticket_no)s imefunguliwa kwa gari %(car_code)s.",
+        shop_name=shop.name,
+        ticket_no=service.id,
+        car_code=service.car.code,
+    )
+    return send_and_log(service.car, "ticket_opened", message, user, phone=shop.phone)

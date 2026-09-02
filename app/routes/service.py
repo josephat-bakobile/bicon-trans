@@ -17,7 +17,7 @@ from ..models import (
     ShortfallClearance,
 )
 from ..security import get_current_user, require_permission
-from ..sms import can_send, send_and_log
+from ..sms import can_send, send_and_log, send_ticket_opened_sms
 from ..utils import parse_date, validate_service_date
 
 bp = Blueprint("service", __name__)
@@ -169,6 +169,7 @@ def new():
     db.session.commit()
     if shop:
         flash(_("Tiketi imefunguliwa kwa muuza %(shop_name)s. Wanaweza kuongeza vipengele na kuwasilisha.", shop_name=shop.name), "success")
+        send_ticket_opened_sms(service, get_current_user())
     else:
         flash(_("Tiketi ya huduma imefunguliwa. Ongeza vipengele (vipuri/gharama) kisha ufunge tiketi."), "success")
     return redirect(url_for("service.ticket_detail", service_id=service.id))
