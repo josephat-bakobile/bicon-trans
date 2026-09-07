@@ -70,6 +70,18 @@ class User(db.Model):
     def has_permission(self, code):
         return self.role.has_permission(code)
 
+    @property
+    def is_cashier_only(self):
+        """True for a role scoped to exactly the 'cashier' permission and nothing
+        else -- such a user is confined to the cashier portal (see
+        app._require_login) and never sees the admin dashboard/analytics or any
+        other module, since those are all financial/operational reporting the
+        cashier isn't meant to have visibility into."""
+        if self.role.is_super_admin:
+            return False
+        codes = {p.code for p in self.role.permissions}
+        return codes == {"cashier"}
+
     def __repr__(self):
         return self.username
 
@@ -178,6 +190,74 @@ class CollectionLine(db.Model):
     collection_date = db.Column(db.Date, nullable=False, default=date_cls.today)
     amount = db.Column(db.Float, nullable=False)
     note = db.Column(db.String(255))
+
+    car = db.relationship("Car")
+
+
+class CashierCollectionBatch(db.Model):
+    """A cashier's working day of collections, entered car-by-car as cash comes in
+    -- before the office deposits it and gets a bank/mobile-money trans_no. Starts
+    "open" while the cashier is still adding CashierCollectionEntry rows; the
+    cashier "closes" the day (see routes.cashier.close) once done, moving it to
+    "submitted" so the office can review it. The office then confirms it (see
+    routes.collections.confirm_batch), entering the trans_no -- this is what
+    actually creates the real CollectionTransaction/CollectionLine rows via the
+    same path as a direct office entry, so nothing downstream (reports, debt
+    auto-repayment, SMS, reconciliation) sees this batch's numbers until then.
+    A cashier may end up with several batches for the same batch_date if they
+    close one and start entering again later the same day -- each is confirmed
+    (or not) independently."""
+
+    __tablename__ = "cashier_collection_batches"
+
+    id = db.Column(db.Integer, primary_key=True)
+    batch_date = db.Column(db.Date, nullable=False, default=date_cls.today)
+    status = db.Column(db.String(10), default="open", nullable=False)  # 'open' | 'submitted' | 'confirmed'
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    submitted_at = db.Column(db.DateTime)
+    confirmed_at = db.Column(db.DateTime)
+    confirmed_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    transaction_id = db.Column(db.Integer, db.ForeignKey("collection_transactions.id"))
+    note = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    created_by = db.relationship("User", foreign_keys=[created_by_id])
+    confirmed_by = db.relationship("User", foreign_keys=[confirmed_by_id])
+    transaction = db.relationship("CollectionTransaction")
+
+    lines = db.relationship(
+        "CashierCollectionEntry",
+        backref="batch",
+        cascade="all, delete-orphan",
+        order_by="CashierCollectionEntry.id",
+    )
+
+    @property
+    def total(self):
+        return sum(line.amount for line in self.lines)
+
+    @property
+    def is_open(self):
+        return self.status == "open"
+
+    @property
+    def is_submitted(self):
+        return self.status == "submitted"
+
+
+class CashierCollectionEntry(db.Model):
+    """One car's cash collection logged by the cashier, before the day's batch is
+    submitted/confirmed and turned into a real CollectionLine."""
+
+    __tablename__ = "cashier_collection_entries"
+
+    id = db.Column(db.Integer, primary_key=True)
+    batch_id = db.Column(db.Integer, db.ForeignKey("cashier_collection_batches.id"), nullable=False)
+    car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
+    collection_date = db.Column(db.Date, nullable=False, default=date_cls.today)
+    amount = db.Column(db.Float, nullable=False)
+    note = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")
 

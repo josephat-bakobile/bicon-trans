@@ -48,6 +48,8 @@ def login():
                 session.permanent = True
                 session["user_id"] = user.id
                 session["lang"] = user.language
+                if user.is_cashier_only:
+                    return redirect(url_for("cashier.index"))
                 return redirect(next_url or url_for("dashboard.index"))
             register_failed_login(user)
             db.session.commit()

@@ -1,8 +1,23 @@
 {% extends "base.html" %}
-{% block title %}{{ _('Hariri') if is_edit else _('Muamala Mpya') }} - BICON TRANS{% endblock %}
+{% block title %}{{ _('Hariri') if is_edit else (_('Thibitisha Muamala') if confirm_batch is defined else _('Muamala Mpya')) }} - BICON TRANS{% endblock %}
 {% block content %}
 
-<h4 class="mb-3"><i class="bi {{ 'bi-pencil' if is_edit else 'bi-cash-coin' }} text-primary"></i> {{ _('Hariri Muamala %(trans_no)s', trans_no=values.trans_no) if is_edit else _('Muamala Mpya wa Makusanyo') }}</h4>
+<h4 class="mb-3">
+  <i class="bi {{ 'bi-pencil' if is_edit else 'bi-cash-coin' }} text-primary"></i>
+  {% if is_edit %}
+    {{ _('Hariri Muamala %(trans_no)s', trans_no=values.trans_no) }}
+  {% elif confirm_batch is defined %}
+    {{ _('Thibitisha Makusanyo ya Mhasibu (%(date)s)', date=confirm_batch.batch_date.strftime('%d-%m-%Y')) }}
+  {% else %}
+    {{ _('Muamala Mpya wa Makusanyo') }}
+  {% endif %}
+</h4>
+
+{% if confirm_batch is defined %}
+<div class="alert alert-info" style="max-width: 920px;">
+  {{ _('Haya ni makusanyo aliyoingiza mhasibu %(name)s. Kagua kiasi kwa kila gari, weka Trans No uliyopokea kutoka benki/pesa za simu, kisha uthibitishe.', name=confirm_batch.created_by.full_name or confirm_batch.created_by.username) }}
+</div>
+{% endif %}
 
 <div class="card-panel" style="max-width: 920px;">
   <form method="post">
@@ -62,8 +77,11 @@
     <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="add-row"><i class="bi bi-plus-lg"></i> {{ _('Ongeza Gari') }}</button>
 
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> {{ _('Hifadhi') }}</button>
-      <a href="{{ url_for('collections.list_view') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> {{ _('Ghairi') }}</a>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check2-circle"></i> {{ _('Thibitisha') if confirm_batch is defined else _('Hifadhi') }}
+      </button>
+      <a href="{{ url_for('collections.pending_batches') if confirm_batch is defined else url_for('collections.list_view') }}"
+         class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i> {{ _('Ghairi') }}</a>
     </div>
   </form>
 </div>

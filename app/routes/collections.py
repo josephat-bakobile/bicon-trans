@@ -1,10 +1,10 @@
-from datetime import date
+from datetime import date, datetime
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext as _
 
 from ..extensions import db
-from ..models import Car, CollectionLine, CollectionTransaction
+from ..models import CashierCollectionBatch, Car, CollectionLine, CollectionTransaction
 from ..security import get_current_user, require_permission
 from ..sms import can_send, send_and_log, send_debt_payment_sms
 from ..utils import (
@@ -90,6 +90,38 @@ def _values_from_form(form, lines, trans_no, txn_id=None):
     }
 
 
+def create_transaction(tdate, note, trans_no, lines, cars):
+    """Creates a CollectionTransaction + one CollectionLine per line dict, running
+    debt auto-repayment on each exactly as a direct office entry does (see
+    new()). Shared with routes.collections.confirm_batch so a cashier batch,
+    once confirmed, is created through the identical path -- and therefore
+    behaves identically in reports/reconciliation/debts -- as a transaction the
+    office types in directly. Caller must have already validated trans_no/lines/
+    dates and must commit(); returns (txn, debt_payments) where debt_payments is
+    a list of (car, amount) tuples for send_debt_payment_sms."""
+    txn = CollectionTransaction(transaction_date=tdate, note=note, trans_no=trans_no)
+    db.session.add(txn)
+    db.session.flush()
+    car_map = {c.id: c for c in cars}
+    debt_payments = []
+    for line in lines:
+        cl = CollectionLine(
+            transaction_id=txn.id,
+            car_id=line["car_id"],
+            amount=line["amount"],
+            note=line["note"],
+            collection_date=line["collection_date"],
+        )
+        db.session.add(cl)
+        db.session.flush()
+        car = car_map.get(line["car_id"])
+        if car:
+            payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id, tdate)
+            if payment:
+                debt_payments.append((car, payment.amount))
+    return txn, debt_payments
+
+
 @bp.route("/")
 def list_view():
     start = parse_date(request.args.get("start"))
@@ -132,26 +164,7 @@ def new():
             values = _values_from_form(request.form, lines, trans_no)
             return render_template("collections/form.html", cars=cars, values=values, is_edit=False)
 
-        txn = CollectionTransaction(transaction_date=tdate, note=note, trans_no=trans_no)
-        db.session.add(txn)
-        db.session.flush()
-        car_map = {c.id: c for c in cars}
-        debt_payments = []
-        for line in lines:
-            cl = CollectionLine(
-                transaction_id=txn.id,
-                car_id=line["car_id"],
-                amount=line["amount"],
-                note=line["note"],
-                collection_date=line["collection_date"],
-            )
-            db.session.add(cl)
-            db.session.flush()
-            car = car_map.get(line["car_id"])
-            if car:
-                payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id, tdate)
-                if payment:
-                    debt_payments.append((car, payment.amount))
+        txn, debt_payments = create_transaction(tdate, note, trans_no, lines, cars)
         db.session.commit()
         flash(_("Muamala %(trans_no)s umehifadhiwa.", trans_no=txn.trans_no), "success")
         for car, amount in debt_payments:
@@ -160,6 +173,78 @@ def new():
 
     values = _values_from_txn(None)
     return render_template("collections/form.html", cars=cars, values=values, is_edit=False)
+
+
+@bp.route("/pending")
+def pending_batches():
+    batches = (
+        CashierCollectionBatch.query.filter_by(status="submitted")
+        .order_by(CashierCollectionBatch.submitted_at.desc(), CashierCollectionBatch.id.desc())
+        .all()
+    )
+    return render_template("collections/pending.html", batches=batches)
+
+
+def _values_from_batch(batch):
+    sorted_lines = sorted(batch.lines, key=lambda l: (l.car.code, l.collection_date))
+    return {
+        "id": None,
+        "trans_no": next_trans_no(),
+        "date": batch.batch_date.isoformat(),
+        "note": batch.note or "",
+        "lines": [
+            {
+                "car_id": l.car_id,
+                "amount": l.amount,
+                "note": l.note or "",
+                "collection_date": l.collection_date.isoformat(),
+            }
+            for l in sorted_lines
+        ],
+    }
+
+
+@bp.route("/pending/<int:batch_id>/confirm", methods=["GET", "POST"])
+def confirm_batch(batch_id):
+    batch = CashierCollectionBatch.query.filter_by(id=batch_id, status="submitted").first_or_404()
+    cars = Car.query.filter_by(active=True).order_by(Car.code).all()
+
+    if request.method == "POST":
+        tdate = parse_date(request.form.get("date"), batch.batch_date)
+        note = (request.form.get("note") or "").strip() or None
+        trans_no = (request.form.get("trans_no") or "").strip()
+        lines = _extract_lines(request.form, tdate)
+
+        error = None
+        if not trans_no:
+            error = _("Weka Trans No.")
+        elif not lines:
+            error = _("Ongeza angalau gari moja na kiasi.")
+        elif CollectionTransaction.query.filter_by(trans_no=trans_no).first():
+            error = _("Trans No %(trans_no)s tayari ipo. Tumia namba nyingine.", trans_no=trans_no)
+        else:
+            error = _validate_dates(tdate, lines)
+
+        if error:
+            flash(error, "danger")
+            values = _values_from_form(request.form, lines, trans_no)
+            return render_template(
+                "collections/form.html", cars=cars, values=values, is_edit=False, confirm_batch=batch
+            )
+
+        txn, debt_payments = create_transaction(tdate, note, trans_no, lines, cars)
+        batch.status = "confirmed"
+        batch.confirmed_at = datetime.utcnow()
+        batch.confirmed_by_id = get_current_user().id
+        batch.transaction_id = txn.id
+        db.session.commit()
+        flash(_("Muamala %(trans_no)s umethibitishwa kutoka kwa mhasibu.", trans_no=txn.trans_no), "success")
+        for car, amount in debt_payments:
+            send_debt_payment_sms(car, amount, car_debt_balance(car.id), get_current_user())
+        return redirect(url_for("collections.pending_batches"))
+
+    values = _values_from_batch(batch)
+    return render_template("collections/form.html", cars=cars, values=values, is_edit=False, confirm_batch=batch)
 
 
 @bp.route("/<int:txn_id>/edit", methods=["GET", "POST"])

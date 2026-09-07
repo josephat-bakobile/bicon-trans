@@ -25,6 +25,7 @@ PERMISSION_MAP = {
     "reports": "reports",
     "admin": "users",
     "smslog": "sms",
+    "cashier": "cashier",
 }
 
 # Passenger/cPanel (and any WSGI host that isn't Docker) does not source a shell
@@ -99,6 +100,7 @@ def create_app():
     from .routes.admin import bp as admin_bp
     from .routes.smslog import bp as smslog_bp
     from .routes.shop_portal import bp as shop_portal_bp
+    from .routes.cashier import bp as cashier_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -116,6 +118,7 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(smslog_bp, url_prefix="/sms-log")
     app.register_blueprint(shop_portal_bp, url_prefix="/shop")
+    app.register_blueprint(cashier_bp, url_prefix="/cashier")
 
     app.jinja_env.filters["money"] = lambda v: f"{(v or 0):,.0f}"
 
@@ -185,6 +188,11 @@ def create_app():
         user = get_current_user()
         if not user:
             return redirect(url_for("auth.login", next=request.path))
+        if user.is_cashier_only and request.blueprint not in ("cashier", "auth"):
+            # A pure Cashier role never sees the dashboard/analytics or any other
+            # module -- only their own collection entry portal (see
+            # User.is_cashier_only). auth stays reachable for password change/logout.
+            return redirect(url_for("cashier.index"))
         required_permission = PERMISSION_MAP.get(request.blueprint)
         if required_permission and not user.has_permission(required_permission):
             flash("Huna ruhusa ya kufikia ukurasa huu.", "danger")
@@ -584,6 +592,7 @@ PERMISSIONS = [
     ("reports", "Ripoti"),
     ("users", "Watumiaji na Majukumu"),
     ("sms", "Kutuma SMS kwa Madereva"),
+    ("cashier", "Kituo cha Mhasibu (Cashier)"),
 ]
 
 DEFAULT_SUPER_ADMIN_USERNAME = "josephat.bakobile"
