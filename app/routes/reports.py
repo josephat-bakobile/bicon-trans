@@ -6,6 +6,7 @@ from flask_babel import gettext as _
 from ..export_excel import (
     build_collections_excel,
     build_consumption_excel,
+    build_pnl_excel,
     build_service_items_excel,
     build_shortfalls_excel,
     build_summary_excel,
@@ -13,6 +14,7 @@ from ..export_excel import (
 from ..export_pdf import (
     build_collections_pdf,
     build_consumption_pdf,
+    build_pnl_pdf,
     build_service_items_pdf,
     build_shortfalls_pdf,
     build_summary_pdf,
@@ -22,6 +24,8 @@ from ..models import Car, ExpenseCategory, ServiceItemCategory, ShortfallClearan
 from ..report_data import (
     collections_rows,
     consumption_rows,
+    pnl_rows,
+    pnl_totals,
     service_category_totals,
     service_item_price_history,
     service_item_rows,
@@ -208,6 +212,41 @@ def analytics():
         category_summary=category_summary,
         debt_trend=debt_trend,
     )
+
+
+@bp.route("/pnl")
+def pnl():
+    start, end = _range()
+    rows = pnl_rows(start, end)
+    totals = pnl_totals(rows)
+    latest = rows[-1] if rows else None
+
+    return render_template(
+        "reports/pnl.html",
+        start=start,
+        end=end,
+        rows=rows,
+        totals=totals,
+        latest=latest,
+    )
+
+
+@bp.route("/pnl.xlsx")
+def pnl_xlsx():
+    start, end = _range()
+    rows = pnl_rows(start, end)
+    totals = pnl_totals(rows)
+    buf = build_pnl_excel(rows, totals, start, end)
+    return _send(buf, f"faida_hasara_{start}_{end}.xlsx", "xlsx")
+
+
+@bp.route("/pnl.pdf")
+def pnl_pdf():
+    start, end = _range()
+    rows = pnl_rows(start, end)
+    totals = pnl_totals(rows)
+    buf = build_pnl_pdf(rows, totals, start, end)
+    return _send(buf, f"faida_hasara_{start}_{end}.pdf", "pdf")
 
 
 @bp.route("/streak-sms/<int:car_id>", methods=["POST"])

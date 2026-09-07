@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Faida na Hasara') }} - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3"><i class="bi bi-graph-up-arrow text-primary"></i> {{ _('Ripoti ya Faida na Hasara (P&L)') }}</h4>
+<p class="text-muted small mb-3">
+  {{ _('Mapato (Makusanyo) dhidi ya Gharama (Matumizi), kwa mwezi -- Gharama Halisi za Uzalishaji (COGS),
+  Gharama za Uendeshaji (OpEx) na Gharama Nyingine hutegemea "Kundi la P&L" ulilochagua kwa kila Aina ya
+  Matumizi kwenye ukurasa wa %(link)s.', link='<a href="' ~ url_for('categories.list_view') ~ '">' ~ _('Aina za Matumizi') ~ '</a>') | safe }}
+</p>
+
+<form class="row g-2 mb-4 card-panel" method="get">
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Kuanzia') }}</label>
+    <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Hadi') }}</label>
+    <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
+  </div>
+  <div class="col-auto d-flex align-items-end">
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Onyesha') }}</button>
+  </div>
+  <div class="col-auto d-flex align-items-end ms-auto">
+    <a class="btn btn-sm btn-outline-primary me-1" href="{{ url_for('reports.pnl_xlsx', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    <a class="btn btn-sm btn-outline-danger" href="{{ url_for('reports.pnl_pdf', start=start.isoformat(), end=end.isoformat()) }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+  </div>
+</form>
+
+{% if latest %}
+<div class="card-panel mb-4 d-flex align-items-center gap-3 {% if latest.net_profit >= 0 %}border-success{% else %}border-danger{% endif %}" style="border-width: 2px;">
+  <i class="bi {{ 'bi-graph-up-arrow text-success' if latest.net_profit >= 0 else 'bi-graph-down-arrow text-danger' }}" style="font-size: 2rem;"></i>
+  <div>
+    <div class="text-muted small">{{ _('Kipindi cha Hivi Karibuni') }}: {{ latest.label }}</div>
+    <div class="fs-4 fw-bold {{ 'text-success' if latest.net_profit >= 0 else 'text-danger' }}">
+      {% if latest.net_profit >= 0 %}{{ _('Faida ya') }}{% else %}{{ _('Hasara ya') }}{% endif %}
+      TZS {{ latest.net_profit | abs | money }}
+    </div>
+    <div class="text-muted small">{{ _('Net Margin') }}: {{ "%.1f"|format(latest.net_margin) }}%</div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card-panel mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <strong><i class="bi bi-bar-chart-line text-primary"></i> {{ _('Mwenendo wa Faida/Hasara Halisi kwa Mwezi') }}</strong>
+  </div>
+  <canvas id="netProfitChart" height="90"></canvas>
+</div>
+
+<div class="card-panel">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <strong><i class="bi bi-table text-primary"></i> {{ _('Muhtasari wa Kila Mwezi') }}</strong>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-money mb-0">
+      <thead>
+        <tr>
+          <th>{{ _('Mwezi') }}</th>
+          <th class="amount">{{ _('Mapato') }}</th>
+          <th class="amount">COGS</th>
+          <th class="amount">{{ _('Faida Ghafi') }}</th>
+          <th class="amount">OpEx</th>
+          <th class="amount">{{ _('Faida ya Uendeshaji') }}</th>
+          <th class="amount">{{ _('Mengine') }}</th>
+          <th class="amount">{{ _('Faida/Hasara Halisi') }}</th>
+          <th class="amount">Gross %</th>
+          <th class="amount">Net %</th>
+          <th class="amount">{{ _('Jumla ya Mwaka') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.label }}</td>
+          <td class="amount">{{ r.revenue | money }}</td>
+          <td class="amount">{{ r.cogs | money }}</td>
+          <td class="amount">{{ r.gross_profit | money }}</td>
+          <td class="amount">{{ r.opex | money }}</td>
+          <td class="amount">{{ r.operating_profit | money }}</td>
+          <td class="amount">{{ r.other | money }}</td>
+          <td class="amount fw-bold {{ 'text-success' if r.net_profit >= 0 else 'text-danger' }}">{{ r.net_profit | money }}</td>
+          <td class="amount">{{ "%.1f"|format(r.gross_margin) }}%</td>
+          <td class="amount">{{ "%.1f"|format(r.net_margin) }}%</td>
+          <td class="amount">{{ r.running_net | money }}</td>
+          <td>
+            {% if r.swing_flag %}
+            <span class="badge text-bg-warning" title="{{ _('Faida/Hasara Halisi imebadilika zaidi ya 30%% ukilinganisha na mwezi uliopita.') }}">
+              <i class="bi bi-exclamation-triangle"></i> {{ "%.0f"|format(r.swing_pct) }}%
+            </span>
+            {% endif %}
+            {% if r.has_inferred_category %}
+            <span class="badge text-bg-secondary" title="{{ _('Baadhi ya matumizi ya mwezi huu yapo kwenye aina ambazo bado hazijakaguliwa (kundi la P&L limekisiwa). Kagua kwenye Aina za Matumizi.') }}">
+              <i class="bi bi-question-circle"></i> {{ _('imekisiwa') }}
+            </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="12" class="text-muted text-center py-3">{{ _('Hakuna data.') }}</td></tr>
+        {% endfor %}
+      </tbody>
+      {% if rows %}
+      <tfoot>
+        <tr class="table-light fw-bold">
+          <td>{{ _('JUMLA KUU') }}</td>
+          <td class="amount">{{ totals.revenue | money }}</td>
+          <td class="amount">{{ totals.cogs | money }}</td>
+          <td class="amount">{{ totals.gross_profit | money }}</td>
+          <td class="amount">{{ totals.opex | money }}</td>
+          <td class="amount">{{ totals.operating_profit | money }}</td>
+          <td class="amount">{{ totals.other | money }}</td>
+          <td class="amount {{ 'text-success' if totals.net_profit >= 0 else 'text-danger' }}">{{ totals.net_profit | money }}</td>
+          <td class="amount">{{ "%.1f"|format(totals.gross_margin) }}%</td>
+          <td class="amount">{{ "%.1f"|format(totals.net_margin) }}%</td>
+          <td class="amount"></td>
+          <td></td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+  <div class="form-text mt-2">
+    {{ _('Kumbuka: Mapato hapa ni fedha zilizokusanywa (cash collected) siku husika, sio mauzo yaliyoingizwa kwenye ankara -- ripoti hii ni ya fedha halisi zilizopokelewa na kutumika, sio "accrual accounting".') }}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+const pnlLabels = {{ rows | map(attribute='label') | list | tojson }};
+const pnlNet = {{ rows | map(attribute='net_profit') | list | tojson }};
+new Chart(document.getElementById('netProfitChart'), {
+  type: 'line',
+  data: {
+    labels: pnlLabels,
+    datasets: [{
+      label: '{{ _("Faida/Hasara Halisi") }}',
+      data: pnlNet,
+      borderColor: '#2a78d6',
+      backgroundColor: 'rgba(42, 120, 214, 0.15)',
+      fill: true,
+      tension: 0.3,
+      pointBackgroundColor: pnlNet.map(v => v >= 0 ? '#1baf7a' : '#d03b3b'),
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: '#e1e0d9' }, ticks: { callback: v => v.toLocaleString() } },
+    }
+  }
+});
+</script>
+{% endblock %}

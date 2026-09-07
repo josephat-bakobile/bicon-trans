@@ -152,6 +152,41 @@ def build_service_items_excel(rows, total, category_totals, start, end):
     return _to_bytes(wb)
 
 
+def build_pnl_excel(rows, totals, start, end):
+    wb = Workbook()
+    ws = _sheet(
+        wb, "FAIDA NA HASARA",
+        ["MWEZI", "MAPATO", "COGS", "FAIDA GHAFI", "OPEX", "FAIDA YA UENDESHAJI", "MENGINE", "FAIDA/HASARA HALISI",
+         "GROSS MARGIN %", "NET MARGIN %"],
+    )
+    for i, r in enumerate(rows, start=2):
+        ws.cell(row=i, column=1, value=r["label"]).font = BODY_FONT
+        ws.cell(row=i, column=2, value=r["revenue"]).font = BODY_FONT
+        ws.cell(row=i, column=3, value=r["cogs"]).font = BODY_FONT
+        ws.cell(row=i, column=4, value=r["gross_profit"]).font = BODY_FONT
+        ws.cell(row=i, column=5, value=r["opex"]).font = BODY_FONT
+        ws.cell(row=i, column=6, value=r["operating_profit"]).font = BODY_FONT
+        ws.cell(row=i, column=7, value=r["other"]).font = BODY_FONT
+        ws.cell(row=i, column=8, value=r["net_profit"]).font = BODY_FONT
+        ws.cell(row=i, column=9, value=round(r["gross_margin"], 1)).font = BODY_FONT
+        ws.cell(row=i, column=10, value=round(r["net_margin"], 1)).font = BODY_FONT
+    total_row = len(rows) + 2
+    ws.cell(row=total_row, column=1, value="JUMLA KUU").font = BOLD_FONT
+    ws.cell(row=total_row, column=2, value=totals["revenue"]).font = BOLD_FONT
+    ws.cell(row=total_row, column=3, value=totals["cogs"]).font = BOLD_FONT
+    ws.cell(row=total_row, column=4, value=totals["gross_profit"]).font = BOLD_FONT
+    ws.cell(row=total_row, column=5, value=totals["opex"]).font = BOLD_FONT
+    ws.cell(row=total_row, column=6, value=totals["operating_profit"]).font = BOLD_FONT
+    ws.cell(row=total_row, column=7, value=totals["other"]).font = BOLD_FONT
+    ws.cell(row=total_row, column=8, value=totals["net_profit"]).font = BOLD_FONT
+    ws.cell(row=total_row, column=9, value=round(totals["gross_margin"], 1)).font = BOLD_FONT
+    ws.cell(row=total_row, column=10, value=round(totals["net_margin"], 1)).font = BOLD_FONT
+    ws.insert_rows(1)
+    ws.cell(row=1, column=1, value=f"FAIDA NA HASARA: {start.isoformat()} hadi {end.isoformat()}").font = BOLD_FONT
+    _autosize(ws, 10)
+    return _to_bytes(wb)
+
+
 def _to_bytes(wb):
     buf = BytesIO()
     wb.save(buf)

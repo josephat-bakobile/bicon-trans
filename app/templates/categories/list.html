@@ -22,7 +22,7 @@
     <div class="card-panel">
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
-          <thead><tr><th>{{ _('Jina') }}</th><th>{{ _('Hali') }}</th><th>{{ _('Huduma ya Gari?') }}</th><th></th></tr></thead>
+          <thead><tr><th>{{ _('Jina') }}</th><th>{{ _('Hali') }}</th><th>{{ _('Huduma ya Gari?') }}</th><th>{{ _('Kundi la P&L') }}</th><th></th></tr></thead>
           <tbody>
             {% for cat in categories %}
             <tr>
@@ -34,6 +34,19 @@
               <td>
                 {% if cat.is_service %}<span class="badge text-bg-primary">{{ _('Ndiyo') }}</span>
                 {% else %}<span class="badge text-bg-secondary">{{ _('Hapana') }}</span>{% endif %}
+              </td>
+              <td>
+                <form method="post" action="{{ url_for('categories.set_pnl_group', category_id=cat.id) }}" class="d-flex align-items-center gap-1">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <select name="pnl_group" class="form-select form-select-sm" style="width: auto;" onchange="this.form.requestSubmit()">
+                    {% for g in ['cogs', 'opex', 'other'] %}
+                    <option value="{{ g }}" {{ 'selected' if cat.pnl_group == g else '' }}>{{ g.upper() }}</option>
+                    {% endfor %}
+                  </select>
+                  {% if cat.pnl_group_inferred %}
+                  <span class="badge text-bg-warning" title="{{ _('Imekisiwa kiotomatiki -- kagua na uhakikishe.') }}">{{ _('imekisiwa') }}</span>
+                  {% endif %}
+                </form>
               </td>
               <td class="text-end">
                 <form method="post" action="{{ url_for('categories.toggle', category_id=cat.id) }}" class="d-inline">

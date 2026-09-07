@@ -113,6 +113,13 @@ class Car(db.Model):
 class ExpenseCategory(db.Model):
     __tablename__ = "expense_categories"
 
+    # Which P&L bucket this category's spend rolls up into (see report_data.pnl_rows):
+    # 'cogs' -- direct cost of running a trip (e.g. fuel), 'opex' -- overhead
+    # (service, admin, salaries...), 'other' -- one-off/non-operating (e.g. madeni).
+    # New/unclassified categories default to 'opex' and should be reviewed --
+    # the P&L report flags them as inferred (see report_data.pnl_rows).
+    PNL_GROUPS = ("cogs", "opex", "other")
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
@@ -120,6 +127,8 @@ class ExpenseCategory(db.Model):
     # only staff tickets booked under an is_service category count toward the
     # next-service-due prediction (see car_service.predict_for_car).
     is_service = db.Column(db.Boolean, default=False, nullable=False)
+    pnl_group = db.Column(db.String(10), default="opex", nullable=False)
+    pnl_group_inferred = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):

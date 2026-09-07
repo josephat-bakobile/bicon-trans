@@ -200,3 +200,47 @@ def build_consumption_pdf(rows, total, start, end):
     doc.build(elements)
     buf.seek(0)
     return buf
+
+
+def build_pnl_pdf(rows, totals, start, end):
+    buf = BytesIO()
+    doc = _doc(buf)
+    data = [
+        ["MWEZI", "MAPATO", "COGS", "FAIDA GHAFI", "OPEX", "FAIDA YA UENDESHAJI", "MENGINE", "FAIDA/HASARA HALISI"]
+    ]
+    for r in rows:
+        data.append(
+            [
+                r["label"],
+                _money(r["revenue"]),
+                _money(r["cogs"]),
+                _money(r["gross_profit"]),
+                _money(r["opex"]),
+                _money(r["operating_profit"]),
+                _money(r["other"]),
+                _money(r["net_profit"]),
+            ]
+        )
+    data.append(
+        [
+            "JUMLA KUU",
+            _money(totals["revenue"]),
+            _money(totals["cogs"]),
+            _money(totals["gross_profit"]),
+            _money(totals["opex"]),
+            _money(totals["operating_profit"]),
+            _money(totals["other"]),
+            _money(totals["net_profit"]),
+        ]
+    )
+    verdict = "Faida" if totals["net_profit"] >= 0 else "Hasara"
+    elements = _header(
+        "Ripoti ya Faida na Hasara (P&L)",
+        f"{start.isoformat()} hadi {end.isoformat()} — {verdict} ya {_money(abs(totals['net_profit']))}",
+    )
+    elements.append(
+        _table(data, col_widths=[2.3 * cm, 2.3 * cm, 2 * cm, 2.3 * cm, 2 * cm, 2.8 * cm, 2 * cm, None])
+    )
+    doc.build(elements)
+    buf.seek(0)
+    return buf

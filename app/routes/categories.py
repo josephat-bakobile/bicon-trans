@@ -44,6 +44,20 @@ def toggle_service(category_id):
     return redirect(url_for("categories.list_view"))
 
 
+@bp.route("/<int:category_id>/pnl_group", methods=["POST"])
+def set_pnl_group(category_id):
+    category = ExpenseCategory.query.get_or_404(category_id)
+    group = request.form.get("pnl_group")
+    if group not in ExpenseCategory.PNL_GROUPS:
+        flash(_("Aina ya P&L si sahihi."), "danger")
+    else:
+        category.pnl_group = group
+        category.pnl_group_inferred = False
+        db.session.commit()
+        flash(_("Aina %(name)s imewekwa kwenye %(group)s.", name=category.name, group=group.upper()), "success")
+    return redirect(url_for("categories.list_view"))
+
+
 @bp.route("/items/new", methods=["POST"])
 def new_item_category():
     name = (request.form.get("name") or "").strip().upper()

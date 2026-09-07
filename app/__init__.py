@@ -498,6 +498,16 @@ def _migrate_schema():
         )
         db.session.commit()
 
+    # P&L report (see report_data.pnl_rows): every category defaults to 'opex'
+    # and is marked inferred so the report can flag it for the user's review
+    # until they classify it under Aina za Matumizi.
+    if "pnl_group" not in expense_cols:
+        db.session.execute(text("ALTER TABLE expense_categories ADD COLUMN pnl_group VARCHAR(10) NOT NULL DEFAULT 'opex'"))
+        db.session.execute(
+            text("ALTER TABLE expense_categories ADD COLUMN pnl_group_inferred BOOLEAN NOT NULL DEFAULT 1")
+        )
+        db.session.commit()
+
 
 def _seed_defaults():
     from .models import Car, DocumentType, ExpenseCategory

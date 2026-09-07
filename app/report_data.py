@@ -1,6 +1,18 @@
+import calendar
+
+from sqlalchemy import func
+
 from .extensions import db
-from .models import Car, CarService, CarServiceItem, CollectionLine, CollectionTransaction, ConsumptionEntry
-from .utils import period_totals
+from .models import (
+    Car,
+    CarService,
+    CarServiceItem,
+    CollectionLine,
+    CollectionTransaction,
+    ConsumptionEntry,
+    ExpenseCategory,
+)
+from .utils import month_bounds, period_totals
 
 
 def summary_rows(start, end):
@@ -192,3 +204,120 @@ def consumption_rows(start, end, car_id=None, category_id=None):
         )
         total += e.amount
     return rows, total
+
+
+def pnl_rows(start, end):
+    """Profit & Loss, one row per calendar month overlapping [start, end], oldest
+    first. Revenue is Collections (money handed over by drivers); expenses are
+    Consumption entries split by each category's pnl_group (COGS/OpEx/Other --
+    see ExpenseCategory.pnl_group). running_net accumulates net profit within a
+    calendar year (resets each January) for a year-to-date figure. swing_pct/
+    swing_flag flag a month whose net profit moved more than 30% from the prior
+    month -- a possible data error or a real event worth a second look either
+    way. has_inferred_category flags a month with spend booked under a category
+    that hasn't been manually classified yet (see categories.set_pnl_group)."""
+    rows = []
+    prev_net = None
+    running_net = 0.0
+    running_year = None
+    y, m = start.year, start.month
+    while (y, m) <= (end.year, end.month):
+        m_start, m_end = month_bounds(y, m)
+        bucket_start = max(m_start, start)
+        bucket_end = min(m_end, end)
+
+        revenue = (
+            db.session.query(func.coalesce(func.sum(CollectionLine.amount), 0.0))
+            .filter(CollectionLine.collection_date.between(bucket_start, bucket_end))
+            .scalar()
+            or 0.0
+        )
+
+        group_totals = dict(
+            db.session.query(ExpenseCategory.pnl_group, func.coalesce(func.sum(ConsumptionEntry.amount), 0.0))
+            .join(ConsumptionEntry, ConsumptionEntry.category_id == ExpenseCategory.id)
+            .filter(ConsumptionEntry.date.between(bucket_start, bucket_end))
+            .group_by(ExpenseCategory.pnl_group)
+            .all()
+        )
+        cogs = group_totals.get("cogs", 0.0)
+        opex = group_totals.get("opex", 0.0)
+        other = group_totals.get("other", 0.0)
+
+        has_inferred = (
+            db.session.query(ConsumptionEntry.id)
+            .join(ExpenseCategory, ConsumptionEntry.category_id == ExpenseCategory.id)
+            .filter(
+                ConsumptionEntry.date.between(bucket_start, bucket_end),
+                ExpenseCategory.pnl_group_inferred.is_(True),
+            )
+            .first()
+            is not None
+        )
+
+        gross_profit = revenue - cogs
+        operating_profit = gross_profit - opex
+        net_profit = operating_profit - other
+        gross_margin = (gross_profit / revenue * 100) if revenue else 0.0
+        net_margin = (net_profit / revenue * 100) if revenue else 0.0
+
+        if running_year != y:
+            running_year = y
+            running_net = 0.0
+        running_net += net_profit
+
+        swing_pct = None
+        if prev_net not in (None, 0):
+            swing_pct = (net_profit - prev_net) / abs(prev_net) * 100
+        prev_net = net_profit
+
+        rows.append(
+            {
+                "year": y,
+                "month": m,
+                "label": f"{calendar.month_abbr[m].upper()} {y}",
+                "period_start": bucket_start,
+                "period_end": bucket_end,
+                "revenue": revenue,
+                "cogs": cogs,
+                "gross_profit": gross_profit,
+                "opex": opex,
+                "operating_profit": operating_profit,
+                "other": other,
+                "net_profit": net_profit,
+                "gross_margin": gross_margin,
+                "net_margin": net_margin,
+                "running_net": running_net,
+                "swing_pct": swing_pct,
+                "swing_flag": swing_pct is not None and abs(swing_pct) > 30,
+                "has_inferred_category": has_inferred,
+            }
+        )
+
+        m += 1
+        if m == 13:
+            m = 1
+            y += 1
+    return rows
+
+
+def pnl_totals(rows):
+    """Grand totals across every row returned by pnl_rows, plus overall margins."""
+    revenue = sum(r["revenue"] for r in rows)
+    cogs = sum(r["cogs"] for r in rows)
+    opex = sum(r["opex"] for r in rows)
+    other = sum(r["other"] for r in rows)
+    gross_profit = revenue - cogs
+    operating_profit = gross_profit - opex
+    net_profit = operating_profit - other
+    return {
+        "revenue": revenue,
+        "cogs": cogs,
+        "gross_profit": gross_profit,
+        "opex": opex,
+        "operating_profit": operating_profit,
+        "other": other,
+        "net_profit": net_profit,
+        "gross_margin": (gross_profit / revenue * 100) if revenue else 0.0,
+        "net_margin": (net_profit / revenue * 100) if revenue else 0.0,
+    }
