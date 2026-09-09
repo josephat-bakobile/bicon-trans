@@ -12,12 +12,15 @@ bp = Blueprint("cashier", __name__)
 
 
 def _current_open_batch():
-    """The cashier's own batch still being built for today, creating one on first
-    use. A cashier may have already closed today's batch and started a new one
-    later the same day -- always the most recent 'open' one, if any."""
+    """The cashier's own batch still being built, creating one dated today on
+    first use. Not restricted to today's batch_date: if the office returns an
+    already-submitted batch for correction (see routes.collections.return_batch),
+    it goes back to 'open' regardless of which day it was originally opened, and
+    a cashier should only ever have one open batch at a time -- so this always
+    picks the most recent 'open' one, if any."""
     user = get_current_user()
     return (
-        CashierCollectionBatch.query.filter_by(created_by_id=user.id, batch_date=date.today(), status="open")
+        CashierCollectionBatch.query.filter_by(created_by_id=user.id, status="open")
         .order_by(CashierCollectionBatch.id.desc())
         .first()
     )

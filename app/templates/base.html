@@ -60,8 +60,9 @@
         {{ nav_item('dashboard.index', 'bi-speedometer2', _('Dashibodi')) }}
         {% endif %}
         {{ nav_dropdown('bi-cash-coin', _('Fedha'), [
-          ('cashier.index', 'bi-cash', _('Kituo cha Mhasibu'), 'cashier'),
+          ('cashier.index', 'bi-cash', 'Kituo cha Mhasibu', 'cashier'),
           ('collections.list_view', 'bi-cash-coin', _('Makusanyo'), 'collections'),
+          ('collections.ongoing_batches', 'bi-hourglass', _('Makusanyo Yanayoendelea'), 'collections'),
           ('collections.pending_batches', 'bi-hourglass-split', _('Kuidhinisha Makusanyo'), 'collections'),
           ('reconciliation.index', 'bi-arrow-left-right', _('Upatanisho'), 'reconciliation'),
           ('consumption.list_view', 'bi-fuel-pump', _('Matumizi'), 'consumption'),

@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="page-header">
-  <h4><i class="bi bi-hourglass-split"></i> {{ _('Makusanyo Yanayosubiri Uthibitisho') }}</h4>
+  <h4><i class="bi bi-hourglass-split"></i> Makusanyo Yanayosubiri Uthibitisho</h4>
 </div>
 
 <p class="text-muted small">
@@ -36,9 +36,18 @@
           </td>
           <td class="amount">{{ b.total | money }}</td>
           <td class="text-end">
-            <a href="{{ url_for('collections.confirm_batch', batch_id=b.id) }}" class="btn btn-sm btn-primary">
-              <i class="bi bi-check2-circle"></i> {{ _('Thibitisha') }}
-            </a>
+            <div class="d-inline-flex gap-1">
+              <a href="{{ url_for('collections.confirm_batch', batch_id=b.id) }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-check2-circle"></i> {{ _('Thibitisha') }}
+              </a>
+              <form method="post" action="{{ url_for('collections.return_batch', batch_id=b.id) }}" class="d-inline confirm-form"
+                    data-confirm="{{ _('Rudisha makusanyo haya kwa mhasibu kwa marekebisho?') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                  <i class="bi bi-arrow-return-left"></i> {{ _('Rudisha kwa Mhasibu') }}
+                </button>
+              </form>
+            </div>
           </td>
         </tr>
         {% else %}

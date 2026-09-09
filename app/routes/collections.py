@@ -204,6 +204,39 @@ def _values_from_batch(batch):
     }
 
 
+@bp.route("/pending/<int:batch_id>/return", methods=["POST"])
+def return_batch(batch_id):
+    """Sends a submitted batch back to 'open' so the cashier can fix a mistake
+    (wrong amount/car/date) and re-submit -- used when the office spots a
+    problem while reviewing it on the pending list, before it's confirmed into
+    a real transaction."""
+    batch = CashierCollectionBatch.query.filter_by(id=batch_id, status="submitted").first_or_404()
+    batch.status = "open"
+    batch.submitted_at = None
+    db.session.commit()
+    flash(
+        _(
+            "Makusanyo ya %(date)s yamerudishwa kwa mhasibu kwa marekebisho.",
+            date=batch.batch_date.strftime("%d-%m-%Y"),
+        ),
+        "info",
+    )
+    return redirect(url_for("collections.pending_batches"))
+
+
+@bp.route("/ongoing")
+def ongoing_batches():
+    """Read-only view for the office of batches a cashier is still building
+    (status 'open', not yet closed/submitted) -- lets admin see cash logged so
+    far without being able to act on it, since it isn't ready for review yet."""
+    batches = (
+        CashierCollectionBatch.query.filter_by(status="open")
+        .order_by(CashierCollectionBatch.batch_date.desc(), CashierCollectionBatch.id.desc())
+        .all()
+    )
+    return render_template("collections/ongoing.html", batches=batches)
+
+
 @bp.route("/pending/<int:batch_id>/confirm", methods=["GET", "POST"])
 def confirm_batch(batch_id):
     batch = CashierCollectionBatch.query.filter_by(id=batch_id, status="submitted").first_or_404()
