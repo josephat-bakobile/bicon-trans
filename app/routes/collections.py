@@ -20,6 +20,18 @@ from ..utils import (
 bp = Blueprint("collections", __name__)
 
 
+def _send_debt_payment_sms(debt_payments):
+    """Sends one debt-payment SMS per car, summing amounts across every line
+    that repaid that car's debt in this transaction (a transaction can carry
+    multiple lines for the same car -- see create_transaction docstring)."""
+    totals = {}
+    for car, amount in debt_payments:
+        prev_car, prev_amount = totals.get(car.id, (car, 0))
+        totals[car.id] = (prev_car, prev_amount + amount)
+    for car, amount in totals.values():
+        send_debt_payment_sms(car, amount, car_debt_balance(car.id), get_current_user())
+
+
 def _validate_dates(tdate, lines):
     error = validate_entry_date(tdate, _("Tarehe ya Muamala"))
     if error:
@@ -167,8 +179,7 @@ def new():
         txn, debt_payments = create_transaction(tdate, note, trans_no, lines, cars)
         db.session.commit()
         flash(_("Muamala %(trans_no)s umehifadhiwa.", trans_no=txn.trans_no), "success")
-        for car, amount in debt_payments:
-            send_debt_payment_sms(car, amount, car_debt_balance(car.id), get_current_user())
+        _send_debt_payment_sms(debt_payments)
         return redirect(url_for("collections.list_view"))
 
     values = _values_from_txn(None)
@@ -272,8 +283,7 @@ def confirm_batch(batch_id):
         batch.transaction_id = txn.id
         db.session.commit()
         flash(_("Muamala %(trans_no)s umethibitishwa kutoka kwa mhasibu.", trans_no=txn.trans_no), "success")
-        for car, amount in debt_payments:
-            send_debt_payment_sms(car, amount, car_debt_balance(car.id), get_current_user())
+        _send_debt_payment_sms(debt_payments)
         return redirect(url_for("collections.pending_batches"))
 
     values = _values_from_batch(batch)
@@ -346,8 +356,7 @@ def edit(txn_id):
                     debt_payments.append((car, payment.amount))
         db.session.commit()
         flash(_("Muamala %(trans_no)s umesasishwa.", trans_no=txn.trans_no), "success")
-        for car, amount in debt_payments:
-            send_debt_payment_sms(car, amount, car_debt_balance(car.id), get_current_user())
+        _send_debt_payment_sms(debt_payments)
         return redirect(url_for("collections.list_view"))
 
     values = _values_from_txn(txn)
