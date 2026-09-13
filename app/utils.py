@@ -326,7 +326,8 @@ def shortfall_report(start, end):
                     }
                 )
         d += timedelta(days=1)
-    rows.sort(key=lambda r: (r["date"], r["car"].code))
+    rows.sort(key=lambda r: r["car"].code)
+    rows.sort(key=lambda r: r["date"], reverse=True)
     return rows
 
 
