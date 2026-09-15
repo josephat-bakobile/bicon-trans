@@ -385,6 +385,12 @@ def add_payment(service_id):
             service.status = "confirmed"
             service.confirmed_at = datetime.utcnow()
             service.confirmed_by_id = get_current_user().id
+            if service.payment_category and service.payment_category.is_service:
+                # Mirrors confirm() for staff tickets -- a shop ticket billed under
+                # an is_service category also excuses its service_date, once fully
+                # paid. _sync_service_clearance is idempotent (updates/reuses an
+                # existing clearance rather than duplicating it).
+                _sync_service_clearance(service, service.car, service.service_date)
             flash(_("Malipo ya %(amount)s yamerekodiwa. Tiketi imelipwa kikamilifu.", amount=f"{amount:,.0f}"), "success")
         else:
             flash(_("Malipo ya %(amount)s yamerekodiwa. Baki: %(balance)s.", amount=f"{amount:,.0f}", balance=f"{service.balance_due:,.0f}"), "success")
