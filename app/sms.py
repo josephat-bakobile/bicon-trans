@@ -141,6 +141,23 @@ def send_debt_payment_sms(car, amount_paid, balance, user=None):
     return send_and_log(car, "debt_payment", message, user)
 
 
+def send_debt_overdue_sms(car, balance, days_skipped, user=None):
+    """Reminds car's driver that they've gone days_skipped (1 or 2) days without
+    a debt repayment since their repayment period started. Best-effort, same
+    silent-failure pattern as send_debt_payment_sms."""
+    ok, reason = can_send(car)
+    if not ok:
+        return False, reason
+    message = _(
+        "Habari %(name)s, ni siku %(days)s hujafanya malipo ya deni lako. "
+        "Deni lililobaki: TSh %(balance)s. Tafadhali fanya malipo.",
+        name=car.driver.name,
+        days=days_skipped,
+        balance=f"{balance:,.0f}",
+    )
+    return send_and_log(car, "debt_overdue", message, user)
+
+
 def send_and_log(car, scenario, message, user, phone=None):
     """Sends the SMS for a car/scenario and always records the attempt (sent or
     failed) to SmsLog. Returns (ok, error_message). Caller is expected to have

@@ -194,6 +194,46 @@ def remove_collection_debt_payments(line_ids):
     DebtPayment.query.filter(DebtPayment.source_collection_line_id.in_(line_ids)).delete(synchronize_session=False)
 
 
+def overdue_debt_reminders(as_of=None):
+    """Cars with an outstanding debt whose repayment has already started
+    (earliest applicable Debt.start_date <= as_of) but that have gone unpaid
+    for 2 or more days -- either no DebtPayment at all since that start_date,
+    or none since their most recent payment. Used by routes.debts.send_overdue_sms
+    to offer a manual reminder SMS."""
+    as_of = as_of or date.today()
+    cars = Car.query.order_by(Car.code).all()
+    rows = []
+    for car in cars:
+        balance = car_debt_balance(car.id)
+        if balance <= 0.01:
+            continue
+        earliest_start = (
+            db.session.query(func.min(Debt.start_date))
+            .filter(Debt.car_id == car.id, Debt.start_date <= as_of)
+            .scalar()
+        )
+        if not earliest_start:
+            continue
+        last_payment = (
+            db.session.query(func.max(DebtPayment.date))
+            .filter(DebtPayment.car_id == car.id, DebtPayment.date >= earliest_start)
+            .scalar()
+        )
+        reference = last_payment or earliest_start
+        days_skipped = (as_of - reference).days
+        if days_skipped >= 2:
+            rows.append(
+                {
+                    "car": car,
+                    "balance": balance,
+                    "start_date": earliest_start,
+                    "last_payment": last_payment,
+                    "days_skipped": days_skipped,
+                }
+            )
+    return rows
+
+
 def debt_balances():
     """Per-car running debt balance (owed - paid), all time."""
     cars = Car.query.order_by(Car.code).all()

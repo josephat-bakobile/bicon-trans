@@ -29,6 +29,50 @@
   </div>
 </div>
 
+{% if overdue %}
+<div class="card-panel mb-4">
+  <strong><i class="bi bi-bell text-warning"></i> {{ _('Wamekosa Malipo ya Deni (Siku 2+)') }}</strong>
+  <div class="table-responsive">
+    <table class="table table-sm table-money mt-2 mb-0">
+      <thead>
+        <tr>
+          <th>{{ _('Gari') }}</th>
+          <th>{{ _('Dereva') }}</th>
+          <th class="amount">{{ _('Baki la Deni') }}</th>
+          <th>{{ _('Malipo ya Mwisho') }}</th>
+          <th class="amount">{{ _('Siku Zilizokosekana') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in overdue %}
+        <tr>
+          <td>{{ r.car.code }}</td>
+          <td>{{ r.car.driver.name if r.car.driver else '-' }}</td>
+          <td class="amount">{{ r.balance | money }}</td>
+          <td>{{ r.last_payment.strftime('%d-%m-%Y') if r.last_payment else _('Hakuna') }}</td>
+          <td class="amount">
+            <span class="badge {% if r.days_skipped >= 4 %}text-bg-danger{% else %}text-bg-warning{% endif %}">
+              {{ r.days_skipped }}
+            </span>
+          </td>
+          <td class="text-end">
+            {% if current_user.has_permission('sms') %}
+            <form method="post" action="{{ url_for('debts.send_overdue_sms', car_id=r.car.id) }}" class="confirm-form"
+                  data-confirm="{{ _('Tuma SMS ya ukumbusho wa deni kwa dereva wa %(code)s?', code=r.car.code) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
 <div class="row g-4">
   <div class="col-12 col-lg-6">
     <div class="card-panel mb-3">

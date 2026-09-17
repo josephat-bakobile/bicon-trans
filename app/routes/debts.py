@@ -5,9 +5,16 @@ from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import Car, ConsumptionEntry, Debt, DebtPayment, ExpenseCategory
-from ..security import get_current_user
-from ..sms import send_debt_added_sms, send_debt_payment_sms
-from ..utils import DEBT_COLLECTION_EXTRA, car_debt_balance, debt_balances, parse_date, validate_entry_date
+from ..security import get_current_user, require_permission
+from ..sms import send_debt_added_sms, send_debt_overdue_sms, send_debt_payment_sms
+from ..utils import (
+    DEBT_COLLECTION_EXTRA,
+    car_debt_balance,
+    debt_balances,
+    overdue_debt_reminders,
+    parse_date,
+    validate_entry_date,
+)
 
 MADENI_CATEGORY_NAME = "MADENI"
 
@@ -25,12 +32,14 @@ def index():
     debts = Debt.query.order_by(Debt.date.desc(), Debt.id.desc()).limit(20).all()
     payments = DebtPayment.query.order_by(DebtPayment.date.desc(), DebtPayment.id.desc()).limit(20).all()
     cars = Car.query.filter_by(active=True).order_by(Car.code).all()
+    overdue = overdue_debt_reminders()
     return render_template(
         "debts/index.html",
         balances=balances,
         debts=debts,
         payments=payments,
         cars=cars,
+        overdue=overdue,
         debt_collection_extra=DEBT_COLLECTION_EXTRA,
     )
 
@@ -127,6 +136,26 @@ def new_payment():
     db.session.commit()
     flash(_("Malipo ya deni yamehifadhiwa."), "success")
     send_debt_payment_sms(car, amount, car_debt_balance(car_id), get_current_user())
+    return redirect(url_for("debts.index"))
+
+
+@bp.route("/overdue-sms/<int:car_id>", methods=["POST"])
+@require_permission("sms")
+def send_overdue_sms(car_id):
+    car = Car.query.get_or_404(car_id)
+    row = next((r for r in overdue_debt_reminders() if r["car"].id == car_id), None)
+    if row is None:
+        flash(
+            _("Gari %(code)s halina deni lililokosa malipo kwa siku 2 au zaidi kwa sasa.", code=car.code),
+            "danger",
+        )
+        return redirect(url_for("debts.index"))
+
+    sent, error = send_debt_overdue_sms(car, row["balance"], row["days_skipped"], get_current_user())
+    if sent:
+        flash(_("SMS ya ukumbusho wa deni imetumwa kwa dereva wa %(code)s.", code=car.code), "success")
+    else:
+        flash(error, "danger")
     return redirect(url_for("debts.index"))
 
 
