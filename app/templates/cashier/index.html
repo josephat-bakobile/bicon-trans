@@ -21,8 +21,10 @@
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">{{ _('Tarehe') }}</label>
-          <input type="date" class="form-control" name="collection_date" value="{{ today_iso }}"
-                 min="{{ min_entry_date_iso }}" max="{{ today_iso }}" required>
+          <select class="form-select" name="collection_date" id="collection_date" required disabled
+                  data-shortfall-url-base="{{ url_for('cashier.shortfall_dates', car_id=0) }}">
+            <option value="" selected>{{ _('Chagua gari kwanza') }}</option>
+          </select>
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">{{ _('Kiasi') }}</label>
@@ -131,4 +133,55 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const carSelect = document.querySelector('select[name="car_id"]');
+  const dateSelect = document.getElementById("collection_date");
+  if (!carSelect || !dateSelect) return;
+
+  function setDateOptions(options, placeholder) {
+    dateSelect.innerHTML = "";
+    const placeholderOpt = document.createElement("option");
+    placeholderOpt.value = "";
+    placeholderOpt.textContent = placeholder;
+    placeholderOpt.selected = true;
+    dateSelect.appendChild(placeholderOpt);
+    options.forEach((opt) => {
+      const el = document.createElement("option");
+      el.value = opt.value;
+      el.textContent = opt.label;
+      dateSelect.appendChild(el);
+    });
+  }
+
+  carSelect.addEventListener("change", () => {
+    const carId = carSelect.value;
+    if (!carId) {
+      dateSelect.disabled = true;
+      setDateOptions([], "{{ _('Chagua gari kwanza') }}");
+      return;
+    }
+    dateSelect.disabled = true;
+    setDateOptions([], "{{ _('Inapakia tarehe...') }}");
+    fetch(dateSelect.dataset.shortfallUrlBase.replace("/0/", `/${carId}/`))
+      .then((res) => res.json())
+      .then((dates) => {
+        if (dates.length === 0) {
+          setDateOptions([], "{{ _('Hakuna tarehe zenye upungufu kwa gari hili') }}");
+          dateSelect.disabled = true;
+          return;
+        }
+        setDateOptions(dates, "{{ _('Chagua tarehe') }}");
+        dateSelect.disabled = false;
+      })
+      .catch(() => {
+        setDateOptions([], "{{ _('Imeshindwa kupakia tarehe') }}");
+        dateSelect.disabled = true;
+      });
+  });
+});
+</script>
 {% endblock %}

@@ -1,12 +1,12 @@
 from datetime import date, datetime
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_babel import gettext as _
 
 from ..extensions import db
 from ..models import CashierCollectionBatch, CashierCollectionEntry, Car
 from ..security import get_current_user
-from ..utils import parse_date, validate_entry_date
+from ..utils import open_shortfall_dates_for_car, parse_date, validate_entry_date
 
 bp = Blueprint("cashier", __name__)
 
@@ -40,13 +40,23 @@ def index():
     return render_template("cashier/index.html", batch=batch, cars=cars, history=history)
 
 
+@bp.route("/cars/<int:car_id>/shortfall-dates")
+def shortfall_dates(car_id):
+    """Dates the cashier may pick for this car -- see open_shortfall_dates_for_car.
+    Powers the date dropdown on the add-collection form, populated once a car is
+    chosen instead of a free-form date picker."""
+    car = Car.query.filter_by(id=car_id, active=True).first()
+    dates = open_shortfall_dates_for_car(car) if car else []
+    return jsonify([{"value": d.isoformat(), "label": d.strftime("%d-%m-%Y")} for d in dates])
+
+
 @bp.route("/lines/new", methods=["POST"])
 def add_line():
     user = get_current_user()
     car_id = request.form.get("car_id", type=int)
     amount = (request.form.get("amount") or "").strip()
     note = (request.form.get("note") or "").strip() or None
-    cdate = parse_date(request.form.get("collection_date"), date.today())
+    cdate = parse_date(request.form.get("collection_date"))
 
     car = Car.query.filter_by(id=car_id, active=True).first() if car_id else None
     error = None
@@ -54,8 +64,12 @@ def add_line():
         error = _("Chagua gari kwenye orodha.")
     elif not amount or float(amount) <= 0:
         error = _("Weka kiasi sahihi.")
+    elif not cdate:
+        error = _("Chagua tarehe.")
     else:
         error = validate_entry_date(cdate, _("Tarehe ya Makusanyo"))
+        if not error and cdate not in open_shortfall_dates_for_car(car):
+            error = _("Tarehe uliyochagua si sahihi tena kwa gari hili, chagua tarehe nyingine.")
 
     if error:
         flash(error, "danger")
