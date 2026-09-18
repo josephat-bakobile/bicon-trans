@@ -3,9 +3,17 @@ from datetime import date
 from flask import Blueprint, render_template
 
 from ..car_service import service_predictions, shop_dashboard
-from ..models import CollectionTransaction, ConsumptionEntry
+from ..models import CollectionTransaction, ConsumptionEntry, SmsTopup
 from ..renewals import dashboard_alerts
-from ..utils import car_month_matrix, debt_balances, month_bounds, monthly_trend, period_totals, shortfall_totals
+from ..utils import (
+    car_month_matrix,
+    debt_balances,
+    month_bounds,
+    monthly_trend,
+    period_totals,
+    shortfall_totals,
+    sms_balance,
+)
 
 bp = Blueprint("dashboard", __name__)
 
@@ -24,6 +32,8 @@ def index():
     service_alerts = [p for p in service_predictions() if p["status"] in ("overdue", "due_soon")]
     renewal_alerts = dashboard_alerts()
     shop_summary = shop_dashboard()
+    sms = sms_balance()
+    recent_sms_topups = SmsTopup.query.order_by(SmsTopup.date.desc(), SmsTopup.id.desc()).limit(5).all()
 
     recent_transactions = (
         CollectionTransaction.query.order_by(
@@ -51,5 +61,7 @@ def index():
         service_alerts=service_alerts,
         renewal_alerts=renewal_alerts,
         shop_summary=shop_summary,
+        sms=sms,
+        recent_sms_topups=recent_sms_topups,
         today=today,
     )

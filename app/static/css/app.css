@@ -160,6 +160,7 @@ body {
 .stat-tile.debt .icon-badge { background: rgba(208, 59, 59, .1); color: var(--critical); }
 .stat-tile.shortfall-open .icon-badge { background: rgba(208, 59, 59, .1); color: var(--critical); }
 .stat-tile.shortfall-cleared .icon-badge { background: rgba(12, 163, 12, .1); color: var(--good); }
+.stat-tile.sms .icon-badge { background: rgba(74, 58, 167, .1); color: #4a3aa7; }
 
 .stat-tile .body {
   min-width: 0;
@@ -186,6 +187,7 @@ body {
 .stat-tile.debt .value { color: var(--critical); }
 .stat-tile.shortfall-open .value { color: var(--critical); }
 .stat-tile.shortfall-cleared .value { color: var(--good); }
+.stat-tile.sms .value { color: #4a3aa7; }
 
 /* ---------- Cards ---------- */
 

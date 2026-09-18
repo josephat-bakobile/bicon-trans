@@ -644,3 +644,19 @@ class SmsLog(db.Model):
     car = db.relationship("Car")
     driver = db.relationship("Driver")
     sent_by = db.relationship("User")
+
+
+class SmsTopup(db.Model):
+    """A batch of SMS credits loaded onto the Beem account, recorded manually here so
+    the app can track how many are left (see utils.sms_balance) without querying Beem."""
+
+    __tablename__ = "sms_topups"
+
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False, default=date_cls.today)
+    amount = db.Column(db.Integer, nullable=False)
+    note = db.Column(db.String(255))
+    added_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    added_by = db.relationship("User")

@@ -18,6 +18,8 @@ from .models import (
     Driver,
     ExpenseCategory,
     ShortfallClearance,
+    SmsLog,
+    SmsTopup,
 )
 
 
@@ -578,6 +580,14 @@ def category_totals(start=None, end=None):
             grand_total += total
     rows.sort(key=lambda r: r["total"], reverse=True)
     return {"rows": rows, "grand_total": grand_total}
+
+
+def sms_balance():
+    """SMS credits loaded so far minus every successfully sent SMS (SmsLog rows with
+    status='sent') -- a failed send never used up a real credit so isn't deducted."""
+    total_topup = db.session.query(func.coalesce(func.sum(SmsTopup.amount), 0)).scalar() or 0
+    total_sent = SmsLog.query.filter_by(status="sent").count()
+    return {"total_topup": total_topup, "total_sent": total_sent, "remaining": total_topup - total_sent}
 
 
 def debt_monthly_trend(start, end):
