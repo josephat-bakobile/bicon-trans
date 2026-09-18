@@ -454,6 +454,12 @@ def shortfall_monthly_trend(start, end):
             .scalar()
             or 0.0
         )
+        consumed = (
+            db.session.query(func.coalesce(func.sum(ConsumptionEntry.amount), 0.0))
+            .filter(ConsumptionEntry.date.between(bucket_start, bucket_end))
+            .scalar()
+            or 0.0
+        )
         rows = shortfall_report(bucket_start, bucket_end)
         explained = sum(r["shortfall"] for r in rows if r["clearance"])
         open_ = sum(r["shortfall"] for r in rows if not r["clearance"])
@@ -461,6 +467,7 @@ def shortfall_monthly_trend(start, end):
             {
                 "label": f"{calendar.month_abbr[m].upper()} {y % 100:02d}",
                 "collected": collected,
+                "consumed": consumed,
                 "explained_shortfall": explained,
                 "open_shortfall": open_,
             }

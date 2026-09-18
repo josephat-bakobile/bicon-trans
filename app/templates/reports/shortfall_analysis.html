@@ -30,6 +30,7 @@
         <span>
           <span class="legend-dot" style="background:#2a78d6"></span>{{ _('Makusanyo') }}
           <span class="legend-dot ms-3" style="background:#d03b3b"></span>{{ _('Upungufu Uliofafanuliwa') }}
+          <span class="legend-dot ms-3" style="background:#1baf7a"></span>{{ _('Matumizi') }}
         </span>
       </div>
       <canvas id="trendChart" height="90"></canvas>
@@ -114,6 +115,17 @@ new Chart(document.getElementById('trendChart'), {
         tension: 0.3,
         pointRadius: 4,
         pointBackgroundColor: '#d03b3b',
+        order: 1,
+      },
+      {
+        type: 'line',
+        label: {{ _('Matumizi') | tojson }},
+        data: trend.map(p => p.consumed),
+        borderColor: '#1baf7a',
+        backgroundColor: '#1baf7a',
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#1baf7a',
         order: 1,
       },
     ]
