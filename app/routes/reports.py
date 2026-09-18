@@ -42,6 +42,8 @@ from ..utils import (
     paginate,
     parse_date,
     period_totals,
+    shortfall_by_car,
+    shortfall_monthly_trend,
     shortfall_report,
     shortfall_streaks,
 )
@@ -304,6 +306,21 @@ def shortfalls():
         cleared_rows=cleared_rows,
         cleared_page=cleared_page,
         cleared_pages=cleared_pages,
+    )
+
+
+@bp.route("/shortfall-analysis")
+def shortfall_analysis():
+    start, end = _range()
+    trend = shortfall_monthly_trend(start, end)
+    by_car = shortfall_by_car(start, end)
+
+    return render_template(
+        "reports/shortfall_analysis.html",
+        start=start,
+        end=end,
+        trend=trend,
+        by_car=by_car,
     )
 
 

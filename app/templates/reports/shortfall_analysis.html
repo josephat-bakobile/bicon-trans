@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Uchambuzi wa Upungufu') }} - BICON TRANS{% endblock %}
+{% block content %}
+
+<h4 class="mb-3"><i class="bi bi-graph-down-arrow text-primary"></i> {{ _('Uchambuzi wa Upungufu Uliofafanuliwa') }}</h4>
+<p class="text-muted small mb-3">
+  {{ _('Kulinganisha makusanyo na upungufu uliofafanuliwa kwa kila mwezi, na kuonyesha ni gari lipi
+  linalochangia zaidi upungufu uliofafanuliwa kwa kipindi ulichochagua hapa chini.') }}
+</p>
+
+<form class="row g-2 mb-4 card-panel" method="get">
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Kuanzia') }}</label>
+    <input type="date" class="form-control" name="start" value="{{ start.isoformat() }}">
+  </div>
+  <div class="col-auto">
+    <label class="form-label small mb-0">{{ _('Hadi') }}</label>
+    <input type="date" class="form-control" name="end" value="{{ end.isoformat() }}">
+  </div>
+  <div class="col-auto d-flex align-items-end">
+    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> {{ _('Onyesha') }}</button>
+  </div>
+</form>
+
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card-panel">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong><i class="bi bi-bar-chart-line text-primary"></i> {{ _('Makusanyo dhidi ya Upungufu Uliofafanuliwa kwa Mwezi') }}</strong>
+        <span>
+          <span class="legend-dot" style="background:#2a78d6"></span>{{ _('Makusanyo') }}
+          <span class="legend-dot ms-3" style="background:#d03b3b"></span>{{ _('Upungufu Uliofafanuliwa') }}
+        </span>
+      </div>
+      <canvas id="trendChart" height="90"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card-panel h-100">
+      <strong><i class="bi bi-truck text-primary"></i> {{ _('Upungufu Uliofafanuliwa kwa Gari') }}</strong>
+      <canvas id="carChart" height="160" class="mt-2"></canvas>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card-panel h-100">
+      <strong><i class="bi bi-table text-primary"></i> {{ _('Jedwali kwa Gari') }}</strong>
+      <div class="table-responsive">
+        <table class="table table-sm table-money mt-2 mb-0">
+          <thead>
+            <tr>
+              <th>{{ _('Gari') }}</th>
+              <th>{{ _('Dereva') }}</th>
+              <th class="amount">{{ _('Upungufu Uliofafanuliwa') }}</th>
+              <th class="amount">{{ _('Mara') }}</th>
+              <th class="amount">{{ _('Upungufu Wazi') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in by_car.rows %}
+            <tr>
+              <td>{{ r.car.code }}</td>
+              <td>{{ r.car.driver.name if r.car.driver else '-' }}</td>
+              <td class="amount text-danger fw-bold">{{ r.explained | money }}</td>
+              <td class="amount">{{ r.explained_count }}</td>
+              <td class="amount">{{ r.open | money }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-muted text-center py-3">{{ _('Hakuna upungufu katika kipindi hiki.') }}</td></tr>
+            {% endfor %}
+          </tbody>
+          {% if by_car.rows %}
+          <tfoot>
+            <tr class="table-light fw-bold">
+              <td colspan="2">{{ _('JUMLA') }}</td>
+              <td class="amount">{{ by_car.grand_explained | money }}</td>
+              <td class="amount"></td>
+              <td class="amount">{{ by_car.grand_open | money }}</td>
+            </tr>
+          </tfoot>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+const trend = {{ trend | tojson }};
+new Chart(document.getElementById('trendChart'), {
+  data: {
+    labels: trend.map(p => p.label),
+    datasets: [
+      {
+        type: 'bar',
+        label: {{ _('Makusanyo') | tojson }},
+        data: trend.map(p => p.collected),
+        backgroundColor: '#2a78d6',
+        borderRadius: 4,
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: {{ _('Upungufu Uliofafanuliwa') | tojson }},
+        data: trend.map(p => p.explained_shortfall),
+        borderColor: '#d03b3b',
+        backgroundColor: '#d03b3b',
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#d03b3b',
+        order: 1,
+      },
+    ]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: '#e1e0d9' }, ticks: { callback: v => v.toLocaleString() } },
+    }
+  }
+});
+
+const carLabels = {{ by_car.rows | map(attribute='car.code') | list | tojson }};
+const carData = {{ by_car.rows | map(attribute='explained') | list | tojson }};
+new Chart(document.getElementById('carChart'), {
+  type: 'bar',
+  data: {
+    labels: carLabels,
+    datasets: [
+      { label: {{ _('Upungufu Uliofafanuliwa') | tojson }}, data: carData, backgroundColor: '#d03b3b', borderRadius: 4 },
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#e1e0d9' }, ticks: { callback: v => v.toLocaleString() } },
+      y: { grid: { display: false } },
+    }
+  }
+});
+</script>
+{% endblock %}

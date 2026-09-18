@@ -437,6 +437,69 @@ def shortfall_totals(start=None, end=None):
     return {"open_total": open_total, "cleared_total": cleared_total}
 
 
+def shortfall_monthly_trend(start, end):
+    """Collected vs explained (cleared) vs open shortfall totals per calendar month
+    overlapping [start, end], oldest first -- pairs what was actually collected
+    against how much of the shortfall gap already has a recorded explanation, so
+    the money being lost each month is visible next to the money coming in."""
+    points = []
+    y, m = start.year, start.month
+    while (y, m) <= (end.year, end.month):
+        m_start, m_end = month_bounds(y, m)
+        bucket_start = max(m_start, start)
+        bucket_end = min(m_end, end)
+        collected = (
+            db.session.query(func.coalesce(func.sum(CollectionLine.amount), 0.0))
+            .filter(CollectionLine.collection_date.between(bucket_start, bucket_end))
+            .scalar()
+            or 0.0
+        )
+        rows = shortfall_report(bucket_start, bucket_end)
+        explained = sum(r["shortfall"] for r in rows if r["clearance"])
+        open_ = sum(r["shortfall"] for r in rows if not r["clearance"])
+        points.append(
+            {
+                "label": f"{calendar.month_abbr[m].upper()} {y % 100:02d}",
+                "collected": collected,
+                "explained_shortfall": explained,
+                "open_shortfall": open_,
+            }
+        )
+        m += 1
+        if m == 13:
+            m = 1
+            y += 1
+    return points
+
+
+def shortfall_by_car(start, end):
+    """Per-car totals of explained (cleared) vs open shortfall for the period,
+    ranked by explained amount descending -- surfaces which cars rack up the most
+    shortfall that ends up explained away (and how often), separate from cars
+    that simply have open/unresolved shortfall."""
+    rows = shortfall_report(start, end)
+    by_car = {}
+    for r in rows:
+        entry = by_car.setdefault(
+            r["car"].id,
+            {"car": r["car"], "explained": 0.0, "explained_count": 0, "open": 0.0, "open_count": 0},
+        )
+        if r["clearance"]:
+            entry["explained"] += r["shortfall"]
+            entry["explained_count"] += 1
+        else:
+            entry["open"] += r["shortfall"]
+            entry["open_count"] += 1
+
+    result = [r for r in by_car.values() if r["explained"] or r["open"]]
+    result.sort(key=lambda r: r["explained"], reverse=True)
+    return {
+        "rows": result,
+        "grand_explained": sum(r["explained"] for r in result),
+        "grand_open": sum(r["open"] for r in result),
+    }
+
+
 def car_achievement_rates(start, end):
     """Per-car % of days in range the collected amount met/exceeded daily_target."""
     cars = Car.query.filter(Car.daily_target > 0).order_by(Car.code).all()
