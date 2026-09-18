@@ -3,7 +3,7 @@ from datetime import date
 from flask import Blueprint, render_template
 
 from ..car_service import service_predictions, shop_dashboard
-from ..models import CollectionTransaction, ConsumptionEntry, SmsTopup
+from ..models import CollectionTransaction, ConsumptionEntry
 from ..renewals import dashboard_alerts
 from ..utils import (
     car_month_matrix,
@@ -33,7 +33,6 @@ def index():
     renewal_alerts = dashboard_alerts()
     shop_summary = shop_dashboard()
     sms = sms_balance()
-    recent_sms_topups = SmsTopup.query.order_by(SmsTopup.date.desc(), SmsTopup.id.desc()).limit(5).all()
 
     recent_transactions = (
         CollectionTransaction.query.order_by(
@@ -62,6 +61,5 @@ def index():
         renewal_alerts=renewal_alerts,
         shop_summary=shop_summary,
         sms=sms,
-        recent_sms_topups=recent_sms_topups,
         today=today,
     )

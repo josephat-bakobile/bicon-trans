@@ -53,9 +53,6 @@
       </div>
     </div>
   </div>
-</div>
-
-<div class="row g-3 mb-4">
   <div class="col-6 col-lg-3">
     <div class="stat-tile shortfall-open">
       <div class="icon-badge"><i class="bi bi-exclamation-triangle"></i></div>
@@ -74,10 +71,7 @@
       </div>
     </div>
   </div>
-</div>
-
-{% if current_user.has_permission('sms') %}
-<div class="row g-3 mb-4">
+  {% if current_user.has_permission('sms') %}
   <div class="col-6 col-lg-3">
     <div class="stat-tile sms">
       <div class="icon-badge"><i class="bi bi-chat-dots"></i></div>
@@ -87,55 +81,8 @@
       </div>
     </div>
   </div>
-  <div class="col-12 col-lg-9">
-    <div class="card-panel h-100">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <strong><i class="bi bi-plus-circle text-primary"></i> {{ _('Ongeza SMS Mpya') }}</strong>
-        <a href="{{ url_for('smslog.index') }}" class="small">{{ _('Ona Kumbukumbu za SMS') }} <i class="bi bi-arrow-right"></i></a>
-      </div>
-      <form method="post" action="{{ url_for('smslog.add_topup') }}" class="row g-2 align-items-end">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="next" value="{{ url_for('dashboard.index') }}">
-        <div class="col-6 col-md-3">
-          <label class="form-label small mb-1">{{ _('Tarehe') }}</label>
-          <input type="date" name="date" class="form-control form-control-sm" value="{{ today_iso }}"
-                 min="{{ min_entry_date_iso }}" max="{{ today_iso }}" required>
-        </div>
-        <div class="col-6 col-md-3">
-          <label class="form-label small mb-1">{{ _('Idadi ya SMS') }}</label>
-          <input type="number" name="amount" min="1" step="1" class="form-control form-control-sm" required>
-        </div>
-        <div class="col-12 col-md-4">
-          <label class="form-label small mb-1">{{ _('Maelezo (hiari)') }}</label>
-          <input type="text" name="note" class="form-control form-control-sm" placeholder="{{ _('mf. Malipo ya Beem') }}">
-        </div>
-        <div class="col-12 col-md-2">
-          <button class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg"></i> {{ _('Ongeza') }}</button>
-        </div>
-      </form>
-      {% if recent_sms_topups %}
-      <div class="table-responsive mt-3">
-        <table class="table table-sm mb-0">
-          <thead>
-            <tr><th>{{ _('Tarehe') }}</th><th class="amount">{{ _('Idadi') }}</th><th>{{ _('Maelezo') }}</th><th>{{ _('Aliyeongeza') }}</th></tr>
-          </thead>
-          <tbody>
-            {% for t in recent_sms_topups %}
-            <tr>
-              <td>{{ t.date.strftime('%d-%m-%Y') }}</td>
-              <td class="amount">{{ t.amount | money }}</td>
-              <td class="small text-muted">{{ t.note or '-' }}</td>
-              <td>{{ t.added_by.username if t.added_by else '-' }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% endif %}
-    </div>
-  </div>
+  {% endif %}
 </div>
-{% endif %}
 
 {% if shop_summary.by_shop or shop_summary.active_count %}
 <div class="row g-3 mb-4">

@@ -23,6 +23,12 @@ def index():
     )
 
 
+@bp.route("/balance")
+def balance():
+    recent_topups = SmsTopup.query.order_by(SmsTopup.date.desc(), SmsTopup.id.desc()).limit(10).all()
+    return render_template("smslog/balance.html", sms=sms_balance(), recent_sms_topups=recent_topups)
+
+
 @bp.route("/topup", methods=["POST"])
 @require_permission("sms")
 def add_topup():
