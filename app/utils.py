@@ -32,6 +32,10 @@ LAUNCH_DATE = date(2026, 8, 16)
 # the 5,000 surplus is auto-recorded as a debt payment (see apply_collection_debt_repayment).
 DEBT_COLLECTION_EXTRA = 5000.0
 
+# Surcharge applied on top of the amount entered when a debt is created --
+# e.g. entering 10,000 records a debt of 11,000 (see routes/debts.py new_debt).
+DEBT_SURCHARGE_RATE = 0.10
+
 
 def transaction_locked(txn_date):
     """Collection transactions older than the edit window can no longer be changed."""

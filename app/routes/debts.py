@@ -9,6 +9,7 @@ from ..security import get_current_user, require_permission
 from ..sms import send_debt_added_sms, send_debt_overdue_sms, send_debt_payment_sms
 from ..utils import (
     DEBT_COLLECTION_EXTRA,
+    DEBT_SURCHARGE_RATE,
     car_debt_balance,
     debt_balances,
     overdue_debt_reminders,
@@ -58,7 +59,8 @@ def new_debt():
     start_date = parse_date(request.form.get("start_date"), debt_date)
 
     car_id = int(request.form["car_id"])
-    amount = float(request.form["amount"])
+    entered_amount = float(request.form["amount"])
+    amount = entered_amount * (1 + DEBT_SURCHARGE_RATE)
     description = (request.form.get("description") or "").strip() or None
     debt = Debt(
         date=debt_date,
