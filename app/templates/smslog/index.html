@@ -35,6 +35,7 @@
             {% elif log.scenario == 'debt_payment' %}{{ _('Malipo ya Deni') }}
             {% elif log.scenario == 'allowance' %}{{ _('Posho') }}
             {% elif log.scenario == 'ticket_opened' %}{{ _('Tiketi Imefunguliwa (Muuza)') }}
+            {% elif log.scenario == 'manual' %}{{ _('Ujumbe wa Kawaida') }}
             {% else %}{{ log.scenario }}{% endif %}
           </td>
           <td>

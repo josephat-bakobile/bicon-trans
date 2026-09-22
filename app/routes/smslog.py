@@ -4,8 +4,9 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext as _
 
 from ..extensions import db
-from ..models import SmsLog, SmsTopup
+from ..models import Driver, SmsLog, SmsTopup
 from ..security import get_current_user, require_permission
+from ..sms import send_manual_sms
 from ..utils import paginate, parse_date, sms_balance, validate_entry_date
 
 bp = Blueprint("smslog", __name__)
@@ -27,6 +28,42 @@ def index():
 def balance():
     recent_topups = SmsTopup.query.order_by(SmsTopup.date.desc(), SmsTopup.id.desc()).limit(10).all()
     return render_template("smslog/balance.html", sms=sms_balance(), recent_sms_topups=recent_topups)
+
+
+@bp.route("/compose")
+def compose():
+    drivers = Driver.query.filter_by(active=True).order_by(Driver.name).all()
+    return render_template("smslog/compose.html", drivers=drivers, balance=sms_balance())
+
+
+@bp.route("/compose/send", methods=["POST"])
+@require_permission("sms")
+def send_bulk():
+    driver_ids = request.form.getlist("driver_ids", type=int)
+    message = (request.form.get("message") or "").strip()
+
+    if not driver_ids:
+        flash(_("Chagua angalau dereva mmoja."), "danger")
+        return redirect(url_for("smslog.compose"))
+    if not message:
+        flash(_("Andika ujumbe kwanza."), "danger")
+        return redirect(url_for("smslog.compose"))
+
+    drivers = Driver.query.filter(Driver.id.in_(driver_ids)).all()
+    sent = 0
+    failures = []
+    for driver in drivers:
+        ok, reason = send_manual_sms(driver, message, get_current_user())
+        if ok:
+            sent += 1
+        else:
+            failures.append(f"{driver.name}: {reason}")
+
+    if sent:
+        flash(_("SMS zimetumwa kwa madereva %(count)s.", count=sent), "success")
+    if failures:
+        flash(_("Imeshindwa kutuma kwa: %(list)s", list="; ".join(failures)), "danger")
+    return redirect(url_for("smslog.compose"))
 
 
 @bp.route("/topup", methods=["POST"])

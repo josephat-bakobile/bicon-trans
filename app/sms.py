@@ -158,6 +158,58 @@ def send_debt_overdue_sms(car, balance, days_skipped, user=None):
     return send_and_log(car, "debt_overdue", message, user)
 
 
+def can_send_driver(driver):
+    """(bool, reason) -- whether this driver is set up to receive SMS at all,
+    mirroring can_send's checks but for a driver not tied to a specific car
+    (used by the manual/bulk compose flow)."""
+    if driver is None:
+        return False, _("Dereva hajapatikana.")
+    if not driver.active:
+        return False, _("Dereva %(name)s amezimwa.", name=driver.name)
+    if not driver.sms_enabled:
+        return False, _("SMS zimezimwa kwa dereva %(name)s.", name=driver.name)
+    if not driver.phone:
+        return False, _("Namba ya simu ya dereva %(name)s haijawekwa.", name=driver.name)
+    if not normalize_phone(driver.phone):
+        return False, _(
+            "Namba ya simu ya dereva %(name)s si sahihi (%(phone)s).", name=driver.name, phone=driver.phone
+        )
+    return True, None
+
+
+def send_manual_sms(driver, message, user):
+    """Sends a custom, freely-composed message to a driver (bulk compose flow),
+    always logging the attempt to SmsLog. Mirrors send_and_log's log-always
+    semantics but works from a driver directly instead of a car/scenario."""
+    from .extensions import db
+    from .models import SmsLog
+
+    ok, reason = can_send_driver(driver)
+    if not ok:
+        return False, reason
+
+    log = SmsLog(
+        car_id=driver.car.id if driver.car else None,
+        driver_id=driver.id,
+        phone=driver.phone,
+        scenario="manual",
+        message=message,
+        sent_by_id=user.id if user else None,
+    )
+    try:
+        send_sms(driver.phone, message)
+        log.status = "sent"
+        db.session.add(log)
+        db.session.commit()
+        return True, None
+    except SmsError as e:
+        log.status = "failed"
+        log.error = str(e)
+        db.session.add(log)
+        db.session.commit()
+        return False, str(e)
+
+
 def send_and_log(car, scenario, message, user, phone=None):
     """Sends the SMS for a car/scenario and always records the attempt (sent or
     failed) to SmsLog. Returns (ok, error_message). Caller is expected to have
