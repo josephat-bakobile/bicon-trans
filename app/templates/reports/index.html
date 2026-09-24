@@ -46,7 +46,7 @@
   </div>
   <div class="table-responsive">
     <table class="table table-sm table-money mb-0">
-      <thead><tr><th>{{ _('Gari') }}</th><th class="amount">{{ _('Makusanyo') }}</th><th class="amount">{{ _('Matumizi') }}</th><th class="amount">{{ _('Baki') }}</th></tr></thead>
+      <thead><tr><th>{{ _('Gari') }}</th><th class="amount">{{ _('Makusanyo') }}</th><th class="amount">{{ _('Matumizi') }}</th><th class="amount">{{ _('Baki') }}</th><th></th></tr></thead>
       <tbody>
         {% for r in summary_rows %}
         <tr>
@@ -54,6 +54,17 @@
           <td class="amount">{{ r.collected | money }}</td>
           <td class="amount">{{ r.consumed | money }}</td>
           <td class="amount">{{ r.net | money }}</td>
+          <td class="text-end">
+            {% if current_user.has_permission('sms') %}
+            <form method="post" action="{{ url_for('reports.send_summary_sms', car_id=r.car_id) }}" class="confirm-form"
+                  data-confirm="{{ _('Tuma SMS ya muhtasari kwa dereva wa %(code)s?', code=r.car) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="start" value="{{ start.isoformat() }}">
+              <input type="hidden" name="end" value="{{ end.isoformat() }}">
+              <button class="btn btn-sm btn-outline-primary"><i class="bi bi-send"></i> SMS</button>
+            </form>
+            {% endif %}
+          </td>
         </tr>
         {% endfor %}
         <tr class="table-light fw-bold">
@@ -61,6 +72,7 @@
           <td class="amount">{{ summary_totals.grand_collected | money }}</td>
           <td class="amount">{{ summary_totals.grand_consumed | money }}</td>
           <td class="amount">{{ summary_totals.grand_net | money }}</td>
+          <td></td>
         </tr>
       </tbody>
     </table>

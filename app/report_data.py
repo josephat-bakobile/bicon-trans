@@ -22,6 +22,7 @@ def summary_rows(start, end):
         rows.append(
             {
                 "car": r["car"].code,
+                "car_id": r["car"].id,
                 "collected": r["collected"],
                 "consumed": r["consumed"],
                 "net": r["net"],

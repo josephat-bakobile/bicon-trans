@@ -284,6 +284,41 @@ def send_streak_sms(car_id):
     return redirect(url_for("reports.analytics", start=start.isoformat(), end=end.isoformat()))
 
 
+@bp.route("/summary-sms/<int:car_id>", methods=["POST"])
+@require_permission("sms")
+def send_summary_sms(car_id):
+    start = parse_date(request.form.get("start"), LAUNCH_DATE)
+    end = parse_date(request.form.get("end"), date.today())
+    car = Car.query.get_or_404(car_id)
+
+    ok, reason = can_send(car)
+    if not ok:
+        flash(reason, "danger")
+        return redirect(url_for("reports.index", start=start.isoformat(), end=end.isoformat()))
+
+    totals = period_totals(start, end)
+    row = next((r for r in totals["rows"] if r["car"].id == car_id), None)
+    collected = row["collected"] if row else 0.0
+    consumed = row["consumed"] if row else 0.0
+    net = collected - consumed
+    label = _("faida") if net >= 0 else _("hasara")
+
+    message = _(
+        "Habari, Kuanzia tarehe %(period)s gari yako imekusanya %(collected)s, matumizi %(consumed)s, %(label)s %(amount)s.",
+        period=f"{start.day}/{start.month}-{end.day}/{end.month}",
+        collected=f"{collected:,.0f}",
+        consumed=f"{consumed:,.0f}",
+        label=label,
+        amount=f"{abs(net):,.0f}",
+    )
+    sent, error = send_and_log(car, "summary", message, get_current_user())
+    if sent:
+        flash(_("SMS ya muhtasari imetumwa kwa dereva wa %(code)s.", code=car.code), "success")
+    else:
+        flash(error, "danger")
+    return redirect(url_for("reports.index", start=start.isoformat(), end=end.isoformat()))
+
+
 @bp.route("/shortfalls")
 def shortfalls():
     start, end = _range()
