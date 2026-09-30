@@ -27,9 +27,11 @@ TRANSACTION_EDIT_WINDOW_DAYS = 7
 MAX_BACKDATE_DAYS = 7
 LAUNCH_DATE = date(2026, 8, 16)
 
-# Fixed extra a driver tacks onto their daily collection while repaying a
+# Cap on the extra a driver tacks onto their daily collection while repaying a
 # 'collection'-type debt -- e.g. a car with a 45,000 target collects 50,000, and
-# the 5,000 surplus is auto-recorded as a debt payment (see apply_collection_debt_repayment).
+# the 5,000 surplus is auto-recorded as a debt payment (see
+# apply_collection_debt_repayment). If the surplus is less than this, only the
+# actual surplus is taken -- never more than what actually exceeded the target.
 DEBT_COLLECTION_EXTRA = 5000.0
 
 # Surcharge applied on top of the amount entered when a debt is created --
@@ -159,22 +161,28 @@ def car_debt_balance(car_id, return_type=None, as_of=None):
 
 
 def apply_collection_debt_repayment(car, collection_date, collected_amount, collection_line_id, transaction_date):
-    """Auto-repays up to DEBT_COLLECTION_EXTRA off a car's 'collection'-type debt
-    whenever a day's collection beats the car's daily_target -- the driver already
-    added the extra on top of the target themselves, so the surplus counts as a debt
-    payment without touching the recorded collection amount. No-op if the car has no
-    target, the day didn't beat it, or no 'collection' debt has started yet.
-    Whether a debt has "started" is judged against transaction_date (the date the
-    collection was actually entered/saved), not collection_date -- a line can be a
-    backdated catch-up entry for a day before the debt's start_date even though the
-    debt is already active by the time it's being recorded.
+    """Auto-repays a car's 'collection'-type debt out of whatever it collected
+    above its daily_target -- the driver already added the extra on top of the
+    target themselves, so the surplus counts as a debt payment without touching
+    the recorded collection amount. Capped at DEBT_COLLECTION_EXTRA (the driver
+    isn't expected to add more than that in a single day) and at the actual
+    surplus (collected_amount - daily_target) -- taking the full
+    DEBT_COLLECTION_EXTRA regardless of how small the surplus is would eat into
+    money that was actually meant to count toward the day's target, making a
+    fully-met day look like a shortfall. No-op if the car has no target, the
+    day didn't beat it, or no 'collection' debt has started yet. Whether a debt
+    has "started" is judged against transaction_date (the date the collection
+    was actually entered/saved), not collection_date -- a line can be a
+    backdated catch-up entry for a day before the debt's start_date even though
+    the debt is already active by the time it's being recorded.
     Returns the DebtPayment created, or None."""
     if not car.daily_target or collected_amount <= car.daily_target:
         return None
     balance = car_debt_balance(car.id, return_type="collection", as_of=transaction_date)
     if balance <= 0:
         return None
-    applied = min(DEBT_COLLECTION_EXTRA, balance)
+    surplus = collected_amount - car.daily_target
+    applied = min(DEBT_COLLECTION_EXTRA, balance, surplus)
     payment = DebtPayment(
         date=collection_date,
         car_id=car.id,
