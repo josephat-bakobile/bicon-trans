@@ -11,9 +11,9 @@ from ..utils import (
     apply_collection_debt_repayment,
     car_debt_balance,
     next_trans_no,
-    open_shortfall_dates_for_car,
     parse_date,
     remove_collection_debt_payments,
+    shortfall_dates_with_remaining_for_car,
     transaction_locked,
     validate_entry_date,
 )
@@ -138,21 +138,25 @@ def create_transaction(tdate, note, trans_no, lines, cars):
 @bp.route("/cars/<int:car_id>/shortfall-dates")
 def shortfall_dates(car_id):
     """Dates this car may be logged against on the collection form -- see
-    cashier.shortfall_dates and open_shortfall_dates_for_car. Powers the
-    per-row date dropdown for new/edit/confirm here. Accepts ?include=<iso
-    date> so a row's already-assigned date (new/edit/confirm all pre-fill
-    rows from existing data) stays selectable even if it no longer shows up
-    as an open shortfall -- e.g. on confirm_batch the batch's own entries are
-    still 'submitted' so open_shortfall_dates_for_car already excludes them
-    as queued, and on edit the line's own collected amount can itself have
-    closed the shortfall for that date."""
+    cashier.shortfall_dates and shortfall_dates_with_remaining_for_car. Powers
+    the per-row date dropdown for new/edit/confirm here, and each option's
+    remaining balance drives auto-filling that row's amount field. Accepts
+    ?include=<iso date> so a row's already-assigned date (new/edit/confirm
+    all pre-fill rows from existing data) stays selectable even if it no
+    longer shows up as an open shortfall -- e.g. on confirm_batch the batch's
+    own entries are still 'submitted' so it's already excluded as queued, and
+    on edit the line's own collected amount can itself have closed the
+    shortfall for that date. The included date has no computed remaining
+    (its row already carries a real amount, so nothing should auto-fill)."""
     car = Car.query.filter_by(id=car_id, active=True).first()
-    dates = open_shortfall_dates_for_car(car) if car else []
+    rows = shortfall_dates_with_remaining_for_car(car) if car else []
     include = parse_date(request.args.get("include"))
-    if include and include not in dates:
-        dates.append(include)
-        dates.sort(reverse=True)
-    return jsonify([{"value": d.isoformat(), "label": d.strftime("%d-%m-%Y")} for d in dates])
+    if include and include not in {d for d, _ in rows}:
+        rows.append((include, None))
+        rows.sort(key=lambda r: r[0], reverse=True)
+    return jsonify(
+        [{"value": d.isoformat(), "label": d.strftime("%d-%m-%Y"), "remaining": remaining} for d, remaining in rows]
+    )
 
 
 @bp.route("/")

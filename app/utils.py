@@ -379,20 +379,17 @@ def shortfall_report(start, end):
     return rows
 
 
-def open_shortfall_dates_for_car(car):
-    """Dates (today back to the max-backdate window) where this car's confirmed
-    collections fell short of its daily_target and the day hasn't already been
-    explained via a ShortfallClearance -- these are the only dates the cashier
-    should be able to pick when logging a collection, so a mistaken date can no
-    longer be typed in and wrongly flagged as an unexplained shortfall. Also
-    excludes any date the cashier has already queued as a CashierCollectionEntry
-    for this car in a not-yet-confirmed batch, so a picked date drops off the
-    list right away instead of lingering until the office confirms it. Cars
-    without a daily_target have no shortfall concept, so they just get today's
-    date -- enough to keep logging collections for them."""
+def shortfall_dates_with_remaining_for_car(car):
+    """Like open_shortfall_dates_for_car, but pairs each date with how much is
+    still owed that day (daily_target minus confirmed collections so far) --
+    powers auto-filling the amount field once a shortfall date is picked on
+    the cashier/collection forms, so the person logging the payment doesn't
+    have to work out the remainder themselves. Cars without a daily_target
+    have no shortfall/remaining concept, so today's date is returned with a
+    remaining of None (nothing to auto-fill)."""
     today = date.today()
     if not car.daily_target or car.daily_target <= 0:
-        return [today]
+        return [(today, None)]
 
     start = min_entry_date()
     collected_rows = (
@@ -422,14 +419,30 @@ def open_shortfall_dates_for_car(car):
         .all()
     }
 
-    dates = []
+    rows = []
     d = start
     while d <= today:
-        if d not in cleared_dates and d not in queued_dates and collected_map.get(d, 0.0) < car.daily_target:
-            dates.append(d)
+        if d not in cleared_dates and d not in queued_dates:
+            collected = collected_map.get(d, 0.0)
+            if collected < car.daily_target:
+                rows.append((d, car.daily_target - collected))
         d += timedelta(days=1)
-    dates.sort(reverse=True)
-    return dates
+    rows.sort(key=lambda r: r[0], reverse=True)
+    return rows
+
+
+def open_shortfall_dates_for_car(car):
+    """Dates (today back to the max-backdate window) where this car's confirmed
+    collections fell short of its daily_target and the day hasn't already been
+    explained via a ShortfallClearance -- these are the only dates the cashier
+    should be able to pick when logging a collection, so a mistaken date can no
+    longer be typed in and wrongly flagged as an unexplained shortfall. Also
+    excludes any date the cashier has already queued as a CashierCollectionEntry
+    for this car in a not-yet-confirmed batch, so a picked date drops off the
+    list right away instead of lingering until the office confirms it. Cars
+    without a daily_target have no shortfall concept, so they just get today's
+    date -- enough to keep logging collections for them."""
+    return [d for d, _ in shortfall_dates_with_remaining_for_car(car)]
 
 
 def shortfall_totals(start=None, end=None):

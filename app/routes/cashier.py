@@ -6,7 +6,12 @@ from flask_babel import gettext as _
 from ..extensions import db
 from ..models import CashierCollectionBatch, CashierCollectionEntry, Car
 from ..security import get_current_user
-from ..utils import open_shortfall_dates_for_car, parse_date, validate_entry_date
+from ..utils import (
+    open_shortfall_dates_for_car,
+    parse_date,
+    shortfall_dates_with_remaining_for_car,
+    validate_entry_date,
+)
 
 bp = Blueprint("cashier", __name__)
 
@@ -42,12 +47,16 @@ def index():
 
 @bp.route("/cars/<int:car_id>/shortfall-dates")
 def shortfall_dates(car_id):
-    """Dates the cashier may pick for this car -- see open_shortfall_dates_for_car.
-    Powers the date dropdown on the add-collection form, populated once a car is
-    chosen instead of a free-form date picker."""
+    """Dates the cashier may pick for this car -- see
+    shortfall_dates_with_remaining_for_car. Powers the date dropdown on the
+    add-collection form, populated once a car is chosen instead of a
+    free-form date picker; each option's remaining balance also drives
+    auto-filling the amount field."""
     car = Car.query.filter_by(id=car_id, active=True).first()
-    dates = open_shortfall_dates_for_car(car) if car else []
-    return jsonify([{"value": d.isoformat(), "label": d.strftime("%d-%m-%Y")} for d in dates])
+    rows = shortfall_dates_with_remaining_for_car(car) if car else []
+    return jsonify(
+        [{"value": d.isoformat(), "label": d.strftime("%d-%m-%Y"), "remaining": remaining} for d, remaining in rows]
+    )
 
 
 @bp.route("/lines/new", methods=["POST"])

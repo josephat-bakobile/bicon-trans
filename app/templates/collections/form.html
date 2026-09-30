@@ -131,9 +131,23 @@ function setDateOptions(select, options, placeholder, selectedValue) {
     const el = document.createElement("option");
     el.value = opt.value;
     el.textContent = opt.label;
+    if (opt.remaining !== null && opt.remaining !== undefined) {
+      el.dataset.remaining = opt.remaining;
+    }
     if (opt.value === selectedValue) el.selected = true;
     select.appendChild(el);
   });
+}
+
+function maybeAutofillAmount(row) {
+  const dateSelect = row.querySelector('select[name="collection_date[]"]');
+  const amountInput = row.querySelector('input[name="amount[]"]');
+  if (!dateSelect || !amountInput || amountInput.value.trim() !== "") return;
+  const selected = dateSelect.selectedOptions[0];
+  const remaining = selected ? selected.dataset.remaining : undefined;
+  if (remaining !== undefined) {
+    amountInput.value = Math.round(parseFloat(remaining) * 100) / 100;
+  }
 }
 
 function loadDatesForRow(row, selectedValue) {
@@ -162,6 +176,7 @@ function loadDatesForRow(row, selectedValue) {
       }
       setDateOptions(dateSelect, dates, "{{ _('Chagua tarehe') }}", selectedValue);
       dateSelect.disabled = false;
+      maybeAutofillAmount(row);
     })
     .catch(() => {
       setDateOptions(dateSelect, [], "{{ _('Imeshindwa kupakia tarehe') }}");
@@ -186,6 +201,8 @@ body.addEventListener('click', (e) => {
 body.addEventListener('change', (e) => {
   if (e.target.matches('select[name="car_id[]"]')) {
     loadDatesForRow(e.target.closest('tr'), null);
+  } else if (e.target.matches('select[name="collection_date[]"]')) {
+    maybeAutofillAmount(e.target.closest('tr'));
   }
 });
 

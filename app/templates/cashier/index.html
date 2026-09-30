@@ -140,6 +140,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const carSelect = document.querySelector('select[name="car_id"]');
   const dateSelect = document.getElementById("collection_date");
+  const amountInput = document.querySelector('input[name="amount"]');
   if (!carSelect || !dateSelect) return;
 
   function setDateOptions(options, placeholder) {
@@ -153,9 +154,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const el = document.createElement("option");
       el.value = opt.value;
       el.textContent = opt.label;
+      if (opt.remaining !== null && opt.remaining !== undefined) {
+        el.dataset.remaining = opt.remaining;
+      }
       dateSelect.appendChild(el);
     });
   }
+
+  function maybeAutofillAmount() {
+    if (!amountInput || amountInput.value.trim() !== "") return;
+    const selected = dateSelect.selectedOptions[0];
+    const remaining = selected ? selected.dataset.remaining : undefined;
+    if (remaining !== undefined) {
+      amountInput.value = Math.round(parseFloat(remaining) * 100) / 100;
+    }
+  }
+
+  dateSelect.addEventListener("change", maybeAutofillAmount);
 
   carSelect.addEventListener("change", () => {
     const carId = carSelect.value;
@@ -176,6 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         setDateOptions(dates, "{{ _('Chagua tarehe') }}");
         dateSelect.disabled = false;
+        maybeAutofillAmount();
       })
       .catch(() => {
         setDateOptions([], "{{ _('Imeshindwa kupakia tarehe') }}");
