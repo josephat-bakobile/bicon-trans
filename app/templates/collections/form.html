@@ -64,8 +64,13 @@
                 {% endfor %}
               </select>
             </td>
-            <td><input type="date" class="form-control" name="collection_date[]" value="{{ l.collection_date }}" required
-                       min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></td>
+            <td>
+              <select class="form-select" name="collection_date[]" required
+                      data-shortfall-url-base="{{ url_for('collections.shortfall_dates', car_id=0) }}"
+                      data-selected="{{ l.collection_date }}">
+                <option value="{{ l.collection_date }}" selected>{{ l.collection_date }}</option>
+              </select>
+            </td>
             <td><input type="number" step="0.01" min="0" class="form-control" name="amount[]" value="{{ l.amount }}" required></td>
             <td><input type="text" class="form-control" name="note[]" value="{{ l.note or '' }}"></td>
             <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button></td>
@@ -93,8 +98,12 @@
         {% for c in cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
       </select>
     </td>
-    <td><input type="date" class="form-control" name="collection_date[]" required
-               min="{{ min_entry_date_iso }}" max="{{ today_iso }}"></td>
+    <td>
+      <select class="form-select" name="collection_date[]" required disabled
+              data-shortfall-url-base="{{ url_for('collections.shortfall_dates', car_id=0) }}">
+        <option value="" selected>{{ _('Inapakia tarehe...') }}</option>
+      </select>
+    </td>
     <td><input type="number" step="0.01" min="0" class="form-control" name="amount[]" required></td>
     <td><input type="text" class="form-control" name="note[]"></td>
     <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i class="bi bi-trash"></i></button></td>
@@ -107,15 +116,63 @@
 <script>
 const body = document.getElementById('lines-body');
 const tmpl = document.getElementById('row-template');
-const txnDate = document.getElementById('txn-date');
+
+function setDateOptions(select, options, placeholder, selectedValue) {
+  select.innerHTML = "";
+  if (options.length === 0) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = placeholder;
+    opt.selected = true;
+    select.appendChild(opt);
+    return;
+  }
+  options.forEach((opt) => {
+    const el = document.createElement("option");
+    el.value = opt.value;
+    el.textContent = opt.label;
+    if (opt.value === selectedValue) el.selected = true;
+    select.appendChild(el);
+  });
+}
+
+function loadDatesForRow(row, selectedValue) {
+  const carSelect = row.querySelector('select[name="car_id[]"]');
+  const dateSelect = row.querySelector('select[name="collection_date[]"]');
+  if (!carSelect || !dateSelect) return;
+  const carId = carSelect.value;
+  if (!carId) {
+    dateSelect.disabled = true;
+    setDateOptions(dateSelect, [], "{{ _('Chagua gari kwanza') }}");
+    return;
+  }
+  dateSelect.disabled = true;
+  setDateOptions(dateSelect, [], "{{ _('Inapakia tarehe...') }}");
+  let url = dateSelect.dataset.shortfallUrlBase.replace("/0/", `/${carId}/`);
+  if (selectedValue) {
+    url += `?include=${encodeURIComponent(selectedValue)}`;
+  }
+  fetch(url)
+    .then((res) => res.json())
+    .then((dates) => {
+      if (dates.length === 0) {
+        setDateOptions(dateSelect, [], "{{ _('Hakuna tarehe zenye upungufu kwa gari hili') }}");
+        dateSelect.disabled = true;
+        return;
+      }
+      setDateOptions(dateSelect, dates, "{{ _('Chagua tarehe') }}", selectedValue);
+      dateSelect.disabled = false;
+    })
+    .catch(() => {
+      setDateOptions(dateSelect, [], "{{ _('Imeshindwa kupakia tarehe') }}");
+      dateSelect.disabled = true;
+    });
+}
 
 function addRow() {
   const row = tmpl.content.cloneNode(true);
-  const dateInput = row.querySelector('input[name="collection_date[]"]');
-  if (dateInput && txnDate.value) {
-    dateInput.value = txnDate.value;
-  }
   body.appendChild(row);
+  loadDatesForRow(body.lastElementChild, null);
 }
 
 document.getElementById('add-row').addEventListener('click', addRow);
@@ -124,6 +181,17 @@ body.addEventListener('click', (e) => {
   if (e.target.classList.contains('remove-row')) {
     e.target.closest('tr').remove();
   }
+});
+
+body.addEventListener('change', (e) => {
+  if (e.target.matches('select[name="car_id[]"]')) {
+    loadDatesForRow(e.target.closest('tr'), null);
+  }
+});
+
+Array.from(body.querySelectorAll('tr')).forEach((row) => {
+  const dateSelect = row.querySelector('select[name="collection_date[]"]');
+  loadDatesForRow(row, dateSelect ? dateSelect.dataset.selected || null : null);
 });
 
 if (body.children.length === 0) {
