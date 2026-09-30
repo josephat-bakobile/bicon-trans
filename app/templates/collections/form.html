@@ -58,6 +58,7 @@
           {% for l in values.lines %}
           <tr>
             <td>
+              <input type="hidden" name="line_id[]" value="{{ l.line_id or '' }}">
               <select class="form-select" name="car_id[]" required>
                 {% for c in cars %}
                 <option value="{{ c.id }}" {{ 'selected' if c.id == l.car_id else '' }}>{{ c.code }}</option>
@@ -94,6 +95,7 @@
 <template id="row-template">
   <tr>
     <td>
+      <input type="hidden" name="line_id[]" value="">
       <select class="form-select" name="car_id[]" required>
         {% for c in cars %}<option value="{{ c.id }}">{{ c.code }}</option>{% endfor %}
       </select>

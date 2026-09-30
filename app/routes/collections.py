@@ -49,18 +49,21 @@ def _extract_lines(form, fallback_date):
     amounts = form.getlist("amount[]")
     notes = form.getlist("note[]")
     collection_dates = form.getlist("collection_date[]")
+    line_ids = form.getlist("line_id[]")
     lines = []
     for i, (cid, amt) in enumerate(zip(car_ids, amounts)):
         amt = (amt or "").strip()
         if cid and amt:
             note = notes[i].strip() if i < len(notes) and notes[i] else None
             cdate = collection_dates[i].strip() if i < len(collection_dates) and collection_dates[i] else None
+            lid = line_ids[i].strip() if i < len(line_ids) and line_ids[i] else None
             lines.append(
                 {
                     "car_id": int(cid),
                     "amount": float(amt),
                     "note": note,
                     "collection_date": parse_date(cdate, fallback_date),
+                    "line_id": int(lid) if lid else None,
                 }
             )
     return lines
@@ -77,6 +80,7 @@ def _values_from_txn(txn):
         "note": txn.note or "",
         "lines": [
             {
+                "line_id": l.id,
                 "car_id": l.car_id,
                 "amount": l.amount,
                 "note": l.note or "",
@@ -230,6 +234,7 @@ def _values_from_batch(batch):
         "note": batch.note or "",
         "lines": [
             {
+                "line_id": None,
                 "car_id": l.car_id,
                 "amount": l.amount,
                 "note": l.note or "",
@@ -359,7 +364,7 @@ def edit(txn_id):
         txn.transaction_date = tdate
         txn.note = note
         txn.trans_no = trans_no
-        old_line_ids = [l.id for l in txn.lines]
+        old_line_ids = {l.id for l in txn.lines}
         remove_collection_debt_payments(old_line_ids)
         CollectionLine.query.filter_by(transaction_id=txn.id).delete()
         car_map = {c.id: c for c in cars}
@@ -377,7 +382,13 @@ def edit(txn_id):
             car = car_map.get(line["car_id"])
             if car:
                 payment = apply_collection_debt_repayment(car, line["collection_date"], line["amount"], cl.id, tdate)
-                if payment:
+                # Every line gets rebuilt (deleted + recreated) on each edit even when
+                # untouched, since rows carry no stable identity across the form's
+                # parallel arrays other than this line_id. Only lines missing from the
+                # transaction before this edit are genuinely new -- an existing line
+                # (its debt-payment SMS already sent when first created) shouldn't be
+                # re-notified just because the transaction was re-saved.
+                if payment and line["line_id"] not in old_line_ids:
                     debt_payments.append((car, payment.amount))
         db.session.commit()
         flash(_("Muamala %(trans_no)s umesasishwa.", trans_no=txn.trans_no), "success")
