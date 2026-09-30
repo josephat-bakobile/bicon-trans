@@ -103,6 +103,7 @@
         <table class="table table-sm align-middle mb-0">
           <thead>
             <tr>
+              <th style="width:1.5rem"></th>
               <th>{{ _('Tarehe') }}</th>
               <th class="amount">{{ _('Jumla') }}</th>
               <th>{{ _('Hali') }}</th>
@@ -110,7 +111,8 @@
           </thead>
           <tbody>
             {% for b in history %}
-            <tr>
+            <tr class="hist-toggle" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#hist-{{ b.id }}">
+              <td class="text-muted"><i class="bi bi-chevron-right"></i></td>
               <td>{{ b.batch_date.strftime('%d-%m-%Y') }}</td>
               <td class="amount">{{ b.total | money }}</td>
               <td>
@@ -123,8 +125,28 @@
                 {% endif %}
               </td>
             </tr>
+            <tr>
+              <td colspan="4" class="p-0 border-0">
+                <div class="collapse" id="hist-{{ b.id }}">
+                  <table class="table table-sm table-money mb-0">
+                    <tbody>
+                      {% for l in b.lines %}
+                      <tr>
+                        <td class="ps-4">{{ l.car.code }}</td>
+                        <td>{{ l.collection_date.strftime('%d-%m-%Y') }}</td>
+                        <td class="amount">{{ l.amount | money }}</td>
+                        <td class="text-muted small">{{ l.note or '' }}</td>
+                      </tr>
+                      {% else %}
+                      <tr><td class="ps-4 text-muted small">{{ _('Hakuna magari.') }}</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>
             {% else %}
-            <tr><td colspan="3" class="text-muted text-center py-3">{{ _('Hakuna historia bado.') }}</td></tr>
+            <tr><td colspan="4" class="text-muted text-center py-3">{{ _('Hakuna historia bado.') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -161,8 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function maybeAutofillAmount() {
-    if (!amountInput || amountInput.value.trim() !== "") return;
+  function fillAmountFromDate(force) {
+    if (!amountInput) return;
+    if (!force && amountInput.value.trim() !== "") return;
     const selected = dateSelect.selectedOptions[0];
     const remaining = selected ? selected.dataset.remaining : undefined;
     if (remaining !== undefined) {
@@ -170,7 +193,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  dateSelect.addEventListener("change", maybeAutofillAmount);
+  // Nothing here is submitted to the office yet, so switching the date always
+  // refreshes the amount to that date's remaining balance -- the cashier can
+  // still type over it afterwards, this just saves re-typing the common case.
+  dateSelect.addEventListener("change", () => fillAmountFromDate(true));
 
   carSelect.addEventListener("change", () => {
     const carId = carSelect.value;
@@ -191,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         setDateOptions(dates, "{{ _('Chagua tarehe') }}");
         dateSelect.disabled = false;
-        maybeAutofillAmount();
+        fillAmountFromDate(false);
       })
       .catch(() => {
         setDateOptions([], "{{ _('Imeshindwa kupakia tarehe') }}");

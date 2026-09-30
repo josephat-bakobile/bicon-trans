@@ -259,6 +259,14 @@ table.table-money td.amount, table.table-money th.amount {
   transition: background-color .15s ease;
 }
 
+.hist-toggle .bi-chevron-right {
+  transition: transform .2s ease;
+}
+
+.hist-toggle:not(.collapsed) .bi-chevron-right {
+  transform: rotate(90deg);
+}
+
 .legend-dot {
   display: inline-block;
   width: 10px;
