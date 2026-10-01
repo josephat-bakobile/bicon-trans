@@ -12,6 +12,7 @@ from ..utils import (
     car_debt_balance,
     next_trans_no,
     parse_date,
+    remaining_shortfall_for_date,
     remove_collection_debt_payments,
     shortfall_dates_with_remaining_for_car,
     transaction_locked,
@@ -33,14 +34,45 @@ def _send_debt_payment_sms(debt_payments):
         send_debt_payment_sms(car, amount, car_debt_balance(car.id), get_current_user())
 
 
-def _validate_dates(tdate, lines):
+def _validate_dates(tdate, lines, cars, exclude_line_ids=None):
+    """Validates the transaction date (still bound by MAX_BACKDATE_DAYS -- it's
+    when the money reached the bank/agent) and each line's collection_date.
+    Unlike the transaction date, a line's collection_date is which shortfall
+    day is being paid off and may be arbitrarily old, so it's only checked for
+    not being in the future, plus a cap so a car/date's total submitted amount
+    never exceeds what's still owed for that day (see
+    remaining_shortfall_for_date). exclude_line_ids lets an edit recompute the
+    remainder excluding the transaction's own prior lines, since those are
+    about to be replaced rather than being collections on top of them."""
     error = validate_entry_date(tdate, _("Tarehe ya Muamala"))
     if error:
         return error
+    today = date.today()
+    totals = {}
     for line in lines:
-        error = validate_entry_date(line["collection_date"], _("Tarehe ya Makusanyo"))
-        if error:
-            return error
+        d = line["collection_date"]
+        if d > today:
+            return _(
+                "%(label)s haiwezi kuwa baadaye ya leo (%(date)s).",
+                label=_("Tarehe ya Makusanyo"),
+                date=today.strftime("%d-%m-%Y"),
+            )
+        key = (line["car_id"], d)
+        totals[key] = totals.get(key, 0.0) + line["amount"]
+
+    car_map = {c.id: c for c in cars}
+    for (car_id, d), amt in totals.items():
+        car = car_map.get(car_id)
+        if not car:
+            continue
+        remaining = remaining_shortfall_for_date(car, d, exclude_line_ids)
+        if remaining is not None and amt > remaining + 0.01:
+            return _(
+                "Kiasi cha gari %(code)s tarehe %(date)s kinazidi deni lililobaki (%(remaining)s).",
+                code=car.code,
+                date=d.strftime("%d-%m-%Y"),
+                remaining=f"{max(remaining, 0):,.0f}",
+            )
     return None
 
 
@@ -198,7 +230,7 @@ def new():
         elif CollectionTransaction.query.filter_by(trans_no=trans_no).first():
             error = _("Trans No %(trans_no)s tayari ipo. Tumia namba nyingine.", trans_no=trans_no)
         else:
-            error = _validate_dates(tdate, lines)
+            error = _validate_dates(tdate, lines, cars)
 
         if error:
             flash(error, "danger")
@@ -297,7 +329,7 @@ def confirm_batch(batch_id):
         elif CollectionTransaction.query.filter_by(trans_no=trans_no).first():
             error = _("Trans No %(trans_no)s tayari ipo. Tumia namba nyingine.", trans_no=trans_no)
         else:
-            error = _validate_dates(tdate, lines)
+            error = _validate_dates(tdate, lines, cars)
 
         if error:
             flash(error, "danger")
@@ -341,6 +373,7 @@ def edit(txn_id):
         note = (request.form.get("note") or "").strip() or None
         trans_no = (request.form.get("trans_no") or "").strip()
         lines = _extract_lines(request.form, tdate)
+        old_line_ids = {l.id for l in txn.lines}
 
         error = None
         if not trans_no:
@@ -354,7 +387,7 @@ def edit(txn_id):
             if clash:
                 error = _("Trans No %(trans_no)s tayari inatumika kwenye muamala mwingine.", trans_no=trans_no)
             else:
-                error = _validate_dates(tdate, lines)
+                error = _validate_dates(tdate, lines, cars, exclude_line_ids=old_line_ids)
 
         if error:
             flash(error, "danger")
@@ -364,7 +397,6 @@ def edit(txn_id):
         txn.transaction_date = tdate
         txn.note = note
         txn.trans_no = trans_no
-        old_line_ids = {l.id for l in txn.lines}
         remove_collection_debt_payments(old_line_ids)
         CollectionLine.query.filter_by(transaction_id=txn.id).delete()
         car_map = {c.id: c for c in cars}

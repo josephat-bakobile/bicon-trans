@@ -9,8 +9,8 @@ from ..security import get_current_user
 from ..utils import (
     open_shortfall_dates_for_car,
     parse_date,
+    remaining_shortfall_for_date,
     shortfall_dates_with_remaining_for_car,
-    validate_entry_date,
 )
 
 bp = Blueprint("cashier", __name__)
@@ -69,6 +69,7 @@ def add_line():
 
     car = Car.query.filter_by(id=car_id, active=True).first() if car_id else None
     error = None
+    amt_value = None
     if not car:
         error = _("Chagua gari kwenye orodha.")
     elif not amount or float(amount) <= 0:
@@ -76,15 +77,30 @@ def add_line():
     elif not cdate:
         error = _("Chagua tarehe.")
     else:
-        error = validate_entry_date(cdate, _("Tarehe ya Makusanyo"))
-        if not error and cdate not in open_shortfall_dates_for_car(car):
+        amt_value = float(amount)
+        if cdate not in open_shortfall_dates_for_car(car):
             error = _("Tarehe uliyochagua si sahihi tena kwa gari hili, chagua tarehe nyingine.")
+
+    batch = _current_open_batch()
+    existing = None
+    if not error:
+        if batch:
+            existing = CashierCollectionEntry.query.filter_by(
+                batch_id=batch.id, car_id=car.id, collection_date=cdate
+            ).first()
+        remaining = remaining_shortfall_for_date(car, cdate)
+        if remaining is not None:
+            already_queued = existing.amount if existing else 0.0
+            if already_queued + amt_value > remaining + 0.01:
+                error = _(
+                    "Kiasi kinazidi deni lililobaki kwa tarehe hii (%(remaining)s).",
+                    remaining=f"{max(remaining - already_queued, 0):,.0f}",
+                )
 
     if error:
         flash(error, "danger")
         return redirect(url_for("cashier.index"))
 
-    batch = _current_open_batch()
     if batch is None:
         batch = CashierCollectionBatch(batch_date=date.today(), created_by_id=user.id)
         db.session.add(batch)
@@ -93,11 +109,8 @@ def add_line():
     # Same car + same date already logged in this batch -- add to it instead of
     # creating a second line, so e.g. a driver paying in twice for today shows as
     # one running total per car/date rather than a growing list of tiny rows.
-    existing = CashierCollectionEntry.query.filter_by(
-        batch_id=batch.id, car_id=car.id, collection_date=cdate
-    ).first()
     if existing:
-        existing.amount += float(amount)
+        existing.amount += amt_value
         if note:
             existing.note = f"{existing.note}; {note}" if existing.note else note
         db.session.commit()
@@ -113,7 +126,7 @@ def add_line():
     else:
         db.session.add(
             CashierCollectionEntry(
-                batch_id=batch.id, car_id=car.id, amount=float(amount), note=note, collection_date=cdate
+                batch_id=batch.id, car_id=car.id, amount=amt_value, note=note, collection_date=cdate
             )
         )
         db.session.commit()

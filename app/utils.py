@@ -394,12 +394,15 @@ def shortfall_dates_with_remaining_for_car(car):
     the cashier/collection forms, so the person logging the payment doesn't
     have to work out the remainder themselves. Cars without a daily_target
     have no shortfall/remaining concept, so today's date is returned with a
-    remaining of None (nothing to auto-fill)."""
+    remaining of None (nothing to auto-fill). Goes back to LAUNCH_DATE rather
+    than min_entry_date() -- an old unpaid shortfall should stay payable no
+    matter how long ago it happened, even though MAX_BACKDATE_DAYS still caps
+    how recent the transaction/batch date itself must be."""
     today = date.today()
     if not car.daily_target or car.daily_target <= 0:
         return [(today, None)]
 
-    start = min_entry_date()
+    start = LAUNCH_DATE
     collected_rows = (
         db.session.query(CollectionLine.collection_date, func.sum(CollectionLine.amount))
         .filter(CollectionLine.car_id == car.id, CollectionLine.collection_date.between(start, today))
@@ -451,6 +454,25 @@ def open_shortfall_dates_for_car(car):
     without a daily_target have no shortfall concept, so they just get today's
     date -- enough to keep logging collections for them."""
     return [d for d, _ in shortfall_dates_with_remaining_for_car(car)]
+
+
+def remaining_shortfall_for_date(car, d, exclude_line_ids=None):
+    """Still-owed amount for this car on date d (daily_target minus confirmed
+    CollectionLine amounts), or None if the car has no daily_target and
+    therefore no shortfall/cap concept. Used to stop a collection entry from
+    exceeding what's actually still owed for that date. exclude_line_ids lets
+    an edit recompute the remainder excluding the transaction's own prior
+    lines for that date, since those are about to be replaced rather than
+    being collections on top of what's already there."""
+    if not car.daily_target or car.daily_target <= 0:
+        return None
+    q = db.session.query(func.sum(CollectionLine.amount)).filter(
+        CollectionLine.car_id == car.id, CollectionLine.collection_date == d
+    )
+    if exclude_line_ids:
+        q = q.filter(~CollectionLine.id.in_(exclude_line_ids))
+    collected = q.scalar() or 0.0
+    return car.daily_target - collected
 
 
 def shortfall_totals(start=None, end=None):
