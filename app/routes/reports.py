@@ -20,7 +20,7 @@ from ..export_pdf import (
     build_summary_pdf,
 )
 from ..extensions import db
-from ..models import Car, ExpenseCategory, ServiceItemCategory, ShortfallClearance
+from ..models import Car, CarService, DriverAllowance, ExpenseCategory, ServiceItemCategory, ShortfallClearance
 from ..report_data import (
     collections_rows,
     consumption_rows,
@@ -379,6 +379,27 @@ def clear_shortfall():
             db.session.add(ShortfallClearance(car_id=car_id, date=shortfall_date, description=description))
         db.session.commit()
         flash(_("Upungufu umefafanuliwa."), "success")
+
+    return redirect(url_for("reports.shortfalls", start=start, end=end))
+
+
+@bp.route("/shortfalls/clear/<int:clearance_id>/delete", methods=["POST"])
+def delete_shortfall_clearance(clearance_id):
+    start = request.form.get("start", "")
+    end = request.form.get("end", "")
+    clearance = ShortfallClearance.query.get_or_404(clearance_id)
+
+    linked_service = CarService.query.filter_by(shortfall_clearance_id=clearance.id).first()
+    linked_allowance = DriverAllowance.query.filter_by(car_id=clearance.car_id, date=clearance.date).first()
+
+    if linked_service:
+        flash(_("Upungufu huu ulifafanuliwa na tiketi ya huduma -- fungua au hariri tiketi hiyo badala ya kufuta hapa."), "danger")
+    elif linked_allowance:
+        flash(_("Upungufu huu ulifafanuliwa na posho ya dereva -- rudisha (reverse) posho hiyo badala ya kufuta hapa."), "danger")
+    else:
+        db.session.delete(clearance)
+        db.session.commit()
+        flash(_("Ufafanuzi wa upungufu umefutwa -- siku hiyo imerudi kuwa wazi."), "success")
 
     return redirect(url_for("reports.shortfalls", start=start, end=end))
 

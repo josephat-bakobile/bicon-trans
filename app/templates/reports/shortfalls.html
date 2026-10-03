@@ -99,7 +99,18 @@
             <span class="badge text-bg-success">{{ _('Imefafanuliwa') }}</span>
           </td>
           <td style="min-width:280px;">
-            <span class="small text-muted">{{ r.clearance.description }}</span>
+            <div class="d-flex align-items-start gap-2">
+              <span class="small text-muted flex-grow-1">{{ r.clearance.description }}</span>
+              <form method="post" action="{{ url_for('reports.delete_shortfall_clearance', clearance_id=r.clearance.id) }}"
+                    onsubmit="return confirm('{{ _('Una hakika unataka kufuta ufafanuzi huu? Siku hiyo itarudi kuwa wazi.') }}');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="start" value="{{ start.isoformat() }}">
+                <input type="hidden" name="end" value="{{ end.isoformat() }}">
+                <button class="btn btn-sm btn-outline-danger text-nowrap" title="{{ _('Futa ufafanuzi (ulikosewa)') }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
           </td>
         </tr>
         {% else %}
