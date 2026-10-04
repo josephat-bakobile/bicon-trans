@@ -9,7 +9,6 @@ from ..security import get_current_user
 from ..utils import (
     open_shortfall_dates_for_car,
     parse_date,
-    remaining_shortfall_for_date,
     shortfall_dates_with_remaining_for_car,
 )
 
@@ -88,14 +87,6 @@ def add_line():
             existing = CashierCollectionEntry.query.filter_by(
                 batch_id=batch.id, car_id=car.id, collection_date=cdate
             ).first()
-        remaining = remaining_shortfall_for_date(car, cdate)
-        if remaining is not None:
-            already_queued = existing.amount if existing else 0.0
-            if already_queued + amt_value > remaining + 0.01:
-                error = _(
-                    "Kiasi kinazidi deni lililobaki kwa tarehe hii (%(remaining)s).",
-                    remaining=f"{max(remaining - already_queued, 0):,.0f}",
-                )
 
     if error:
         flash(error, "danger")
