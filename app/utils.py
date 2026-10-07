@@ -343,10 +343,13 @@ def car_month_matrix(months=6):
     return {"labels": labels, "rows": rows, "col_totals": col_totals, "grand_total": grand_total}
 
 
-def shortfall_report(start, end):
+def shortfall_report(start, end, car_id=None):
     """Every (car, date) in range where a car with a daily_target either collected
     nothing or collected less than that target, whether or not it's been explained."""
-    cars = Car.query.filter(Car.daily_target > 0).order_by(Car.code).all()
+    q = Car.query.filter(Car.daily_target > 0)
+    if car_id:
+        q = q.filter(Car.id == car_id)
+    cars = q.order_by(Car.code).all()
     if not cars:
         return []
     car_ids = [c.id for c in cars]

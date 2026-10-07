@@ -322,7 +322,8 @@ def send_summary_sms(car_id):
 @bp.route("/shortfalls")
 def shortfalls():
     start, end = _range()
-    rows = shortfall_report(start, end)
+    car_id = request.args.get("car_id", type=int)
+    rows = shortfall_report(start, end, car_id)
     open_rows = [r for r in rows if not r["clearance"]]
     cleared_rows = [r for r in rows if r["clearance"]]
 
@@ -335,6 +336,8 @@ def shortfalls():
         "reports/shortfalls.html",
         start=start,
         end=end,
+        car_id=car_id,
+        cars=Car.query.order_by(Car.code).all(),
         open_rows=open_rows,
         open_page=open_page,
         open_pages=open_pages,
@@ -407,7 +410,8 @@ def delete_shortfall_clearance(clearance_id):
 @bp.route("/shortfalls.xlsx")
 def shortfalls_xlsx():
     start, end = _range()
-    rows = shortfall_report(start, end)
+    car_id = request.args.get("car_id", type=int)
+    rows = shortfall_report(start, end, car_id)
     buf = build_shortfalls_excel(rows, start, end)
     return _send(buf, f"upungufu_{start}_{end}.xlsx", "xlsx")
 
@@ -415,7 +419,8 @@ def shortfalls_xlsx():
 @bp.route("/shortfalls.pdf")
 def shortfalls_pdf():
     start, end = _range()
-    rows = shortfall_report(start, end)
+    car_id = request.args.get("car_id", type=int)
+    rows = shortfall_report(start, end, car_id)
     buf = build_shortfalls_pdf(rows, start, end)
     return _send(buf, f"upungufu_{start}_{end}.pdf", "pdf")
 
