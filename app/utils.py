@@ -8,6 +8,7 @@ from sqlalchemy import func
 from .extensions import db
 from .models import (
     Car,
+    CarCollectionPause,
     CashierCollectionBatch,
     CashierCollectionEntry,
     CollectionLine,
@@ -69,15 +70,18 @@ def validate_entry_date(d, label=None):
     return None
 
 
-def validate_service_date(d):
-    """None if d is a valid service-ticket date, otherwise a Swahili error message.
-    Unlike validate_entry_date, service dates may legitimately be far in the past
-    -- backfilling a car's baseline/last-known service date -- so this only
-    rejects missing values and future dates, not old ones."""
+def validate_service_date(d, label=None):
+    """None if d is a valid service-ticket (or similarly backdatable) date, else a
+    Swahili error message. Unlike validate_entry_date, these dates may legitimately
+    be far in the past -- backfilling a car's baseline/last-known service date, or
+    when a CarCollectionPause actually started -- so this only rejects missing
+    values and future dates, not old ones."""
+    if label is None:
+        label = _("Tarehe ya huduma")
     if d is None:
-        return _("Tarehe ya huduma si sahihi.")
+        return _("%(label)s si sahihi.", label=label)
     if d > date.today():
-        return _("Tarehe ya huduma haiwezi kuwa baadaye ya leo (%(date)s).", date=date.today().strftime("%d-%m-%Y"))
+        return _("%(label)s haiwezi kuwa baadaye ya leo (%(date)s).", label=label, date=date.today().strftime("%d-%m-%Y"))
     return None
 
 
@@ -343,9 +347,46 @@ def car_month_matrix(months=6):
     return {"labels": labels, "rows": rows, "col_totals": col_totals, "grand_total": grand_total}
 
 
+def active_pause_for_car(car):
+    """This car's currently-open CarCollectionPause (end_date is None), or None
+    if it isn't paused -- powers the pause/resume button and banner on the
+    cars list."""
+    return (
+        CarCollectionPause.query.filter_by(car_id=car.id, end_date=None)
+        .order_by(CarCollectionPause.start_date.desc())
+        .first()
+    )
+
+
+def _paused_dates_by_car(car_ids, start, end):
+    """{car_id: set of dates in [start, end]} covered by an (overlapping) open
+    or closed CarCollectionPause -- every shortfall/achievement calculation
+    below skips these days entirely, since a paused car isn't expected to
+    collect toward its daily_target while paused."""
+    if not car_ids:
+        return {}
+    pauses = CarCollectionPause.query.filter(
+        CarCollectionPause.car_id.in_(car_ids),
+        CarCollectionPause.start_date <= end,
+        db.or_(CarCollectionPause.end_date.is_(None), CarCollectionPause.end_date >= start),
+    ).all()
+    by_car = {}
+    for p in pauses:
+        p_start = max(p.start_date, start)
+        p_end = min(p.end_date, end) if p.end_date else end
+        dates = by_car.setdefault(p.car_id, set())
+        d = p_start
+        while d <= p_end:
+            dates.add(d)
+            d += timedelta(days=1)
+    return by_car
+
+
 def shortfall_report(start, end, car_id=None):
     """Every (car, date) in range where a car with a daily_target either collected
-    nothing or collected less than that target, whether or not it's been explained."""
+    nothing or collected less than that target, whether or not it's been explained.
+    Dates covered by a CarCollectionPause (see active_pause_for_car) are skipped
+    entirely -- a paused car isn't expected to collect that day at all."""
     q = Car.query.filter(Car.daily_target > 0)
     if car_id:
         q = q.filter(Car.id == car_id)
@@ -366,11 +407,14 @@ def shortfall_report(start, end, car_id=None):
         ShortfallClearance.car_id.in_(car_ids), ShortfallClearance.date.between(start, end)
     ).all()
     clearance_map = {(c.car_id, c.date): c for c in clearances}
+    paused_map = _paused_dates_by_car(car_ids, start, end)
 
     rows = []
     d = start
     while d <= end:
         for car in cars:
+            if d in paused_map.get(car.id, ()):
+                continue
             collected = collected_map.get((car.id, d), 0.0)
             if collected < car.daily_target:
                 clearance = clearance_map.get((car.id, d))
@@ -400,7 +444,9 @@ def shortfall_dates_with_remaining_for_car(car):
     remaining of None (nothing to auto-fill). Goes back to LAUNCH_DATE rather
     than min_entry_date() -- an old unpaid shortfall should stay payable no
     matter how long ago it happened, even though MAX_BACKDATE_DAYS still caps
-    how recent the transaction/batch date itself must be."""
+    how recent the transaction/batch date itself must be. Also excludes any
+    date covered by a CarCollectionPause -- a paused car has nothing owed for
+    that day."""
     today = date.today()
     if not car.daily_target or car.daily_target <= 0:
         return [(today, None)]
@@ -420,6 +466,7 @@ def shortfall_dates_with_remaining_for_car(car):
             ShortfallClearance.car_id == car.id, ShortfallClearance.date.between(start, today)
         ).all()
     }
+    paused_dates = _paused_dates_by_car([car.id], start, today).get(car.id, set())
 
     queued_dates = {
         d
@@ -436,7 +483,7 @@ def shortfall_dates_with_remaining_for_car(car):
     rows = []
     d = start
     while d <= today:
-        if d not in cleared_dates and d not in queued_dates:
+        if d not in cleared_dates and d not in queued_dates and d not in paused_dates:
             collected = collected_map.get(d, 0.0)
             if collected < car.daily_target:
                 rows.append((d, car.daily_target - collected))
@@ -558,7 +605,10 @@ def shortfall_by_car(start, end):
 
 
 def car_achievement_rates(start, end):
-    """Per-car % of days in range the collected amount met/exceeded daily_target."""
+    """Per-car % of days in range the collected amount met/exceeded daily_target.
+    Days covered by a CarCollectionPause are dropped from both the hit count and
+    the denominator -- a paused car isn't scored on days it wasn't expected to
+    collect."""
     cars = Car.query.filter(Car.daily_target > 0).order_by(Car.code).all()
     if not cars:
         return []
@@ -571,18 +621,20 @@ def car_achievement_rates(start, end):
         .all()
     )
     collected_map = {(car_id, d): total for d, car_id, total in collected_rows}
+    paused_map = _paused_dates_by_car(car_ids, start, end)
 
-    total_days = (end - start).days + 1
     rows = []
     for car in cars:
+        car_paused_dates = paused_map.get(car.id, set())
+        days_total = (end - start).days + 1 - len(car_paused_dates)
         days_hit = 0
         d = start
         while d <= end:
-            if collected_map.get((car.id, d), 0.0) >= car.daily_target:
+            if d not in car_paused_dates and collected_map.get((car.id, d), 0.0) >= car.daily_target:
                 days_hit += 1
             d += timedelta(days=1)
-        rate = (days_hit / total_days * 100) if total_days else 0.0
-        rows.append({"car": car, "days_hit": days_hit, "days_total": total_days, "rate": rate})
+        rate = (days_hit / days_total * 100) if days_total else 0.0
+        rows.append({"car": car, "days_hit": days_hit, "days_total": days_total, "rate": rate})
     rows.sort(key=lambda r: r["rate"], reverse=True)
     return rows
 
@@ -590,7 +642,8 @@ def car_achievement_rates(start, end):
 def shortfall_streaks(start=None, end=None):
     """Current run of consecutive days (ending at `end`, default today) each car has
     had an unresolved open shortfall, back to `start` (default LAUNCH_DATE). Cars with
-    no active streak are omitted."""
+    no active streak are omitted. A day covered by a CarCollectionPause breaks the
+    streak, same as a cleared day -- the car wasn't expected to collect that day."""
     end = end or date.today()
     lookback_start = start or LAUNCH_DATE
     cars = Car.query.filter(Car.daily_target > 0).order_by(Car.code).all()
@@ -612,12 +665,15 @@ def shortfall_streaks(start=None, end=None):
             ShortfallClearance.car_id.in_(car_ids), ShortfallClearance.date.between(lookback_start, end)
         ).all()
     }
+    paused_map = _paused_dates_by_car(car_ids, lookback_start, end)
 
     rows = []
     for car in cars:
         streak = 0
         d = end
         while d >= lookback_start:
+            if d in paused_map.get(car.id, ()):
+                break
             collected = collected_map.get((car.id, d), 0.0)
             is_open_shortfall = collected < car.daily_target and (car.id, d) not in cleared_dates
             if not is_open_shortfall:

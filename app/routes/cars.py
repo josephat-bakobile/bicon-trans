@@ -1,16 +1,22 @@
+from datetime import date, datetime
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext as _
 
 from ..extensions import db
-from ..models import Car, Driver
+from ..models import Car, CarCollectionPause, Driver
+from ..security import get_current_user
+from ..utils import active_pause_for_car, parse_date, validate_service_date
 
 bp = Blueprint("cars", __name__)
 
 
 def _assignable_driver_options(cars):
-    """(car, options) pairs -- options being the drivers each car's dropdown
-    should offer: every unassigned active driver, plus the car's own current
-    driver (so it stays selected even though it's technically "taken")."""
+    """(car, options, open_pause) rows for the cars list -- options being the
+    drivers each car's dropdown should offer: every unassigned active driver,
+    plus the car's own current driver (so it stays selected even though it's
+    technically "taken"); open_pause (see active_pause_for_car) drives whether
+    the row shows the pause form or the resume form."""
     unassigned = Driver.query.filter_by(active=True, car=None).order_by(Driver.name).all()
     rows = []
     for car in cars:
@@ -18,7 +24,7 @@ def _assignable_driver_options(cars):
         if car.driver and car.driver not in options:
             options.append(car.driver)
         options.sort(key=lambda d: d.name)
-        rows.append((car, options))
+        rows.append((car, options, active_pause_for_car(car)))
     return rows
 
 
@@ -45,6 +51,7 @@ def list_view():
         "cars/list.html",
         car_rows=_assignable_driver_options(cars),
         unassigned_drivers=unassigned_drivers,
+        today=date.today().isoformat(),
     )
 
 
@@ -97,4 +104,76 @@ def update_driver(car_id):
     else:
         db.session.commit()
         flash(_("Dereva wa %(code)s amesasishwa.", code=car.code), "success")
+    return redirect(url_for("cars.list_view"))
+
+
+@bp.route("/<int:car_id>/pause", methods=["POST"])
+def pause(car_id):
+    """Opens a CarCollectionPause so this car stops generating collection
+    shortfalls from start_date onward, until resume() closes it -- e.g. the car
+    is broken down or off the road for a stretch and isn't expected to collect
+    toward its daily_target in the meantime. Always requires a reason."""
+    car = Car.query.get_or_404(car_id)
+    reason = (request.form.get("reason") or "").strip()
+    start_date = parse_date(request.form.get("start_date")) or date.today()
+    if active_pause_for_car(car):
+        flash(_("Gari %(code)s tayari limesimamishwa kukusanya.", code=car.code), "danger")
+    elif not reason:
+        flash(_("Sababu ya kusimamisha gari kukusanya inahitajika."), "danger")
+    else:
+        error = validate_service_date(start_date, _("Tarehe ya kusimamisha"))
+        if error:
+            flash(error, "danger")
+        else:
+            db.session.add(
+                CarCollectionPause(
+                    car_id=car.id,
+                    start_date=start_date,
+                    reason=reason,
+                    created_by_id=get_current_user().id,
+                )
+            )
+            db.session.commit()
+            flash(
+                _(
+                    "Gari %(code)s limesimamishwa kukusanya kuanzia %(date)s.",
+                    code=car.code,
+                    date=start_date.strftime("%d-%m-%Y"),
+                ),
+                "success",
+            )
+    return redirect(url_for("cars.list_view"))
+
+
+@bp.route("/<int:car_id>/resume", methods=["POST"])
+def resume(car_id):
+    """Closes this car's open CarCollectionPause as of end_date, so collection
+    shortfalls resume being tracked from the next day onward."""
+    car = Car.query.get_or_404(car_id)
+    open_pause = active_pause_for_car(car)
+    if not open_pause:
+        flash(_("Gari %(code)s halijasimamishwa kukusanya.", code=car.code), "danger")
+        return redirect(url_for("cars.list_view"))
+
+    end_date = parse_date(request.form.get("end_date")) or date.today()
+    resume_reason = (request.form.get("resume_reason") or "").strip() or None
+    error = validate_service_date(end_date, _("Tarehe ya kuanza tena"))
+    if error:
+        flash(error, "danger")
+    elif end_date < open_pause.start_date:
+        flash(_("Tarehe ya kuanza tena haiwezi kuwa kabla ya tarehe ya kusimamisha."), "danger")
+    else:
+        open_pause.end_date = end_date
+        open_pause.resume_reason = resume_reason
+        open_pause.resumed_by_id = get_current_user().id
+        open_pause.resumed_at = datetime.utcnow()
+        db.session.commit()
+        flash(
+            _(
+                "Gari %(code)s limeanza kukusanya tena kuanzia %(date)s.",
+                code=car.code,
+                date=end_date.strftime("%d-%m-%Y"),
+            ),
+            "success",
+        )
     return redirect(url_for("cars.list_view"))

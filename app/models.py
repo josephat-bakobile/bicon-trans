@@ -350,6 +350,36 @@ class ShortfallClearance(db.Model):
     car = db.relationship("Car")
 
 
+class CarCollectionPause(db.Model):
+    """A car can be temporarily excused from daily-collection shortfall tracking
+    -- e.g. it's broken down or off the road for an extended stretch and isn't
+    expected to collect toward its daily_target in the meantime. Rather than
+    zeroing daily_target (which would lose the figure it should resume at),
+    this spans [start_date, end_date]; end_date is None while the pause is
+    still in effect. A reason is always required to open a pause; a car has at
+    most one open pause at a time. Every date inside an (overlapping) pause is
+    skipped entirely by the shortfall/achievement calculations in utils.py."""
+
+    __tablename__ = "car_collection_pauses"
+
+    id = db.Column(db.Integer, primary_key=True)
+    car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
+    start_date = db.Column(db.Date, nullable=False, default=date_cls.today)
+    end_date = db.Column(db.Date)
+    reason = db.Column(db.String(255), nullable=False)
+    resume_reason = db.Column(db.String(255))
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    resumed_by_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    resumed_at = db.Column(db.DateTime)
+
+    car = db.relationship("Car")
+
+    @property
+    def is_open(self):
+        return self.end_date is None
+
+
 class DriverAllowance(db.Model):
     """A confirmed Posho ya Dereva disbursement: one of a car's 2 monthly slots
     (mid-month 'kati' or end-of-month 'mwisho'), amount always the car's

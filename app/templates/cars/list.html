@@ -42,9 +42,9 @@
     <div class="card-panel">
       <div class="table-responsive">
         <table class="table table-sm table-money align-middle mb-0">
-          <thead><tr><th>Code</th><th>{{ _('Jina') }}</th><th>{{ _('Dereva') }}</th><th class="amount">{{ _('Lengo la Siku') }}</th><th>{{ _('Hali') }}</th><th></th></tr></thead>
+          <thead><tr><th>Code</th><th>{{ _('Jina') }}</th><th>{{ _('Dereva') }}</th><th class="amount">{{ _('Lengo la Siku') }}</th><th>{{ _('Hali') }}</th><th>{{ _('Ukusanyaji') }}</th><th></th></tr></thead>
           <tbody>
-            {% for c, driver_options in car_rows %}
+            {% for c, driver_options, open_pause in car_rows %}
             <tr>
               <td>{{ c.code }}</td>
               <td>{{ c.name or '-' }}</td>
@@ -71,6 +71,28 @@
               <td>
                 {% if c.active %}<span class="badge text-bg-success">Active</span>
                 {% else %}<span class="badge text-bg-secondary">{{ _('Imezimwa') }}</span>{% endif %}
+              </td>
+              <td style="min-width:260px;">
+                {% if open_pause %}
+                  <div class="small text-warning mb-1">
+                    <i class="bi bi-pause-circle"></i>
+                    {{ _('Imesimamishwa tangu %(date)s', date=open_pause.start_date.strftime('%d-%m-%Y')) }}
+                    &mdash; {{ open_pause.reason }}
+                  </div>
+                  <form method="post" action="{{ url_for('cars.resume', car_id=c.id) }}" class="d-flex gap-1">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="date" name="end_date" class="form-control form-control-sm" style="max-width:130px;" value="{{ today }}">
+                    <input type="text" name="resume_reason" class="form-control form-control-sm" placeholder="{{ _('Sababu (si lazima)') }}">
+                    <button class="btn btn-sm btn-outline-success"><i class="bi bi-play-circle"></i> {{ _('Anza Tena') }}</button>
+                  </form>
+                {% else %}
+                  <form method="post" action="{{ url_for('cars.pause', car_id=c.id) }}" class="d-flex gap-1">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="date" name="start_date" class="form-control form-control-sm" style="max-width:130px;" value="{{ today }}">
+                    <input type="text" name="reason" required class="form-control form-control-sm" placeholder="{{ _('Sababu ya kusimamisha') }}">
+                    <button class="btn btn-sm btn-outline-warning"><i class="bi bi-pause-circle"></i> {{ _('Simamisha') }}</button>
+                  </form>
+                {% endif %}
               </td>
               <td class="text-end">
                 <form method="post" action="{{ url_for('cars.toggle', car_id=c.id) }}">
