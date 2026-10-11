@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from .models import Car, CarService, ExpenseCategory, ShortfallClearance
+from .utils import active_pause_for_car
 
 DUE_SOON_DAYS = 3
 
@@ -76,8 +77,12 @@ def predict_for_car(car, today=None):
 
 def service_predictions(cars=None):
     """Prediction rows for every (active) car, most urgent first; cars without
-    a baseline service yet sort last."""
+    a baseline service yet sort last. A car currently paused (skipped) from
+    collection is left out entirely -- it isn't expected to work, so it has no
+    service due date to track -- and reappears, showing its last service, once
+    resumed."""
     cars = cars if cars is not None else Car.query.filter_by(active=True).order_by(Car.code).all()
+    cars = [c for c in cars if not active_pause_for_car(c)]
     rows = [predict_for_car(c, today=None) for c in cars]
     rows.sort(key=lambda r: (r["days_remaining"] is None, r["days_remaining"]))
     return rows
