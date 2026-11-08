@@ -362,7 +362,9 @@ def _paused_dates_by_car(car_ids, start, end):
     """{car_id: set of dates in [start, end]} covered by an (overlapping) open
     or closed CarCollectionPause -- every shortfall/achievement calculation
     below skips these days entirely, since a paused car isn't expected to
-    collect toward its daily_target while paused."""
+    collect toward its daily_target while paused. end_date itself is the day
+    collection resumes (see cars.resume()), so it is excluded from the skip
+    set -- only days strictly before end_date are treated as paused."""
     if not car_ids:
         return {}
     pauses = CarCollectionPause.query.filter(
@@ -373,7 +375,7 @@ def _paused_dates_by_car(car_ids, start, end):
     by_car = {}
     for p in pauses:
         p_start = max(p.start_date, start)
-        p_end = min(p.end_date, end) if p.end_date else end
+        p_end = min(p.end_date - timedelta(days=1), end) if p.end_date else end
         dates = by_car.setdefault(p.car_id, set())
         d = p_start
         while d <= p_end:

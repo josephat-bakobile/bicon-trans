@@ -355,10 +355,12 @@ class CarCollectionPause(db.Model):
     -- e.g. it's broken down or off the road for an extended stretch and isn't
     expected to collect toward its daily_target in the meantime. Rather than
     zeroing daily_target (which would lose the figure it should resume at),
-    this spans [start_date, end_date]; end_date is None while the pause is
-    still in effect. A reason is always required to open a pause; a car has at
-    most one open pause at a time. Every date inside an (overlapping) pause is
-    skipped entirely by the shortfall/achievement calculations in utils.py."""
+    this spans [start_date, end_date); end_date is None while the pause is
+    still in effect, and otherwise is the day collection resumes (not itself
+    paused). A reason is always required to open a pause; a car has at
+    most one open pause at a time. Every date inside an (overlapping) pause,
+    excluding end_date, is skipped entirely by the shortfall/achievement
+    calculations in utils.py."""
 
     __tablename__ = "car_collection_pauses"
 
