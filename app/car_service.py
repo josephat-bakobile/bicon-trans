@@ -17,22 +17,49 @@ def _excused_dates(car_id, after_date):
     return {r.date for r in rows}
 
 
+def _last_qualifying_service(car_id):
+    """Most recent CarService that counts as a real physical service day: either
+    a staff-logged ticket (shop_id is None) booked under an is_service category,
+    or a shop ticket (shop_id set) that's been fully paid (status "confirmed")
+    under an is_service payment_category -- a vendor ticket still being
+    negotiated/paid isn't yet a confirmed service day, so it doesn't count until
+    then (mirrors routes.service.add_payment's shortfall-clearance sync)."""
+    staff = (
+        CarService.query.join(ExpenseCategory, CarService.category_id == ExpenseCategory.id)
+        .filter(CarService.car_id == car_id, CarService.shop_id.is_(None), ExpenseCategory.is_service.is_(True))
+        .order_by(CarService.service_date.desc(), CarService.id.desc())
+        .first()
+    )
+    vendor = (
+        CarService.query.join(ExpenseCategory, CarService.payment_category_id == ExpenseCategory.id)
+        .filter(
+            CarService.car_id == car_id,
+            CarService.shop_id.isnot(None),
+            CarService.status == "confirmed",
+            ExpenseCategory.is_service.is_(True),
+        )
+        .order_by(CarService.service_date.desc(), CarService.id.desc())
+        .first()
+    )
+    candidates = [c for c in (staff, vendor) if c is not None]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda c: (c.service_date, c.id))
+
+
 def predict_for_car(car, today=None):
     """Next service due date for a car, counted forward from its most recent
-    staff-logged CarService entry booked under an is_service category (e.g.
-    SERVICE, not MATUMIZI) -- shop-submitted parts tickets are excluded (a shop
-    billing one part isn't necessarily a full physical service day), and so are
-    staff tickets for incidental costs that aren't a real service, so neither
+    qualifying CarService entry -- either a staff-logged ticket booked under an
+    is_service category (e.g. SERVICE, not MATUMIZI), or a shop/vendor ticket
+    fully paid under an is_service payment category. A shop ticket still open/
+    unpaid doesn't count yet (a shop billing one part isn't necessarily a full
+    physical service day until it's actually settled), and neither do staff
+    tickets for incidental costs that aren't a real service -- none of those
     should reset this clock. Only days the car worked normally count toward
     the interval -- each excused (uncollected/partial + cleared) day in between
     pushes the due date one calendar day later."""
     today = today or date.today()
-    last = (
-        CarService.query.join(ExpenseCategory, CarService.category_id == ExpenseCategory.id)
-        .filter(CarService.car_id == car.id, CarService.shop_id.is_(None), ExpenseCategory.is_service.is_(True))
-        .order_by(CarService.service_date.desc(), CarService.id.desc())
-        .first()
-    )
+    last = _last_qualifying_service(car.id)
     if last is None:
         return {
             "car": car,

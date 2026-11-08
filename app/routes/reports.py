@@ -34,7 +34,6 @@ from ..report_data import (
 from ..security import get_current_user, require_permission
 from ..sms import can_send, send_and_log
 from ..utils import (
-    LAUNCH_DATE,
     car_achievement_rates,
     category_totals,
     debt_monthly_trend,
@@ -54,8 +53,9 @@ bp = Blueprint("reports", __name__)
 
 
 def _range():
-    start = parse_date(request.args.get("start"), LAUNCH_DATE)
-    end = parse_date(request.args.get("end"), date.today())
+    today = date.today()
+    start = parse_date(request.args.get("start"), today.replace(day=1))
+    end = parse_date(request.args.get("end"), today)
     return start, end
 
 
@@ -254,7 +254,7 @@ def pnl_pdf():
 @bp.route("/streak-sms/<int:car_id>", methods=["POST"])
 @require_permission("sms")
 def send_streak_sms(car_id):
-    start = parse_date(request.form.get("start"), LAUNCH_DATE)
+    start = parse_date(request.form.get("start"), date.today().replace(day=1))
     end = parse_date(request.form.get("end"), date.today())
     car = Car.query.get_or_404(car_id)
 
@@ -287,7 +287,7 @@ def send_streak_sms(car_id):
 @bp.route("/summary-sms/<int:car_id>", methods=["POST"])
 @require_permission("sms")
 def send_summary_sms(car_id):
-    start = parse_date(request.form.get("start"), LAUNCH_DATE)
+    start = parse_date(request.form.get("start"), date.today().replace(day=1))
     end = parse_date(request.form.get("end"), date.today())
     car = Car.query.get_or_404(car_id)
 

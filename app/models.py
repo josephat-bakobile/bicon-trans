@@ -477,12 +477,13 @@ class CarService(db.Model):
     A confirmed staff ticket may be reopened to fix a mistake (see
     routes.service.reopen) -- re-confirming updates the same ConsumptionEntry in
     place rather than duplicating it.
-    Only staff (non-shop) tickets sync a ShortfallClearance -- a shop billing a
-    part doesn't mean the car sat idle that day the way a staff-logged service
-    day does, so shop tickets never touch collection shortfalls. Likewise only
-    staff tickets booked under an is_service ExpenseCategory (see category_id)
-    count toward the next-service interval baseline (see
-    car_service.predict_for_car).
+    A staff ticket syncs a ShortfallClearance based on category_id; a shop
+    ticket only does so once fully paid ("confirmed") and only if its
+    payment_category is_service -- a shop ticket still open/unpaid never
+    touches collection shortfalls. Likewise, the next-service interval
+    baseline (see car_service.predict_for_car) counts a staff ticket booked
+    under an is_service category (category_id), or a shop ticket once fully
+    paid under an is_service payment_category (payment_category_id).
     A staff ticket booked under an is_service category always excuses its
     service_date from shortfalls immediately. Any other category only does so
     if affects_shortfall is set, and only once the ticket is confirmed/closed
