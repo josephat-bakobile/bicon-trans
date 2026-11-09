@@ -179,17 +179,21 @@ def shortfall_dates(car_id):
 def list_view():
     start = parse_date(request.args.get("start"))
     end = parse_date(request.args.get("end"))
+    trans_no = (request.args.get("trans_no") or "").strip()
     q = CollectionTransaction.query
     if start:
         q = q.filter(CollectionTransaction.transaction_date >= start)
     if end:
         q = q.filter(CollectionTransaction.transaction_date <= end)
+    if trans_no:
+        q = q.filter(CollectionTransaction.trans_no.ilike(f"%{trans_no}%"))
     transactions = q.order_by(CollectionTransaction.transaction_date.desc(), CollectionTransaction.id.desc()).all()
     return render_template(
         "collections/list.html",
         transactions=transactions,
         start=request.args.get("start", ""),
         end=request.args.get("end", ""),
+        trans_no=trans_no,
     )
 
 
