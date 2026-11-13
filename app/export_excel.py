@@ -106,7 +106,7 @@ def build_shortfalls_excel(rows, start, end):
         ws.cell(row=i, column=3, value=r["target"]).font = BODY_FONT
         ws.cell(row=i, column=4, value=r["collected"]).font = BODY_FONT
         ws.cell(row=i, column=5, value=r["shortfall"]).font = BODY_FONT
-        ws.cell(row=i, column=6, value="Imefafanuliwa" if r["clearance"] else "Wazi").font = BODY_FONT
+        ws.cell(row=i, column=6, value="Imefafanuliwa" if r["remaining"] <= 0.01 else "Wazi").font = BODY_FONT
         ws.cell(row=i, column=7, value=r["clearance"].description if r["clearance"] else "").font = BODY_FONT
     _autosize(ws, 7)
     return _to_bytes(wb)

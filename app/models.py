@@ -336,7 +336,13 @@ class DebtPayment(db.Model):
 class ShortfallClearance(db.Model):
     """Explanation recorded against a car/date whose collection fell short of
     (or missed entirely) that car's daily_target. Clears the day off the
-    open-shortfalls report without deleting the underlying shortage."""
+    open-shortfalls report without deleting the underlying shortage.
+    amount is how much of that day's shortfall this explains -- NULL means a
+    legacy or ticket/allowance-synced clearance that always explains the full
+    day. A manually-entered amount can be less than the full shortfall, in
+    which case the day stays open (see shortfall_report in utils.py) with a
+    reduced remaining balance until later entries bring it up to the full
+    amount."""
 
     __tablename__ = "shortfall_clearances"
     __table_args__ = (db.UniqueConstraint("car_id", "date", name="uq_shortfall_car_date"),)
@@ -345,6 +351,7 @@ class ShortfallClearance(db.Model):
     car_id = db.Column(db.Integer, db.ForeignKey("cars.id"), nullable=False)
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String(255), nullable=False)
+    amount = db.Column(db.Float)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     car = db.relationship("Car")

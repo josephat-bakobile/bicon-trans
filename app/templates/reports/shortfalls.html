@@ -41,7 +41,7 @@
           <th>{{ _('Gari') }}</th>
           <th class="amount">{{ _('Lengo') }}</th>
           <th class="amount">{{ _('Kilichokusanywa') }}</th>
-          <th class="amount">{{ _('Upungufu') }}</th>
+          <th class="amount">{{ _('Upungufu Uliobakia') }}</th>
           <th>{{ _('Hali') }}</th>
           <th>{{ _('Fafanua') }}</th>
         </tr>
@@ -53,17 +53,24 @@
           <td>{{ r.car.code }}</td>
           <td class="amount">{{ r.target | money }}</td>
           <td class="amount">{{ r.collected | money }}</td>
-          <td class="amount text-danger fw-bold">{{ r.shortfall | money }}</td>
+          <td class="amount text-danger fw-bold">{{ r.remaining | money }}</td>
           <td>
+            {% if r.cleared_amount > 0 %}
+            <span class="badge text-bg-warning text-dark">{{ _('Kiasi') }} {{ r.cleared_amount | money }} {{ _('kimefafanuliwa') }}</span>
+            {% else %}
             <span class="badge text-bg-danger">{{ _('Wazi') }}</span>
+            {% endif %}
           </td>
-          <td style="min-width:280px;">
+          <td style="min-width:320px;">
             <form method="post" action="{{ url_for('reports.clear_shortfall') }}" class="d-flex gap-1">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="car_id" value="{{ r.car.id }}">
               <input type="hidden" name="date" value="{{ r.date.isoformat() }}">
               <input type="hidden" name="start" value="{{ start.isoformat() }}">
               <input type="hidden" name="end" value="{{ end.isoformat() }}">
+              <input type="number" step="0.01" min="0.01" max="{{ r.remaining }}" name="amount"
+                     class="form-control form-control-sm" style="max-width:110px;"
+                     placeholder="{{ _('Kiasi') }}" value="{{ r.remaining | round(0) }}" required>
               <input type="text" name="description" class="form-control form-control-sm" placeholder="{{ _('Maelezo ya upungufu') }}" required>
               <button class="btn btn-sm btn-outline-primary text-nowrap"><i class="bi bi-check2"></i> {{ _('Fafanua') }}</button>
             </form>

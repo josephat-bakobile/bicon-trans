@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 from flask_babel import gettext as _
+from sqlalchemy import func
 
 from ..export_excel import (
     build_collections_excel,
@@ -20,7 +21,15 @@ from ..export_pdf import (
     build_summary_pdf,
 )
 from ..extensions import db
-from ..models import Car, CarService, DriverAllowance, ExpenseCategory, ServiceItemCategory, ShortfallClearance
+from ..models import (
+    Car,
+    CarService,
+    CollectionLine,
+    DriverAllowance,
+    ExpenseCategory,
+    ServiceItemCategory,
+    ShortfallClearance,
+)
 from ..report_data import (
     collections_rows,
     consumption_rows,
@@ -324,8 +333,8 @@ def shortfalls():
     start, end = _range()
     car_id = request.args.get("car_id", type=int)
     rows = shortfall_report(start, end, car_id)
-    open_rows = [r for r in rows if not r["clearance"]]
-    cleared_rows = [r for r in rows if r["clearance"]]
+    open_rows = [r for r in rows if r["remaining"] > 0.01]
+    cleared_rows = [r for r in rows if r["remaining"] <= 0.01]
 
     open_rows, open_page, open_pages = paginate(open_rows, request.args.get("open_page", 1, type=int), PER_PAGE)
     cleared_rows, cleared_page, cleared_pages = paginate(
@@ -369,19 +378,59 @@ def clear_shortfall():
     car_id = int(request.form["car_id"])
     shortfall_date = parse_date(request.form.get("date"))
     description = (request.form.get("description") or "").strip()
+    amount_raw = (request.form.get("amount") or "").strip()
+
+    car = Car.query.get(car_id)
+    try:
+        amount = float(amount_raw)
+    except ValueError:
+        amount = None
 
     if not description:
         flash(_("Weka maelezo ya upungufu kabla ya kufafanua."), "danger")
-    elif not shortfall_date:
+    elif not shortfall_date or not car:
         flash(_("Tarehe si sahihi."), "danger")
+    elif amount is None or amount <= 0:
+        flash(_("Weka kiasi sahihi cha kufafanua."), "danger")
     else:
         existing = ShortfallClearance.query.filter_by(car_id=car_id, date=shortfall_date).first()
-        if existing:
-            existing.description = description
+        collected = (
+            db.session.query(func.sum(CollectionLine.amount))
+            .filter(CollectionLine.car_id == car_id, CollectionLine.collection_date == shortfall_date)
+            .scalar()
+            or 0.0
+        )
+        shortfall = car.daily_target - collected
+        already_cleared = shortfall if (existing and existing.amount is None) else (existing.amount if existing else 0.0)
+        remaining = max(0.0, shortfall - already_cleared)
+
+        if remaining <= 0.01:
+            flash(_("Upungufu wa siku hii umefafanuliwa kikamilifu tayari."), "danger")
+        elif amount > remaining + 0.01:
+            flash(
+                _("Kiasi hauzidi kiasi cha upungufu kilichobakia (%(remaining)s).", remaining=f"{remaining:,.0f}"),
+                "danger",
+            )
         else:
-            db.session.add(ShortfallClearance(car_id=car_id, date=shortfall_date, description=description))
-        db.session.commit()
-        flash(_("Upungufu umefafanuliwa."), "success")
+            new_total = min(shortfall, already_cleared + amount)
+            if existing:
+                existing.amount = new_total
+                existing.description = description
+            else:
+                db.session.add(
+                    ShortfallClearance(car_id=car_id, date=shortfall_date, description=description, amount=new_total)
+                )
+            db.session.commit()
+            if new_total < shortfall - 0.01:
+                flash(
+                    _(
+                        "Kiasi kimefafanuliwa. Kimebakia upungufu wa %(remaining)s.",
+                        remaining=f"{shortfall - new_total:,.0f}",
+                    ),
+                    "success",
+                )
+            else:
+                flash(_("Upungufu umefafanuliwa."), "success")
 
     return redirect(url_for("reports.shortfalls", start=start, end=end))
 

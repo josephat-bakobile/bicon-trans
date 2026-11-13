@@ -388,7 +388,14 @@ def shortfall_report(start, end, car_id=None):
     """Every (car, date) in range where a car with a daily_target either collected
     nothing or collected less than that target, whether or not it's been explained.
     Dates covered by a CarCollectionPause (see active_pause_for_car) are skipped
-    entirely -- a paused car isn't expected to collect that day at all."""
+    entirely -- a paused car isn't expected to collect that day at all.
+
+    Each row carries both the full day's "shortfall" and how much of it is still
+    unexplained as "remaining" -- a manually-entered ShortfallClearance.amount can
+    cover only part of the day (see clear_shortfall), in which case "remaining" is
+    the full shortfall minus whatever's been explained so far and the day still
+    counts as open. clearance.amount of None (ticket/allowance-synced or legacy
+    rows) always explains the day in full, i.e. remaining 0."""
     q = Car.query.filter(Car.daily_target > 0)
     if car_id:
         q = q.filter(Car.id == car_id)
@@ -420,13 +427,22 @@ def shortfall_report(start, end, car_id=None):
             collected = collected_map.get((car.id, d), 0.0)
             if collected < car.daily_target:
                 clearance = clearance_map.get((car.id, d))
+                shortfall = car.daily_target - collected
+                if clearance is None:
+                    cleared_amount = 0.0
+                elif clearance.amount is None:
+                    cleared_amount = shortfall
+                else:
+                    cleared_amount = min(clearance.amount, shortfall)
                 rows.append(
                     {
                         "date": d,
                         "car": car,
                         "target": car.daily_target,
                         "collected": collected,
-                        "shortfall": car.daily_target - collected,
+                        "shortfall": shortfall,
+                        "cleared_amount": cleared_amount,
+                        "remaining": max(0.0, shortfall - cleared_amount),
                         "clearance": clearance,
                     }
                 )
@@ -531,8 +547,8 @@ def shortfall_totals(start=None, end=None):
     """Sum of shortfall amounts since LAUNCH_DATE, split into open (Wazi) and
     explained (Imefafanuliwa) buckets."""
     rows = shortfall_report(start or LAUNCH_DATE, end or date.today())
-    open_total = sum(r["shortfall"] for r in rows if not r["clearance"])
-    cleared_total = sum(r["shortfall"] for r in rows if r["clearance"])
+    open_total = sum(r["remaining"] for r in rows)
+    cleared_total = sum(r["cleared_amount"] for r in rows)
     return {"open_total": open_total, "cleared_total": cleared_total}
 
 
@@ -560,8 +576,8 @@ def shortfall_monthly_trend(start, end):
             or 0.0
         )
         rows = shortfall_report(bucket_start, bucket_end)
-        explained = sum(r["shortfall"] for r in rows if r["clearance"])
-        open_ = sum(r["shortfall"] for r in rows if not r["clearance"])
+        explained = sum(r["cleared_amount"] for r in rows)
+        open_ = sum(r["remaining"] for r in rows)
         points.append(
             {
                 "label": f"{calendar.month_abbr[m].upper()} {y % 100:02d}",
@@ -590,11 +606,11 @@ def shortfall_by_car(start, end):
             r["car"].id,
             {"car": r["car"], "explained": 0.0, "explained_count": 0, "open": 0.0, "open_count": 0},
         )
-        if r["clearance"]:
-            entry["explained"] += r["shortfall"]
+        if r["cleared_amount"]:
+            entry["explained"] += r["cleared_amount"]
             entry["explained_count"] += 1
-        else:
-            entry["open"] += r["shortfall"]
+        if r["remaining"] > 0.01:
+            entry["open"] += r["remaining"]
             entry["open_count"] += 1
 
     result = [r for r in by_car.values() if r["explained"] or r["open"]]
@@ -661,8 +677,8 @@ def shortfall_streaks(start=None, end=None):
     )
     collected_map = {(car_id, d): total for d, car_id, total in collected_rows}
 
-    cleared_dates = {
-        (c.car_id, c.date)
+    clearance_map = {
+        (c.car_id, c.date): c
         for c in ShortfallClearance.query.filter(
             ShortfallClearance.car_id.in_(car_ids), ShortfallClearance.date.between(lookback_start, end)
         ).all()
@@ -677,7 +693,10 @@ def shortfall_streaks(start=None, end=None):
             if d in paused_map.get(car.id, ()):
                 break
             collected = collected_map.get((car.id, d), 0.0)
-            is_open_shortfall = collected < car.daily_target and (car.id, d) not in cleared_dates
+            shortfall = car.daily_target - collected
+            clearance = clearance_map.get((car.id, d))
+            is_fully_cleared = clearance is not None and (clearance.amount is None or clearance.amount >= shortfall)
+            is_open_shortfall = collected < car.daily_target and not is_fully_cleared
             if not is_open_shortfall:
                 break
             streak += 1
@@ -699,8 +718,7 @@ def driver_totals(start=None, end=None):
     shortfall_rows = shortfall_report(start or LAUNCH_DATE, end or date.today())
     open_shortfall_by_car = {}
     for r in shortfall_rows:
-        if not r["clearance"]:
-            open_shortfall_by_car[r["car"].id] = open_shortfall_by_car.get(r["car"].id, 0.0) + r["shortfall"]
+        open_shortfall_by_car[r["car"].id] = open_shortfall_by_car.get(r["car"].id, 0.0) + r["remaining"]
 
     rows = []
     grand_collected = grand_consumed = grand_shortfall_open = 0.0

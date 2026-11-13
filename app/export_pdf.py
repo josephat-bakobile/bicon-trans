@@ -121,7 +121,7 @@ def build_shortfalls_pdf(rows, start, end):
     total_shortfall = 0.0
     open_count = 0
     for r in rows:
-        cleared = r["clearance"] is not None
+        cleared = r["remaining"] <= 0.01
         if not cleared:
             open_count += 1
         total_shortfall += r["shortfall"]

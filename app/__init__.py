@@ -516,6 +516,13 @@ def _migrate_schema():
         )
         db.session.commit()
 
+    # Lets a manually-entered shortfall clearance explain less than the full
+    # day -- NULL (all pre-existing rows) keeps meaning "fully explained".
+    clearance_cols = [row[1] for row in db.session.execute(text("PRAGMA table_info(shortfall_clearances)")).fetchall()]
+    if "amount" not in clearance_cols:
+        db.session.execute(text("ALTER TABLE shortfall_clearances ADD COLUMN amount FLOAT"))
+        db.session.commit()
+
 
 def _seed_defaults():
     from .models import Car, DocumentType, ExpenseCategory
