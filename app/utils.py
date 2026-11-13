@@ -464,7 +464,12 @@ def shortfall_dates_with_remaining_for_car(car):
     matter how long ago it happened, even though MAX_BACKDATE_DAYS still caps
     how recent the transaction/batch date itself must be. Also excludes any
     date covered by a CarCollectionPause -- a paused car has nothing owed for
-    that day."""
+    that day.
+
+    A date with a partial ShortfallClearance (amount less than the full day's
+    shortfall) still owes the rest, so it stays in the list with a reduced
+    remaining -- only a clearance that fully covers the day (amount is None,
+    or amount >= the shortfall) drops the date entirely."""
     today = date.today()
     if not car.daily_target or car.daily_target <= 0:
         return [(today, None)]
@@ -478,8 +483,8 @@ def shortfall_dates_with_remaining_for_car(car):
     )
     collected_map = {d: total for d, total in collected_rows}
 
-    cleared_dates = {
-        c.date
+    clearance_map = {
+        c.date: c
         for c in ShortfallClearance.query.filter(
             ShortfallClearance.car_id == car.id, ShortfallClearance.date.between(start, today)
         ).all()
@@ -501,10 +506,20 @@ def shortfall_dates_with_remaining_for_car(car):
     rows = []
     d = start
     while d <= today:
-        if d not in cleared_dates and d not in queued_dates and d not in paused_dates:
+        if d not in queued_dates and d not in paused_dates:
             collected = collected_map.get(d, 0.0)
-            if collected < car.daily_target:
-                rows.append((d, car.daily_target - collected))
+            shortfall = car.daily_target - collected
+            if shortfall > 0:
+                clearance = clearance_map.get(d)
+                if clearance is None:
+                    cleared_amount = 0.0
+                elif clearance.amount is None:
+                    cleared_amount = shortfall
+                else:
+                    cleared_amount = min(clearance.amount, shortfall)
+                remaining = shortfall - cleared_amount
+                if remaining > 0.01:
+                    rows.append((d, remaining))
         d += timedelta(days=1)
     rows.sort(key=lambda r: r[0], reverse=True)
     return rows
