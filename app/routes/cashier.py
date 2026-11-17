@@ -9,6 +9,7 @@ from ..security import get_current_user
 from ..utils import (
     open_shortfall_dates_for_car,
     parse_date,
+    remaining_shortfall_for_date,
     shortfall_dates_with_remaining_for_car,
     validate_entry_date,
 )
@@ -51,9 +52,21 @@ def shortfall_dates(car_id):
     shortfall_dates_with_remaining_for_car. Powers the date dropdown on the
     add-collection form, populated once a car is chosen instead of a
     free-form date picker; each option's remaining balance also drives
-    auto-filling the amount field."""
+    auto-filling the amount field.
+
+    Pass max_date (the "Ongeza Gari kwa Siku Hii" quick-add form on a returned
+    batch does this) to only offer shortfall dates on or before it, since that
+    form is for catching up a forgotten car as of that specific day -- today's
+    date would be a different, unrelated shortfall. max_date itself is always
+    included even without a real shortfall there (e.g. a car with no
+    daily_target), so that form always has at least one date to submit."""
     car = Car.query.filter_by(id=car_id, active=True).first()
     rows = shortfall_dates_with_remaining_for_car(car) if car else []
+    max_date = parse_date(request.args.get("max_date"))
+    if car and max_date:
+        rows = [(d, remaining) for d, remaining in rows if d <= max_date]
+        if not any(d == max_date for d, _ in rows):
+            rows = [(max_date, remaining_shortfall_for_date(car, max_date))] + rows
     return jsonify(
         [{"value": d.isoformat(), "label": d.strftime("%d-%m-%Y"), "remaining": remaining} for d, remaining in rows]
     )
