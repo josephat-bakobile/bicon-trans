@@ -7,9 +7,9 @@ from ..extensions import db
 from ..models import CashierCollectionBatch, CashierCollectionEntry, Car
 from ..security import get_current_user
 from ..utils import (
-    min_entry_date,
     open_shortfall_dates_for_car,
     parse_date,
+    remaining_shortfall_for_date,
     shortfall_dates_with_remaining_for_car,
     validate_entry_date,
 )
@@ -52,9 +52,20 @@ def shortfall_dates(car_id):
     shortfall_dates_with_remaining_for_car. Powers the date dropdown on the
     add-collection form, populated once a car is chosen instead of a
     free-form date picker; each option's remaining balance also drives
-    auto-filling the amount field."""
+    auto-filling the amount field.
+
+    Always also offers the currently open batch's own date (today's, or a day
+    the office returned for correction) even if this car has no shortfall on
+    it -- otherwise a car the office says was forgotten for that day can be
+    impossible to add back, e.g. because it has no daily_target (so only
+    "today" ever shows up) or already met its target that day."""
     car = Car.query.filter_by(id=car_id, active=True).first()
     rows = shortfall_dates_with_remaining_for_car(car) if car else []
+    batch = _current_open_batch()
+    if car and batch:
+        existing_dates = {d for d, _ in rows}
+        if batch.batch_date not in existing_dates:
+            rows = [(batch.batch_date, remaining_shortfall_for_date(car, batch.batch_date))] + rows
     return jsonify(
         [{"value": d.isoformat(), "label": d.strftime("%d-%m-%Y"), "remaining": remaining} for d, remaining in rows]
     )
@@ -69,6 +80,8 @@ def add_line():
     cdate = parse_date(request.form.get("collection_date"))
 
     car = Car.query.filter_by(id=car_id, active=True).first() if car_id else None
+    batch = _current_open_batch()
+    expected_date = batch.batch_date if batch else date.today()
     error = None
     amt_value = None
     if not car:
@@ -79,10 +92,9 @@ def add_line():
         error = _("Chagua tarehe.")
     else:
         amt_value = float(amount)
-        if cdate not in open_shortfall_dates_for_car(car):
+        if cdate != expected_date and cdate not in open_shortfall_dates_for_car(car):
             error = _("Tarehe uliyochagua si sahihi tena kwa gari hili, chagua tarehe nyingine.")
 
-    batch = _current_open_batch()
     existing = None
     if not error:
         if batch:
