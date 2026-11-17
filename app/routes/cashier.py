@@ -7,9 +7,11 @@ from ..extensions import db
 from ..models import CashierCollectionBatch, CashierCollectionEntry, Car
 from ..security import get_current_user
 from ..utils import (
+    min_entry_date,
     open_shortfall_dates_for_car,
     parse_date,
     shortfall_dates_with_remaining_for_car,
+    validate_entry_date,
 )
 
 bp = Blueprint("cashier", __name__)
@@ -135,6 +137,71 @@ def delete_line(entry_id):
         db.session.delete(entry)
         db.session.commit()
         flash(_("Kimefutwa."), "info")
+    return redirect(url_for("cashier.index"))
+
+
+@bp.route("/lines/<int:entry_id>/update", methods=["POST"])
+def update_line(entry_id):
+    user = get_current_user()
+    entry = CashierCollectionEntry.query.get_or_404(entry_id)
+    if entry.batch.created_by_id != user.id or not entry.batch.is_open:
+        flash(_("Huwezi kubadilisha kipengele hiki."), "danger")
+        return redirect(url_for("cashier.index"))
+
+    car_id = request.form.get("car_id", type=int)
+    amount = (request.form.get("amount") or "").strip()
+    note = (request.form.get("note") or "").strip() or None
+    cdate = parse_date(request.form.get("collection_date"))
+
+    car = Car.query.filter_by(id=car_id, active=True).first() if car_id else None
+    error = None
+    amt_value = None
+    if not car:
+        error = _("Chagua gari kwenye orodha.")
+    elif not amount or float(amount) <= 0:
+        error = _("Weka kiasi sahihi.")
+    elif not cdate:
+        error = _("Chagua tarehe.")
+    else:
+        amt_value = float(amount)
+        error = validate_entry_date(cdate)
+
+    if error:
+        flash(error, "danger")
+        return redirect(url_for("cashier.index"))
+
+    # Same car + same date already logged elsewhere in this batch -- merge this
+    # edit into that other line instead of leaving two rows for the same
+    # car/date, mirroring the merge add_line does on a fresh add.
+    other = CashierCollectionEntry.query.filter(
+        CashierCollectionEntry.batch_id == entry.batch_id,
+        CashierCollectionEntry.car_id == car.id,
+        CashierCollectionEntry.collection_date == cdate,
+        CashierCollectionEntry.id != entry.id,
+    ).first()
+
+    if other:
+        other.amount += amt_value
+        if note:
+            other.note = f"{other.note}; {note}" if other.note else note
+        db.session.delete(entry)
+        db.session.commit()
+        flash(
+            _(
+                "Kimeunganishwa na rekodi iliyopo ya gari %(code)s (%(date)s). Jumla sasa: %(total)s",
+                code=car.code,
+                date=cdate.strftime("%d-%m-%Y"),
+                total=f"{other.amount:,.0f}",
+            ),
+            "success",
+        )
+    else:
+        entry.car_id = car.id
+        entry.collection_date = cdate
+        entry.amount = amt_value
+        entry.note = note
+        db.session.commit()
+        flash(_("Makusanyo ya gari %(code)s yamesasishwa.", code=car.code), "success")
     return redirect(url_for("cashier.index"))
 
 
